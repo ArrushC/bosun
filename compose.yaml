@@ -1,5 +1,6 @@
-# Self-hosted Bosun. First run `make docker-setup` (it fills in .env), then
-# `docker compose up -d --build` and `make docker-login`. See README → "Run with Docker".
+# Self-hosted Bosun. First run `scripts/docker-setup.sh` (it fills in .env), then
+# `docker compose up -d --build` and `docker compose exec bosun claude auth login`.
+# See README → "Run with Docker".
 name: bosun
 
 services:
@@ -21,8 +22,8 @@ services:
       BOSUN_HOST: 0.0.0.0
       BOSUN_PORT: "8787"
       BOSUN_PUBLISHED_ON_LOOPBACK: "true"
-      BOSUN_PROJECTS_DIR: ${BOSUN_PROJECTS_DIR:?Set BOSUN_PROJECTS_DIR in .env (run make docker-setup)}
-      BOSUN_DATA_DIR: ${BOSUN_DOCKER_DATA_DIR:?Set BOSUN_DOCKER_DATA_DIR in .env (run make docker-setup)}
+      BOSUN_PROJECTS_DIR: ${BOSUN_PROJECTS_DIR:?Set BOSUN_PROJECTS_DIR in .env (run scripts/docker-setup.sh)}
+      BOSUN_DATA_DIR: ${BOSUN_DOCKER_DATA_DIR:?Set BOSUN_DOCKER_DATA_DIR in .env (run scripts/docker-setup.sh)}
     ports:
       # Never publish on all interfaces: the web UI has no login.
       - "127.0.0.1:${BOSUN_PORT:-8787}:8787"

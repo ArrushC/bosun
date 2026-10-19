@@ -31,7 +31,7 @@ if [[ -z "$projects" && -d "$HOME/git" ]]; then
   projects="$HOME/git"
 fi
 if [[ -z "$projects" ]]; then
-  echo "Which folder holds your projects? Run: make docker-setup PROJECTS=/path/to/projects" >&2
+  echo "Which folder holds your projects? Run: scripts/docker-setup.sh /path/to/projects" >&2
   exit 1
 fi
 projects="${projects/#\~/$HOME}"
@@ -64,7 +64,7 @@ Wrote $ENV_FILE:
   Runs as user:                   $(id -u):$(id -g)
 
 Next:
-  docker compose up -d --build    # or: make docker-up
-  make docker-login               # sign Claude Code in to your subscription
+  docker compose up -d --build
+  docker compose exec bosun claude auth login   # sign Claude Code in to your subscription
   open http://127.0.0.1:$(current BOSUN_PORT | grep . || echo 8787)
 EOF

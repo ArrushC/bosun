@@ -42,7 +42,7 @@ def _request(
             response = client.request(method, path, json=body, headers=headers)
         except httpx.TransportError as exc:
             raise RuntimeError(
-                "Bosun is not running (start it with `make start` or `make dev`)"
+                "Bosun is not running (start it with `docker compose up -d` or `scripts/dev.sh`)"
             ) from exc
     if response.status_code >= 400:
         detail = (

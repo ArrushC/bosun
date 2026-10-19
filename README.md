@@ -43,12 +43,12 @@ Docker image), so a separate install is only needed to sign in (see below).
 ```bash
 git clone https://github.com/ArrushC/bosun.git
 cd bosun
-make docker-setup PROJECTS=~/code   # writes .env: projects folder, data folder, your user ID
-make docker-up                      # docker compose up -d --build
-make docker-login                   # sign the container's Claude Code in to your subscription
+scripts/docker-setup.sh ~/code                # writes .env: projects folder, data folder, your user ID
+docker compose up -d --build
+docker compose exec bosun claude auth login   # sign the container's Claude Code in to your subscription
 ```
 
-Open <http://127.0.0.1:8787>. `make docker-login` prints a sign-in link; open
+Open <http://127.0.0.1:8787>. The login command prints a sign-in link; open
 it, approve, and paste the code it shows back into the terminal.
 
 How the container is set up (`compose.yaml`):
@@ -71,39 +71,38 @@ How the container is set up (`compose.yaml`):
   (default `~/.local/share/bosun`) on your machine. To back up, copy that
   folder while Bosun is stopped.
 - **Claude login**: it lives in the `bosun_home` volume, separate from your own
-  Claude Code login. `make docker-down` keeps it; `docker compose down -v`
+  Claude Code login. `docker compose down` keeps it; `docker compose down -v`
   deletes it.
 - **Your user**: the container runs as your user and group IDs, so files Bosun
   writes stay yours.
 - **Localhost only**: the port is published on `127.0.0.1`. Do not publish it
   on other interfaces: the web UI has no login.
 - **GitHub**: the image has no GitHub CLI. Put a fine-grained, read-only
-  token in `.env` as `BOSUN_GITHUB_TOKEN`, then run `make docker-up`. Agents
+  token in `.env` as `BOSUN_GITHUB_TOKEN`, then run `docker compose up -d`. Agents
   run in the same container as the same user. Anything the container holds
   (this token, the Claude login) is within reach of a command you approve, so
   keep the token read-only.
 - **Agent tools**: agents get git, Python 3.12 with uv, Node.js 24 with npm,
   make, ripgrep and jq. For other toolchains, set for example
   `BOSUN_EXTRA_APT_PACKAGES="build-essential golang"` in `.env` and run
-  `make docker-up`.
+  `docker compose up -d --build`.
 - **Shell sandbox**: Claude Code's OS sandbox can't start inside a container.
   Leave it off; the container is the boundary.
 
-To update, run `git pull && make docker-up`; database migrations run at
-start-up. `make docker-logs` follows the log and `make docker-down` stops
-Bosun.
+To update, run `git pull && docker compose up -d --build`; database
+migrations run at start-up. `docker compose logs -f` follows the log and
+`docker compose down` stops Bosun.
 
 ## Run from source
 
 ```bash
 git clone https://github.com/ArrushC/bosun.git
 cd bosun
-make install      # uv sync + npm install
-make dev          # backend :8787 + Vite :5173 with hot reload
+scripts/dev.sh    # backend :8787 + Vite :5173 with hot reload; installs dependencies on first run
 ```
 
-Open <http://127.0.0.1:5173>. For a single-process build, run `make start` and
-open <http://127.0.0.1:8787>.
+Open <http://127.0.0.1:5173>. If the Docker instance already holds port 8787,
+run `BOSUN_PORT=8788 scripts/dev.sh`.
 
 ## First steps
 
@@ -120,8 +119,7 @@ backend. The demo backend makes no Claude calls.
 ## 1. Connect Claude with your subscription
 
 Bosun runs agents through your own Claude Code login. With Docker, run
-`make docker-login` (or `docker compose exec bosun claude auth login`). From
-source:
+`docker compose exec bosun claude auth login`. From source:
 
 ```bash
 # Use any Claude Code CLI; the bundled one is fine:
@@ -275,10 +273,14 @@ Set `BOSUN_URL` if Bosun is not on `http://127.0.0.1:8787`.
 ## Development
 
 ```bash
-make test        # backend pytest + frontend vitest
-make lint        # ruff, basedpyright, tsc
-make types       # regenerate frontend API types from the OpenAPI schema
-make fixtures    # re-record graph test fixtures from the demo backend
+uv run --directory backend pytest                          # backend tests
+npm --prefix frontend test                                 # frontend tests
+uv run --directory backend ruff check src tests            # lint
+uv run --directory backend ruff format --check src tests   # formatting
+uv run --directory backend basedpyright src                # backend types
+npm --prefix frontend run typecheck                        # frontend types
+npm --prefix frontend run gen:api                          # regenerate frontend API types
+uv run --directory backend python ../scripts/export_fixtures.py   # re-record graph test fixtures
 ```
 
 - The backend is in `backend/src/bosun` (FastAPI, SQLAlchemy and

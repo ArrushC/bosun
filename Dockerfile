@@ -46,9 +46,9 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/app/backend/.venv
 WORKDIR /app/backend
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN uv sync --frozen --no-dev --extra mcp --no-install-project
+RUN uv sync --frozen --no-dev --no-install-project
 COPY backend/src ./src
-RUN uv sync --frozen --no-dev --extra mcp \
+RUN uv sync --frozen --no-dev \
  && python -m compileall -q src \
  && ln -s "$(.venv/bin/python -c 'import claude_agent_sdk, pathlib; print(pathlib.Path(claude_agent_sdk.__file__).parent / "_bundled" / "claude")')" /usr/local/bin/claude
 COPY --from=ui /src/frontend/dist /app/frontend/dist

@@ -60,4 +60,5 @@ async def _pending(services, run_id):  # noqa: ANN001, ANN202
     return [r.id for r in rows]
 
 
-asyncio.run(main(Path(sys.argv[1])))
+DEFAULT_OUT = Path(__file__).resolve().parents[1] / "frontend" / "src" / "test" / "fixtures"
+asyncio.run(main(Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_OUT))

@@ -88,7 +88,7 @@ class Settings(BaseSettings):
         launched_from = os.environ.get("BOSUN_LAUNCH_CWD")
         if launched_from:
             path = Path(launched_from).resolve()
-            # Launched from inside Bosun itself (`make dev`, `make start`): nothing to register.
+            # Launched from inside Bosun itself (`scripts/dev.sh`): nothing to register.
             if not path.is_relative_to(APP_ROOT):
                 return path
         return None
