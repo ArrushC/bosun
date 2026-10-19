@@ -1,0 +1,620 @@
+[
+ {
+  "seq": 108,
+  "id": "evt_492a37a0dd41c705",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.created",
+  "status": "queued",
+  "ts": "2026-10-19T15:01:41.091696+00:00",
+  "data": {
+   "number": 1,
+   "mode": "single",
+   "backend": "demo",
+   "provider": "demo",
+   "model": null,
+   "task_key": "BOS-2",
+   "task_title": "Fixture single-run",
+   "single_role": "implementer",
+   "team_roles": [
+    "researcher",
+    "implementer",
+    "tester",
+    "reviewer"
+   ]
+  }
+ },
+ {
+  "seq": 109,
+  "id": "evt_bb5ccd3c9b9c2e04",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "preparing",
+  "ts": "2026-10-19T15:01:41.096153+00:00",
+  "data": {
+   "from": "queued",
+   "to": "preparing",
+   "reason": null
+  }
+ },
+ {
+  "seq": 110,
+  "id": "evt_dde14532ccf4b2ef",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "workspace.prepared",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.150109+00:00",
+  "data": {
+   "isolation": "worktree",
+   "path": "/tmp/tmpt5fgmunm/data/worktrees/run_00c60855972ec181",
+   "branch": "bosun/bos-2-fixture-single-run-2ec181",
+   "base_branch": "main",
+   "base_commit": "cc318d4aa9e5e1255432bf68900e49a89277a688",
+   "uncommitted_source_changes": false,
+   "base": "main",
+   "notice": null
+  }
+ },
+ {
+  "seq": 111,
+  "id": "evt_e30aaf40037a89aa",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.156001+00:00",
+  "data": {
+   "from": "preparing",
+   "to": "running",
+   "reason": null
+  }
+ },
+ {
+  "seq": 112,
+  "id": "evt_5341d98dd067732a",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "session.created",
+  "status": "pending",
+  "ts": "2026-10-19T15:01:41.158860+00:00",
+  "data": {
+   "role": "implementer",
+   "role_name": "Implementer",
+   "color": "violet",
+   "name": "Implementer",
+   "kind": "agent",
+   "subtask_id": null,
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_00c60855972ec181",
+   "branch": "bosun/bos-2-fixture-single-run-2ec181",
+   "attempt": 1,
+   "prompt": "# Task BOS-2: Fixture single-run\n\nType: implementation\n\nTitle: Fixture single-run\n\n(no description)\n\nComplete this task.\n\nWhen you are done, finish with a concise report in Markdown with these sections:\n## Summary\n## Changes (files touched, or \"none\")\n## Verification (what you ran or checked, with results)\n## Open questions / risks",
+   "permission_profile": "edit_and_test"
+  }
+ },
+ {
+  "seq": 113,
+  "id": "evt_837144ee4077b6e6",
+  "run_id": "run_00c60855972ec181",
+  "task_id": null,
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.161038+00:00",
+  "data": {}
+ },
+ {
+  "seq": 114,
+  "id": "evt_ec8a143102a3d33f",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-19T15:01:41.162015+00:00",
+  "data": {
+   "sdk_session_id": "a5d11a6f-99c3-40de-83e1-adbc2c91cb84",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Edit",
+    "Write",
+    "NotebookEdit",
+    "Bash"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_00c60855972ec181"
+  }
+ },
+ {
+  "seq": 115,
+  "id": "evt_79655e013dc19aa1",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:41.164624+00:00",
+  "data": {
+   "text": "Reading the relevant code before editing.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 116,
+  "id": "evt_dc771a24270e12b5",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.165752+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_001",
+   "name": "Read",
+   "input": {
+    "file_path": "/tmp/tmpt5fgmunm/data/worktrees/run_00c60855972ec181/README.md"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 117,
+  "id": "evt_e246b5889f8f15f4",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.166627+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_001",
+   "name": "Read",
+   "is_error": false,
+   "output": "# Demo project \u2026",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 118,
+  "id": "evt_15311b1d2db2016b",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.168304+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_002",
+   "name": "Write",
+   "input": {
+    "file_path": "/tmp/tmpt5fgmunm/data/worktrees/run_00c60855972ec181/bosun-demo/fixture-single-run.md",
+    "content": "# Implementer notes for tsk_8947364581498646\n\nDemo change made by the implementer agent.\n"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 119,
+  "id": "evt_029cad2121382857",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.169493+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_002",
+   "name": "Write",
+   "is_error": false,
+   "output": "File created successfully at: /tmp/tmpt5fgmunm/data/worktrees/run_00c60855972ec181/bosun-demo/fixture-single-run.md",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 120,
+  "id": "evt_fb1c60b80a31c8d7",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "artifact.file",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.170343+00:00",
+  "data": {
+   "path": "bosun-demo/fixture-single-run.md",
+   "tool": "Write",
+   "tool_use_id": "toolu_demo_10b872_002",
+   "action": "created"
+  }
+ },
+ {
+  "seq": 121,
+  "id": "evt_d898f8ec59b4e18d",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.171978+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_003",
+   "name": "Bash",
+   "input": {
+    "command": "git status --short",
+    "description": "Show changes"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 122,
+  "id": "evt_e5720fcf9c21dc8b",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.173576+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_003",
+   "name": "Bash",
+   "is_error": false,
+   "output": "?? bosun-demo/fixture-single-run.md",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 123,
+  "id": "evt_5bf13a919116de51",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.174436+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_004",
+   "name": "Bash",
+   "input": {
+    "command": "./scripts/migrate.sh --dry-run",
+    "description": "Preview the schema migration"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 124,
+  "id": "evt_b5ffe8cdc1eff2cb",
+  "run_id": "run_00c60855972ec181",
+  "task_id": null,
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "session.status",
+  "status": "waiting_approval",
+  "ts": "2026-10-19T15:01:41.177419+00:00",
+  "data": {}
+ },
+ {
+  "seq": 125,
+  "id": "evt_437f99dee51a991a",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "waiting_approval",
+  "ts": "2026-10-19T15:01:41.179349+00:00",
+  "data": {
+   "from": "running",
+   "to": "waiting_approval",
+   "reason": null
+  }
+ },
+ {
+  "seq": 126,
+  "id": "evt_8102f4b2bae84ea4",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "approval.requested",
+  "status": "pending",
+  "ts": "2026-10-19T15:01:41.181708+00:00",
+  "data": {
+   "approval_id": "apr_52a60f60740b7ecc",
+   "kind": "tool_permission",
+   "title": "Demo agent wants to run `./scripts/migrate.sh --dry-run`",
+   "description": "Preview the schema migration",
+   "tool_name": "Bash",
+   "tool_use_id": "toolu_demo_10b872_004",
+   "tool_input": {
+    "command": "./scripts/migrate.sh --dry-run",
+    "description": "Preview the schema migration"
+   },
+   "subtask_id": null
+  }
+ },
+ {
+  "seq": 127,
+  "id": "evt_3c420042fe0af601",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "approval.resolved",
+  "status": "approved",
+  "ts": "2026-10-19T15:01:41.193905+00:00",
+  "data": {
+   "approval_id": "apr_52a60f60740b7ecc",
+   "kind": "tool_permission",
+   "tool_use_id": "toolu_demo_10b872_004",
+   "decision": "approve",
+   "message": null,
+   "remember": false
+  }
+ },
+ {
+  "seq": 128,
+  "id": "evt_c6eb2120d7e1172f",
+  "run_id": "run_00c60855972ec181",
+  "task_id": null,
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.195870+00:00",
+  "data": {}
+ },
+ {
+  "seq": 129,
+  "id": "evt_1b1eefc501762d36",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.198260+00:00",
+  "data": {
+   "from": "waiting_approval",
+   "to": "running",
+   "reason": null
+  }
+ },
+ {
+  "seq": 130,
+  "id": "evt_8aafabe4b78a622f",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.198997+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_004",
+   "name": "Bash",
+   "is_error": false,
+   "output": "migration plan: 2 statements",
+   "duration_ms": 900,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 131,
+  "id": "evt_a6547949235717d9",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.199719+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_005",
+   "name": "Bash",
+   "input": {
+    "command": "pytest -q",
+    "description": "Run the test suite"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 132,
+  "id": "evt_8055d27f106f503c",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.200518+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_10b872_005",
+   "name": "Bash",
+   "is_error": false,
+   "output": "12 passed in 0.41s",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 133,
+  "id": "evt_cccc24e99fbced9d",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:41.201312+00:00",
+  "data": {
+   "text": "Done. Summarising.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 134,
+  "id": "evt_e3ade4fa939e4f79",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "session.turn_completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.202065+00:00",
+  "data": {
+   "subtype": "success",
+   "is_error": false,
+   "num_turns": 5,
+   "result": "## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-single-run.md`\n\n## Verification\nChecked `git status`. Migration dry-run approved and executed. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "providers": [
+    "demo"
+   ]
+  }
+ },
+ {
+  "seq": 135,
+  "id": "evt_33dd98baba9c1b3d",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": "ses_64de60b94710b872",
+  "agent_id": "ses_64de60b94710b872",
+  "parent_agent_id": null,
+  "type": "session.completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.205114+00:00",
+  "data": {
+   "result": "## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-single-run.md`\n\n## Verification\nChecked `git status`. Migration dry-run approved and executed. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "error": null,
+   "error_kind": null,
+   "num_turns": 6,
+   "duration_ms": 0,
+   "usage": {
+    "input_tokens": 6000,
+    "output_tokens": 900
+   },
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 136,
+  "id": "evt_8a72b8bf7ab7e923",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "artifact.commit",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.235318+00:00",
+  "data": {
+   "commit": "be9ed444ab25b9065c51801056678b309fc09485",
+   "branch": "bosun/bos-2-fixture-single-run-2ec181"
+  }
+ },
+ {
+  "seq": 137,
+  "id": "evt_3434429cd20da580",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.286375+00:00",
+  "data": {
+   "from": "running",
+   "to": "completed",
+   "reason": null
+  }
+ },
+ {
+  "seq": 138,
+  "id": "evt_4585fcf5f07c60c7",
+  "run_id": "run_00c60855972ec181",
+  "task_id": "tsk_8947364581498646",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.287574+00:00",
+  "data": {
+   "summary": "## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-single-run.md`\n\n## Verification\nChecked `git status`. Migration dry-run approved and executed. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "error": null,
+   "error_kind": null,
+   "reason": null,
+   "usage": {
+    "sessions": 1,
+    "num_turns": 6,
+    "input_tokens": 6000,
+    "output_tokens": 900
+   },
+   "diff": {
+    "files": 1,
+    "additions": 3,
+    "deletions": 0,
+    "commits": 1
+   }
+  }
+ }
+]

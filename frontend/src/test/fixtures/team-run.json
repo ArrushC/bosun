@@ -1,0 +1,2270 @@
+[
+ {
+  "seq": 1,
+  "id": "evt_f81064760053eb74",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.created",
+  "status": "queued",
+  "ts": "2026-10-19T15:01:40.559272+00:00",
+  "data": {
+   "number": 1,
+   "mode": "team",
+   "backend": "demo",
+   "provider": "demo",
+   "model": null,
+   "task_key": "BOS-1",
+   "task_title": "Fixture team-run",
+   "single_role": "implementer",
+   "team_roles": [
+    "researcher",
+    "implementer",
+    "tester",
+    "reviewer"
+   ]
+  }
+ },
+ {
+  "seq": 2,
+  "id": "evt_b6755a003f601e6e",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "preparing",
+  "ts": "2026-10-19T15:01:40.570057+00:00",
+  "data": {
+   "from": "queued",
+   "to": "preparing",
+   "reason": null
+  }
+ },
+ {
+  "seq": 3,
+  "id": "evt_0423ebd15da28a62",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "workspace.prepared",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.626670+00:00",
+  "data": {
+   "isolation": "worktree",
+   "path": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c",
+   "branch": "bosun/bos-1-fixture-team-run-32130c",
+   "base_branch": "main",
+   "base_commit": "cc318d4aa9e5e1255432bf68900e49a89277a688",
+   "uncommitted_source_changes": false,
+   "base": "main",
+   "notice": null
+  }
+ },
+ {
+  "seq": 4,
+  "id": "evt_b626676790815aba",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "planning",
+  "ts": "2026-10-19T15:01:40.633924+00:00",
+  "data": {
+   "from": "preparing",
+   "to": "planning",
+   "reason": null
+  }
+ },
+ {
+  "seq": 5,
+  "id": "evt_7c18d814fce0c3a0",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.created",
+  "status": "pending",
+  "ts": "2026-10-19T15:01:40.637943+00:00",
+  "data": {
+   "role": "coordinator",
+   "role_name": "Coordinator",
+   "color": "amber",
+   "name": "Coordinator",
+   "kind": "coordinator",
+   "subtask_id": null,
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c",
+   "branch": "bosun/bos-1-fixture-team-run-32130c",
+   "attempt": 1,
+   "prompt": "# Task BOS-1: Fixture team-run\n\nType: implementation\n\nTitle: Fixture team-run\n\n(no description)\n\nYou are planning how a small team of agents will carry out this task. Investigate the codebase (read-only) as much as you need, then return a plan.\n\nAvailable roles:\n- `researcher` \u2014 Researcher: Explores the existing code, history and documentation; reports findings, relevant files and risks. Never edits.\n- `implementer` \u2014 Implementer: Makes the code changes required by the task, following existing conventions, and verifies them.\n- `tester` \u2014 Tester: Writes and runs tests that cover the change, reports failures with evidence.\n- `reviewer` \u2014 Reviewer: Reviews the change for correctness, maintainability and risk. Read-only.\n\nPlanning rules:\n- The operator asked for a team: use `team` with 2 or more subtasks, but no more agents than the work needs.\n- Use at most 4 subtasks. Prefer fewer, well-scoped subtasks.\n- `depends_on` lists keys of subtasks whose results are needed first. Independent subtasks run in parallel.\n- Subtasks that modify the same files must depend on each other (never edit the same area in parallel).\n- Set `modifies_code` true only for subtasks that will change files.\n- Write `instructions` as a complete brief: the agent receives only its instructions, the task, and the reports of its dependencies.\n- Use only the role keys listed above.\n- Do not put absolute paths or working directories in instructions: every agent gets its own isolated working directory. Refer to files by repository-relative paths.\n\nReturn the plan as the structured output.",
+   "permission_profile": "read_only"
+  }
+ },
+ {
+  "seq": 6,
+  "id": "evt_8d7e28cd266b67b0",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": null,
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.643121+00:00",
+  "data": {}
+ },
+ {
+  "seq": 7,
+  "id": "evt_8b6871015000e257",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.644020+00:00",
+  "data": {
+   "sdk_session_id": "4d21b2f7-f814-429d-9b23-f6c3de7cbb52",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c"
+  }
+ },
+ {
+  "seq": 8,
+  "id": "evt_6ce55668d49d175e",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.646768+00:00",
+  "data": {
+   "text": "Reading the task and surveying the repository before planning.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 9,
+  "id": "evt_20a8d0df5c8967a8",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.647786+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_9de1aa_001",
+   "name": "Glob",
+   "input": {
+    "pattern": "**/*"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 10,
+  "id": "evt_4edcfaf8f998f35f",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.648913+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_9de1aa_001",
+   "name": "Glob",
+   "is_error": false,
+   "output": "README.md\nsrc/\ntests/",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 11,
+  "id": "evt_e8c9c2c0a1f8c986",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.650002+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_9de1aa_002",
+   "name": "Grep",
+   "input": {
+    "pattern": "TODO",
+    "path": "."
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 12,
+  "id": "evt_4b697c9d6f25b1aa",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.650816+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_9de1aa_002",
+   "name": "Grep",
+   "is_error": false,
+   "output": "3 matches",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 13,
+  "id": "evt_3d69970480ad42d3",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.651510+00:00",
+  "data": {
+   "text": "Plan ready: 4 subtask(s), strategy `team`.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 14,
+  "id": "evt_5870b602bbb8642a",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.turn_completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.652295+00:00",
+  "data": {
+   "subtype": "success",
+   "is_error": false,
+   "num_turns": 2,
+   "result": "Plan produced.",
+   "providers": [
+    "demo"
+   ]
+  }
+ },
+ {
+  "seq": 15,
+  "id": "evt_fa40a1123691de92",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.655045+00:00",
+  "data": {
+   "result": "Plan produced.",
+   "error": null,
+   "error_kind": null,
+   "num_turns": 3,
+   "duration_ms": 0,
+   "usage": {
+    "input_tokens": 2400,
+    "output_tokens": 360
+   },
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 16,
+  "id": "evt_291e4ccc1cb6dacc",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "plan.created",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.662854+00:00",
+  "data": {
+   "summary": "Investigate, implement, then test and review in parallel.",
+   "rationale": "Research de-risks the change; testing and review are independent once it lands.",
+   "strategy": "team",
+   "warnings": [],
+   "subtasks": [
+    {
+     "subtask_id": "sub_e42674b05e149b0f",
+     "key": "s1",
+     "title": "Map the affected code",
+     "role": "researcher",
+     "depends_on": [],
+     "modifies_code": false,
+     "instructions": "Find where the behaviour lives, list relevant files and risks."
+    },
+    {
+     "subtask_id": "sub_814649017fa3b8c2",
+     "key": "s2",
+     "title": "Implement the change",
+     "role": "implementer",
+     "depends_on": [
+      "s1"
+     ],
+     "modifies_code": true,
+     "instructions": "Implement the change described in the task using the research notes."
+    },
+    {
+     "subtask_id": "sub_c426e377e98978c1",
+     "key": "s3",
+     "title": "Add regression tests",
+     "role": "tester",
+     "depends_on": [
+      "s2"
+     ],
+     "modifies_code": true,
+     "instructions": "Write tests covering the new behaviour and run the suite."
+    },
+    {
+     "subtask_id": "sub_cdfd0833b56e37a7",
+     "key": "s4",
+     "title": "Review the implementation",
+     "role": "reviewer",
+     "depends_on": [
+      "s2"
+     ],
+     "modifies_code": false,
+     "instructions": "Review correctness, maintainability and risk of the change."
+    }
+   ]
+  }
+ },
+ {
+  "seq": 17,
+  "id": "evt_f49e40b0e8b9c5c4",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.667751+00:00",
+  "data": {
+   "from": "planning",
+   "to": "running",
+   "reason": null
+  }
+ },
+ {
+  "seq": 18,
+  "id": "evt_5e63e9cc84ba6fbe",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_814649017fa3b8c2",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "waiting_dependency",
+  "ts": "2026-10-19T15:01:40.673689+00:00",
+  "data": {
+   "subtask_id": "sub_814649017fa3b8c2",
+   "key": "s2",
+   "title": "Implement the change",
+   "role": "implementer",
+   "from": "pending",
+   "to": "waiting_dependency",
+   "attempt": 0,
+   "session_id": null,
+   "error": null,
+   "depends_on": [
+    "s1"
+   ]
+  }
+ },
+ {
+  "seq": 19,
+  "id": "evt_eba202d5efcee361",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_e42674b05e149b0f",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.677655+00:00",
+  "data": {
+   "subtask_id": "sub_e42674b05e149b0f",
+   "key": "s1",
+   "title": "Map the affected code",
+   "role": "researcher",
+   "from": "pending",
+   "to": "running",
+   "attempt": 1,
+   "session_id": null,
+   "error": null,
+   "depends_on": []
+  }
+ },
+ {
+  "seq": 20,
+  "id": "evt_2368d2f20cf81cfa",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_c426e377e98978c1",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "waiting_dependency",
+  "ts": "2026-10-19T15:01:40.679225+00:00",
+  "data": {
+   "subtask_id": "sub_c426e377e98978c1",
+   "key": "s3",
+   "title": "Add regression tests",
+   "role": "tester",
+   "from": "pending",
+   "to": "waiting_dependency",
+   "attempt": 0,
+   "session_id": null,
+   "error": null,
+   "depends_on": [
+    "s2"
+   ]
+  }
+ },
+ {
+  "seq": 21,
+  "id": "evt_b6a922712aa9eef9",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.created",
+  "status": "pending",
+  "ts": "2026-10-19T15:01:40.684269+00:00",
+  "data": {
+   "role": "researcher",
+   "role_name": "Researcher",
+   "color": "sky",
+   "name": "Researcher: Map the affected code",
+   "kind": "agent",
+   "subtask_id": "sub_e42674b05e149b0f",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c",
+   "branch": "bosun/bos-1-fixture-team-run-32130c",
+   "attempt": 1,
+   "prompt": "# Task BOS-1: Fixture team-run\n\nType: implementation\n\nTitle: Fixture team-run\n\n(no description)\n\n## Your assignment from the coordinator: Map the affected code\nFind where the behaviour lives, list relevant files and risks.\n\n\nFocus on your assignment only; other agents handle the other parts.\nYour working directory is `/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c`; it already contains your teammates' merged work. If the assignment mentions any other directory, ignore it and use repository-relative paths.\n\nWhen you are done, finish with a concise report in Markdown with these sections:\n## Summary\n## Changes (files touched, or \"none\")\n## Verification (what you ran or checked, with results)\n## Open questions / risks",
+   "permission_profile": "read_only"
+  }
+ },
+ {
+  "seq": 22,
+  "id": "evt_52905bf8a41a6bab",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_cdfd0833b56e37a7",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "waiting_dependency",
+  "ts": "2026-10-19T15:01:40.686707+00:00",
+  "data": {
+   "subtask_id": "sub_cdfd0833b56e37a7",
+   "key": "s4",
+   "title": "Review the implementation",
+   "role": "reviewer",
+   "from": "pending",
+   "to": "waiting_dependency",
+   "attempt": 0,
+   "session_id": null,
+   "error": null,
+   "depends_on": [
+    "s2"
+   ]
+  }
+ },
+ {
+  "seq": 23,
+  "id": "evt_19df528d10aaf6fe",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.689648+00:00",
+  "data": {
+   "from_session_id": "ses_10ae7c80f19de1aa",
+   "to_session_id": "ses_3f7856182e36ff91",
+   "kind": "assignment",
+   "subtask": "Map the affected code",
+   "text": "Find where the behaviour lives, list relevant files and risks.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 24,
+  "id": "evt_b56ddad7ed33f0ce",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": null,
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.693163+00:00",
+  "data": {}
+ },
+ {
+  "seq": 25,
+  "id": "evt_fcdf2200d5db6dcb",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.694067+00:00",
+  "data": {
+   "sdk_session_id": "61bf5454-eb2a-437e-9531-76c8d437d1d6",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c"
+  }
+ },
+ {
+  "seq": 26,
+  "id": "evt_76c73b00d1e3b2fe",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.696225+00:00",
+  "data": {
+   "text": "Exploring the codebase to understand the current behaviour.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 27,
+  "id": "evt_39bd2a050bec7c4f",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.696928+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_36ff91_001",
+   "name": "Glob",
+   "input": {
+    "pattern": "**/*.py"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 28,
+  "id": "evt_f942c8436e4f5812",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.698121+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_36ff91_001",
+   "name": "Glob",
+   "is_error": false,
+   "output": "src/app.py\nsrc/util.py\ntests/test_app.py",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 29,
+  "id": "evt_f542b26a0810ae06",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.698849+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_36ff91_002",
+   "name": "Grep",
+   "input": {
+    "pattern": "def ",
+    "path": "src"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 30,
+  "id": "evt_b336b63397145649",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.699715+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_36ff91_002",
+   "name": "Grep",
+   "is_error": false,
+   "output": "src/app.py:3: def handler()",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 31,
+  "id": "evt_a5a754b3e1671f45",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.700500+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_36ff91_003",
+   "name": "Read",
+   "input": {
+    "file_path": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c/README.md"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 32,
+  "id": "evt_d2f4902c126539cf",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.701305+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_36ff91_003",
+   "name": "Read",
+   "is_error": false,
+   "output": "# Demo project \u2026",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 33,
+  "id": "evt_afd608589575ea4d",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.702699+00:00",
+  "data": {
+   "text": "The behaviour lives in `src/app.py`; change is low risk.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 34,
+  "id": "evt_9e43e70d5a9a5da8",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.turn_completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.703413+00:00",
+  "data": {
+   "subtype": "success",
+   "is_error": false,
+   "num_turns": 3,
+   "result": "## Summary\nThe behaviour lives in `src/app.py`; change is low risk.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "providers": [
+    "demo"
+   ]
+  }
+ },
+ {
+  "seq": 35,
+  "id": "evt_46176987cf514ecf",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_3f7856182e36ff91",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.706186+00:00",
+  "data": {
+   "result": "## Summary\nThe behaviour lives in `src/app.py`; change is low risk.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "error": null,
+   "error_kind": null,
+   "num_turns": 4,
+   "duration_ms": 0,
+   "usage": {
+    "input_tokens": 3600,
+    "output_tokens": 540
+   },
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 36,
+  "id": "evt_3e40eb50253f4596",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_e42674b05e149b0f",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.710431+00:00",
+  "data": {
+   "subtask_id": "sub_e42674b05e149b0f",
+   "key": "s1",
+   "title": "Map the affected code",
+   "role": "researcher",
+   "from": "running",
+   "to": "completed",
+   "attempt": 1,
+   "session_id": "ses_3f7856182e36ff91",
+   "error": null,
+   "depends_on": []
+  }
+ },
+ {
+  "seq": 37,
+  "id": "evt_605295ac44b23e65",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_814649017fa3b8c2",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.745865+00:00",
+  "data": {
+   "subtask_id": "sub_814649017fa3b8c2",
+   "key": "s2",
+   "title": "Implement the change",
+   "role": "implementer",
+   "from": "waiting_dependency",
+   "to": "running",
+   "attempt": 1,
+   "session_id": null,
+   "error": null,
+   "depends_on": [
+    "s1"
+   ]
+  }
+ },
+ {
+  "seq": 38,
+  "id": "evt_8f2eb0dcea7ebd03",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.created",
+  "status": "pending",
+  "ts": "2026-10-19T15:01:40.749934+00:00",
+  "data": {
+   "role": "implementer",
+   "role_name": "Implementer",
+   "color": "violet",
+   "name": "Implementer: Implement the change",
+   "kind": "agent",
+   "subtask_id": "sub_814649017fa3b8c2",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s2",
+   "branch": "bosun/bos-1-fixture-team-run-32130c--s2",
+   "attempt": 1,
+   "prompt": "# Task BOS-1: Fixture team-run\n\nType: implementation\n\nTitle: Fixture team-run\n\n(no description)\n\n## Your assignment from the coordinator: Implement the change\nImplement the change described in the task using the research notes.\n\n\n## Reports from your teammates\n### From Researcher (Map the affected code)\n## Summary\nThe behaviour lives in `src/app.py`; change is low risk.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).\n\nFocus on your assignment only; other agents handle the other parts.\nYour working directory is `/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s2`; it already contains your teammates' merged work. If the assignment mentions any other directory, ignore it and use repository-relative paths.\n\nWhen you are done, finish with a concise report in Markdown with these sections:\n## Summary\n## Changes (files touched, or \"none\")\n## Verification (what you ran or checked, with results)\n## Open questions / risks",
+   "permission_profile": "edit_and_test"
+  }
+ },
+ {
+  "seq": 39,
+  "id": "evt_b4ba2292794386a9",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.753148+00:00",
+  "data": {
+   "from_session_id": "ses_10ae7c80f19de1aa",
+   "to_session_id": "ses_ab15326f036a5877",
+   "kind": "assignment",
+   "subtask": "Implement the change",
+   "text": "Implement the change described in the task using the research notes.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 40,
+  "id": "evt_978fc3196f08c9cc",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.755402+00:00",
+  "data": {
+   "from_session_id": "ses_3f7856182e36ff91",
+   "to_session_id": "ses_ab15326f036a5877",
+   "kind": "report",
+   "subtask": "Map the affected code",
+   "text": "## Summary\nThe behaviour lives in `src/app.py`; change is low risk.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 41,
+  "id": "evt_af35cbf54c4ce11e",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": null,
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.759063+00:00",
+  "data": {}
+ },
+ {
+  "seq": 42,
+  "id": "evt_dd653c96e28fba95",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.759986+00:00",
+  "data": {
+   "sdk_session_id": "436f9c5e-4101-4871-915a-7ada86f0ffea",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Edit",
+    "Write",
+    "NotebookEdit",
+    "Bash"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s2"
+  }
+ },
+ {
+  "seq": 43,
+  "id": "evt_a2e6516247a71e27",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.762533+00:00",
+  "data": {
+   "text": "Reading the relevant code before editing.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 44,
+  "id": "evt_8f75e0f7d974adb7",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.763339+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_6a5877_001",
+   "name": "Read",
+   "input": {
+    "file_path": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s2/README.md"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 45,
+  "id": "evt_ba6df299435bba99",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.764500+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_6a5877_001",
+   "name": "Read",
+   "is_error": false,
+   "output": "# Demo project \u2026",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 46,
+  "id": "evt_1d804d5fb6c85c8a",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.765864+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_6a5877_002",
+   "name": "Write",
+   "input": {
+    "file_path": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s2/bosun-demo/fixture-team-run.md",
+    "content": "# Implementer notes for tsk_2207b274b28a03e7\n\nDemo change made by the implementer agent.\n"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 47,
+  "id": "evt_0d96eaa682afe48d",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.766870+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_6a5877_002",
+   "name": "Write",
+   "is_error": false,
+   "output": "File created successfully at: /tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s2/bosun-demo/fixture-team-run.md",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 48,
+  "id": "evt_bd74d1dd10233a1b",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "artifact.file",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.768210+00:00",
+  "data": {
+   "path": "bosun-demo/fixture-team-run.md",
+   "tool": "Write",
+   "tool_use_id": "toolu_demo_6a5877_002",
+   "action": "created"
+  }
+ },
+ {
+  "seq": 49,
+  "id": "evt_f12c4640a2c81752",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.770716+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_6a5877_003",
+   "name": "Bash",
+   "input": {
+    "command": "git status --short",
+    "description": "Show changes"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 50,
+  "id": "evt_1b360cae1d70ebf1",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.771582+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_6a5877_003",
+   "name": "Bash",
+   "is_error": false,
+   "output": "?? bosun-demo/fixture-team-run.md",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 51,
+  "id": "evt_af67eee794a4b42d",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.772420+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_6a5877_004",
+   "name": "Bash",
+   "input": {
+    "command": "pytest -q",
+    "description": "Run the test suite"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 52,
+  "id": "evt_0c5b68c8766da78b",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.773708+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_6a5877_004",
+   "name": "Bash",
+   "is_error": false,
+   "output": "12 passed in 0.41s",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 53,
+  "id": "evt_e897072eb2fb470c",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.774461+00:00",
+  "data": {
+   "text": "Done. Summarising.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 54,
+  "id": "evt_6ad16210c3448bc5",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.turn_completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.775153+00:00",
+  "data": {
+   "subtype": "success",
+   "is_error": false,
+   "num_turns": 4,
+   "result": "## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-team-run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "providers": [
+    "demo"
+   ]
+  }
+ },
+ {
+  "seq": 55,
+  "id": "evt_3ef0a0eb2f0893c4",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.778602+00:00",
+  "data": {
+   "result": "## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-team-run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "error": null,
+   "error_kind": null,
+   "num_turns": 5,
+   "duration_ms": 0,
+   "usage": {
+    "input_tokens": 4800,
+    "output_tokens": 720
+   },
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 56,
+  "id": "evt_a631dae20a624ed7",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_ab15326f036a5877",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": null,
+  "type": "artifact.commit",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.838210+00:00",
+  "data": {
+   "subtask_id": "sub_814649017fa3b8c2",
+   "key": "s2",
+   "commit": "e947a43784270f4a4d7341ba7b6a42007be910b3",
+   "merge_commit": "180d05a09fc0e9ba2b9c2de036f446d30c84cfa4",
+   "branch": "bosun/bos-1-fixture-team-run-32130c--s2"
+  }
+ },
+ {
+  "seq": 57,
+  "id": "evt_00620061d62ef6c0",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_814649017fa3b8c2",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.841562+00:00",
+  "data": {
+   "subtask_id": "sub_814649017fa3b8c2",
+   "key": "s2",
+   "title": "Implement the change",
+   "role": "implementer",
+   "from": "running",
+   "to": "completed",
+   "attempt": 1,
+   "session_id": "ses_ab15326f036a5877",
+   "error": null,
+   "depends_on": [
+    "s1"
+   ]
+  }
+ },
+ {
+  "seq": 58,
+  "id": "evt_d4010689d7a775b3",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_cdfd0833b56e37a7",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.858029+00:00",
+  "data": {
+   "subtask_id": "sub_cdfd0833b56e37a7",
+   "key": "s4",
+   "title": "Review the implementation",
+   "role": "reviewer",
+   "from": "waiting_dependency",
+   "to": "running",
+   "attempt": 1,
+   "session_id": null,
+   "error": null,
+   "depends_on": [
+    "s2"
+   ]
+  }
+ },
+ {
+  "seq": 59,
+  "id": "evt_7da8d6ffcc9a2df0",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.created",
+  "status": "pending",
+  "ts": "2026-10-19T15:01:40.871052+00:00",
+  "data": {
+   "role": "reviewer",
+   "role_name": "Reviewer",
+   "color": "rose",
+   "name": "Reviewer: Review the implementation",
+   "kind": "agent",
+   "subtask_id": "sub_cdfd0833b56e37a7",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c",
+   "branch": "bosun/bos-1-fixture-team-run-32130c",
+   "attempt": 1,
+   "prompt": "# Task BOS-1: Fixture team-run\n\nType: implementation\n\nTitle: Fixture team-run\n\n(no description)\n\n## Your assignment from the coordinator: Review the implementation\nReview correctness, maintainability and risk of the change.\n\n\n## Reports from your teammates\n### From Implementer (Implement the change)\n## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-team-run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.\n\nFocus on your assignment only; other agents handle the other parts.\nYour working directory is `/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c`; it already contains your teammates' merged work. If the assignment mentions any other directory, ignore it and use repository-relative paths.\n\nWhen you are done, finish with a concise report in Markdown with these sections:\n## Summary\n## Changes (files touched, or \"none\")\n## Verification (what you ran or checked, with results)\n## Open questions / risks",
+   "permission_profile": "read_only"
+  }
+ },
+ {
+  "seq": 60,
+  "id": "evt_5d860c48e879944e",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.874897+00:00",
+  "data": {
+   "from_session_id": "ses_10ae7c80f19de1aa",
+   "to_session_id": "ses_9dee209a4974dee5",
+   "kind": "assignment",
+   "subtask": "Review the implementation",
+   "text": "Review correctness, maintainability and risk of the change.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 61,
+  "id": "evt_ee439b24ae8f013e",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.879415+00:00",
+  "data": {
+   "from_session_id": "ses_ab15326f036a5877",
+   "to_session_id": "ses_9dee209a4974dee5",
+   "kind": "report",
+   "subtask": "Implement the change",
+   "text": "## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-team-run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 62,
+  "id": "evt_71cf58aed1107510",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_c426e377e98978c1",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.883909+00:00",
+  "data": {
+   "subtask_id": "sub_c426e377e98978c1",
+   "key": "s3",
+   "title": "Add regression tests",
+   "role": "tester",
+   "from": "waiting_dependency",
+   "to": "running",
+   "attempt": 1,
+   "session_id": null,
+   "error": null,
+   "depends_on": [
+    "s2"
+   ]
+  }
+ },
+ {
+  "seq": 63,
+  "id": "evt_4632ecca51404a40",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": null,
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.886312+00:00",
+  "data": {}
+ },
+ {
+  "seq": 64,
+  "id": "evt_8981aec001c411c6",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.888832+00:00",
+  "data": {
+   "sdk_session_id": "f4b8df7a-ea6c-4fbd-9270-b2ee9ffb850d",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Bash"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c"
+  }
+ },
+ {
+  "seq": 65,
+  "id": "evt_742a04a5c06ecca0",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.created",
+  "status": "pending",
+  "ts": "2026-10-19T15:01:40.892747+00:00",
+  "data": {
+   "role": "tester",
+   "role_name": "Tester",
+   "color": "emerald",
+   "name": "Tester: Add regression tests",
+   "kind": "agent",
+   "subtask_id": "sub_c426e377e98978c1",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s3",
+   "branch": "bosun/bos-1-fixture-team-run-32130c--s3",
+   "attempt": 1,
+   "prompt": "# Task BOS-1: Fixture team-run\n\nType: implementation\n\nTitle: Fixture team-run\n\n(no description)\n\n## Your assignment from the coordinator: Add regression tests\nWrite tests covering the new behaviour and run the suite.\n\n\n## Reports from your teammates\n### From Implementer (Implement the change)\n## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-team-run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.\n\nFocus on your assignment only; other agents handle the other parts.\nYour working directory is `/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s3`; it already contains your teammates' merged work. If the assignment mentions any other directory, ignore it and use repository-relative paths.\n\nWhen you are done, finish with a concise report in Markdown with these sections:\n## Summary\n## Changes (files touched, or \"none\")\n## Verification (what you ran or checked, with results)\n## Open questions / risks",
+   "permission_profile": "edit_and_test"
+  }
+ },
+ {
+  "seq": 66,
+  "id": "evt_0102926770fd25a3",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.896318+00:00",
+  "data": {
+   "text": "Exploring the codebase to understand the current behaviour.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 67,
+  "id": "evt_8e31349db4d28a62",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.897938+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_74dee5_001",
+   "name": "Glob",
+   "input": {
+    "pattern": "**/*.py"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 68,
+  "id": "evt_f74fb54d113c06c4",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.900232+00:00",
+  "data": {
+   "from_session_id": "ses_10ae7c80f19de1aa",
+   "to_session_id": "ses_0b2815de142ced1a",
+   "kind": "assignment",
+   "subtask": "Add regression tests",
+   "text": "Write tests covering the new behaviour and run the suite.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 69,
+  "id": "evt_aa51ab791646fb03",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.900958+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_74dee5_001",
+   "name": "Glob",
+   "is_error": false,
+   "output": "src/app.py\nsrc/util.py\ntests/test_app.py",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 70,
+  "id": "evt_0db0d34988d272da",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.901768+00:00",
+  "data": {
+   "from_session_id": "ses_ab15326f036a5877",
+   "to_session_id": "ses_0b2815de142ced1a",
+   "kind": "report",
+   "subtask": "Implement the change",
+   "text": "## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-team-run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 71,
+  "id": "evt_438d077cff3a288c",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.902804+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_74dee5_002",
+   "name": "Grep",
+   "input": {
+    "pattern": "def ",
+    "path": "src"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 72,
+  "id": "evt_3c72d10e8b48ca9a",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.904694+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_74dee5_002",
+   "name": "Grep",
+   "is_error": false,
+   "output": "src/app.py:3: def handler()",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 73,
+  "id": "evt_7f1012c9e101016e",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": null,
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.906450+00:00",
+  "data": {}
+ },
+ {
+  "seq": 74,
+  "id": "evt_2123b3701ecd5702",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.907386+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_74dee5_003",
+   "name": "Read",
+   "input": {
+    "file_path": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c/README.md"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 75,
+  "id": "evt_ef09411b544e4894",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.908240+00:00",
+  "data": {
+   "sdk_session_id": "c178cdeb-dfa5-4dd2-99b7-bf8e0220ea96",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Edit",
+    "Write",
+    "NotebookEdit",
+    "Bash"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s3"
+  }
+ },
+ {
+  "seq": 76,
+  "id": "evt_b50c165cd62dc7a9",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.909277+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_74dee5_003",
+   "name": "Read",
+   "is_error": false,
+   "output": "# Demo project \u2026",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 77,
+  "id": "evt_ab8e96d0b3f72483",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.910993+00:00",
+  "data": {
+   "text": "Looks correct; consider an extra edge-case test.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 78,
+  "id": "evt_00b933b0631bf5ac",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.913771+00:00",
+  "data": {
+   "text": "Reading the relevant code before editing.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 79,
+  "id": "evt_4bf2bc95f56ce234",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.turn_completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.915065+00:00",
+  "data": {
+   "subtype": "success",
+   "is_error": false,
+   "num_turns": 3,
+   "result": "## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "providers": [
+    "demo"
+   ]
+  }
+ },
+ {
+  "seq": 80,
+  "id": "evt_d0971ce2f39c9506",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.915947+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_2ced1a_001",
+   "name": "Read",
+   "input": {
+    "file_path": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s3/README.md"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 81,
+  "id": "evt_73c4b5e2504252e2",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.917986+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_2ced1a_001",
+   "name": "Read",
+   "is_error": false,
+   "output": "# Demo project \u2026",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 82,
+  "id": "evt_286ee014de7442c5",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_9dee209a4974dee5",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.920109+00:00",
+  "data": {
+   "result": "## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "error": null,
+   "error_kind": null,
+   "num_turns": 4,
+   "duration_ms": 0,
+   "usage": {
+    "input_tokens": 3600,
+    "output_tokens": 540
+   },
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 83,
+  "id": "evt_0506f94cc7060f85",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.921365+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_2ced1a_002",
+   "name": "Write",
+   "input": {
+    "file_path": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s3/bosun-demo/test_fixture_team_run.md",
+    "content": "# Tester notes for tsk_2207b274b28a03e7\n\nDemo change made by the tester agent.\n"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 84,
+  "id": "evt_df9e1ae1d4ef3f81",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.923306+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_2ced1a_002",
+   "name": "Write",
+   "is_error": false,
+   "output": "File created successfully at: /tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c__s3/bosun-demo/test_fixture_team_run.md",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 85,
+  "id": "evt_e8d30997b600d3c6",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "artifact.file",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.926193+00:00",
+  "data": {
+   "path": "bosun-demo/test_fixture_team_run.md",
+   "tool": "Write",
+   "tool_use_id": "toolu_demo_2ced1a_002",
+   "action": "created"
+  }
+ },
+ {
+  "seq": 86,
+  "id": "evt_9567836c594d0169",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_cdfd0833b56e37a7",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.927582+00:00",
+  "data": {
+   "subtask_id": "sub_cdfd0833b56e37a7",
+   "key": "s4",
+   "title": "Review the implementation",
+   "role": "reviewer",
+   "from": "running",
+   "to": "completed",
+   "attempt": 1,
+   "session_id": "ses_9dee209a4974dee5",
+   "error": null,
+   "depends_on": [
+    "s2"
+   ]
+  }
+ },
+ {
+  "seq": 87,
+  "id": "evt_395989c336f42e8a",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.930159+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_2ced1a_003",
+   "name": "Bash",
+   "input": {
+    "command": "git status --short",
+    "description": "Show changes"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 88,
+  "id": "evt_aef28b440f51f7c5",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.931224+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_2ced1a_003",
+   "name": "Bash",
+   "is_error": false,
+   "output": "?? bosun-demo/test_fixture_team_run.md",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 89,
+  "id": "evt_d895fd4c2f1876dc",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-19T15:01:40.932076+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_2ced1a_004",
+   "name": "Bash",
+   "input": {
+    "command": "pytest -q",
+    "description": "Run the test suite"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 90,
+  "id": "evt_12f3d859cf8ef6cd",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.932963+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_2ced1a_004",
+   "name": "Bash",
+   "is_error": false,
+   "output": "12 passed in 0.41s",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 91,
+  "id": "evt_0060b2f70bb289e4",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.933677+00:00",
+  "data": {
+   "text": "Done. Summarising.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 92,
+  "id": "evt_fc0f434372982bf7",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.turn_completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.934302+00:00",
+  "data": {
+   "subtype": "success",
+   "is_error": false,
+   "num_turns": 4,
+   "result": "## Summary\nDemo tester work completed.\n\n## Changes\n- `bosun-demo/test_fixture_team_run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "providers": [
+    "demo"
+   ]
+  }
+ },
+ {
+  "seq": 93,
+  "id": "evt_9628419a56562a96",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": "ses_10ae7c80f19de1aa",
+  "type": "session.completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.937725+00:00",
+  "data": {
+   "result": "## Summary\nDemo tester work completed.\n\n## Changes\n- `bosun-demo/test_fixture_team_run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "error": null,
+   "error_kind": null,
+   "num_turns": 5,
+   "duration_ms": 0,
+   "usage": {
+    "input_tokens": 4800,
+    "output_tokens": 720
+   },
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 94,
+  "id": "evt_44e3c3e20164f966",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_0b2815de142ced1a",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": null,
+  "type": "artifact.commit",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.986748+00:00",
+  "data": {
+   "subtask_id": "sub_c426e377e98978c1",
+   "key": "s3",
+   "commit": "82d533943842c3f460d03ef8735dbd0f7c6dd6f1",
+   "merge_commit": "c995202cd04c749595b51c9f9f70f1b7bb2e1ce5",
+   "branch": "bosun/bos-1-fixture-team-run-32130c--s3"
+  }
+ },
+ {
+  "seq": 95,
+  "id": "evt_bb4174f0c3c80b39",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": "subtask:sub_c426e377e98978c1",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:40.989107+00:00",
+  "data": {
+   "subtask_id": "sub_c426e377e98978c1",
+   "key": "s3",
+   "title": "Add regression tests",
+   "role": "tester",
+   "from": "running",
+   "to": "completed",
+   "attempt": 1,
+   "session_id": "ses_0b2815de142ced1a",
+   "error": null,
+   "depends_on": [
+    "s2"
+   ]
+  }
+ },
+ {
+  "seq": 96,
+  "id": "evt_255c37866af86174",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_3f7856182e36ff91",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.993371+00:00",
+  "data": {
+   "from_session_id": "ses_3f7856182e36ff91",
+   "to_session_id": "ses_10ae7c80f19de1aa",
+   "kind": "report",
+   "subtask": "Map the affected code",
+   "text": "## Summary\nThe behaviour lives in `src/app.py`; change is low risk.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 97,
+  "id": "evt_f004158fe23f27ca",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_ab15326f036a5877",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.994422+00:00",
+  "data": {
+   "from_session_id": "ses_ab15326f036a5877",
+   "to_session_id": "ses_10ae7c80f19de1aa",
+   "kind": "report",
+   "subtask": "Implement the change",
+   "text": "## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-team-run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 98,
+  "id": "evt_27527f3ed2d60572",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_0b2815de142ced1a",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.995186+00:00",
+  "data": {
+   "from_session_id": "ses_0b2815de142ced1a",
+   "to_session_id": "ses_10ae7c80f19de1aa",
+   "kind": "report",
+   "subtask": "Add regression tests",
+   "text": "## Summary\nDemo tester work completed.\n\n## Changes\n- `bosun-demo/test_fixture_team_run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 99,
+  "id": "evt_b843f50c18e0ad96",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_9dee209a4974dee5",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-19T15:01:40.995907+00:00",
+  "data": {
+   "from_session_id": "ses_9dee209a4974dee5",
+   "to_session_id": "ses_10ae7c80f19de1aa",
+   "kind": "report",
+   "subtask": "Review the implementation",
+   "text": "## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 100,
+  "id": "evt_3aac24f6f2a1e778",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.resumed",
+  "status": "pending",
+  "ts": "2026-10-19T15:01:40.998934+00:00",
+  "data": {
+   "role": "coordinator",
+   "role_name": "Coordinator",
+   "color": "amber",
+   "name": "Coordinator",
+   "kind": "coordinator",
+   "subtask_id": null,
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c",
+   "branch": "bosun/bos-1-fixture-team-run-32130c",
+   "attempt": 1,
+   "prompt": "Your team has finished. Here are the reports, routed to you by Bosun:\n\n### Map the affected code \u2014 Researcher (completed)\n## Summary\nThe behaviour lives in `src/app.py`; change is low risk.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).\n\n### Implement the change \u2014 Implementer (completed)\n## Summary\nDemo implementer work completed.\n\n## Changes\n- `bosun-demo/fixture-team-run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.\n\n### Add regression tests \u2014 Tester (completed)\n## Summary\nDemo tester work completed.\n\n## Changes\n- `bosun-demo/test_fixture_team_run.md`\n\n## Verification\nChecked `git status`. Ran `pytest -q`: 12 passed.\n\n## Open questions / risks\nDemo output only.\n\n### Review the implementation \u2014 Reviewer (completed)\n## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).\n\nWrite the final summary for the human reviewer in Markdown:\n## Outcome\n## What changed\n## Verification\n## Risks and follow-ups\nBe specific and concise. Do not make further changes.",
+   "permission_profile": "read_only"
+  }
+ },
+ {
+  "seq": 101,
+  "id": "evt_d2f12a65a1867f71",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": null,
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-19T15:01:41.001948+00:00",
+  "data": {}
+ },
+ {
+  "seq": 102,
+  "id": "evt_c9eb9417c7ac5a07",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-19T15:01:41.002941+00:00",
+  "data": {
+   "sdk_session_id": "4d21b2f7-f814-429d-9b23-f6c3de7cbb52",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpt5fgmunm/data/worktrees/run_f2eaa294ad32130c"
+  }
+ },
+ {
+  "seq": 103,
+  "id": "evt_115a35eca18efb26",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-19T15:01:41.006296+00:00",
+  "data": {
+   "text": "Consolidating the team's reports.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 104,
+  "id": "evt_bea69d1260fdec09",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.turn_completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.007856+00:00",
+  "data": {
+   "subtype": "success",
+   "is_error": false,
+   "num_turns": 0,
+   "result": "## Outcome\nThe change was implemented, tested and reviewed by the demo team.\n\n## What changed\n- Demo notes file updated in the worktree\n- Regression test added\n\n## Verification\n- Demo test command approved and executed (simulated)\n\n## Risks and follow-ups\n- This is demo output; run with Claude for real changes.",
+   "providers": [
+    "demo"
+   ]
+  }
+ },
+ {
+  "seq": 105,
+  "id": "evt_f449344936553cec",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": "ses_10ae7c80f19de1aa",
+  "agent_id": "ses_10ae7c80f19de1aa",
+  "parent_agent_id": null,
+  "type": "session.completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.010704+00:00",
+  "data": {
+   "result": "## Outcome\nThe change was implemented, tested and reviewed by the demo team.\n\n## What changed\n- Demo notes file updated in the worktree\n- Regression test added\n\n## Verification\n- Demo test command approved and executed (simulated)\n\n## Risks and follow-ups\n- This is demo output; run with Claude for real changes.",
+   "error": null,
+   "error_kind": null,
+   "num_turns": 1,
+   "duration_ms": 0,
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0
+   },
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 106,
+  "id": "evt_e6a016fee220989e",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.062879+00:00",
+  "data": {
+   "from": "running",
+   "to": "completed",
+   "reason": null
+  }
+ },
+ {
+  "seq": 107,
+  "id": "evt_07528abbec5a4baa",
+  "run_id": "run_f2eaa294ad32130c",
+  "task_id": "tsk_2207b274b28a03e7",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.completed",
+  "status": "completed",
+  "ts": "2026-10-19T15:01:41.063716+00:00",
+  "data": {
+   "summary": "## Outcome\nThe change was implemented, tested and reviewed by the demo team.\n\n## What changed\n- Demo notes file updated in the worktree\n- Regression test added\n\n## Verification\n- Demo test command approved and executed (simulated)\n\n## Risks and follow-ups\n- This is demo output; run with Claude for real changes.",
+   "error": null,
+   "error_kind": null,
+   "reason": null,
+   "usage": {
+    "sessions": 5,
+    "num_turns": 22,
+    "input_tokens": 19200,
+    "output_tokens": 2880
+   },
+   "diff": {
+    "files": 2,
+    "additions": 6,
+    "deletions": 0,
+    "commits": 4
+   }
+  }
+ }
+]
