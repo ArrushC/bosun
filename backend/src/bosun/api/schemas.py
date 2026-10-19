@@ -27,6 +27,8 @@ class SandboxSupport(Schema):
     platform: str
     supported: bool
     missing: list[str]
+    # Running in a container: shell commands are confined to it and its mounts.
+    container: bool = False
 
 
 class MetaOut(Schema):

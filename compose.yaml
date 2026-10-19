@@ -1,0 +1,42 @@
+# Self-hosted Bosun. First run `make docker-setup` (it fills in .env), then
+# `docker compose up -d --build` and `make docker-login`. See README → "Run with Docker".
+name: bosun
+
+services:
+  bosun:
+    build:
+      context: .
+      args:
+        BOSUN_UID: ${BOSUN_UID:-1000}
+        BOSUN_GID: ${BOSUN_GID:-1000}
+        EXTRA_APT_PACKAGES: ${BOSUN_EXTRA_APT_PACKAGES:-}
+    image: bosun:local
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Listen on the container's interfaces; `ports` below keeps it on your
+      # machine's loopback. Bosun only accepts this inside a container.
+      BOSUN_HOST: 0.0.0.0
+      BOSUN_PORT: "8787"
+      BOSUN_PUBLISHED_ON_LOOPBACK: "true"
+      BOSUN_PROJECTS_DIR: ${BOSUN_PROJECTS_DIR:?Set BOSUN_PROJECTS_DIR in .env (run make docker-setup)}
+      BOSUN_DATA_DIR: ${BOSUN_DOCKER_DATA_DIR:?Set BOSUN_DOCKER_DATA_DIR in .env (run make docker-setup)}
+    ports:
+      # Never publish on all interfaces: the web UI has no login.
+      - "127.0.0.1:${BOSUN_PORT:-8787}:8787"
+    volumes:
+      # Same path inside and out, so paths in Bosun and the git worktree links
+      # it writes into your repositories are valid on your machine too.
+      - ${BOSUN_PROJECTS_DIR}:${BOSUN_PROJECTS_DIR}
+      - ${BOSUN_DOCKER_DATA_DIR}:${BOSUN_DOCKER_DATA_DIR}
+      # Home of the container user: your Claude Code login and tool caches.
+      - home:/home/bosun
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    # Lets Bosun mark active runs as interrupted before it stops.
+    stop_grace_period: 30s
+
+volumes:
+  home:

@@ -359,15 +359,26 @@ def test_role_shell_rules_enable_only_those_commands() -> None:
     assert "Bash(git diff:*)" in policy.auto_allow and "Edit" not in policy.tools
 
 
-def test_agent_shells_do_not_inherit_the_app_virtualenv(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_agent_shells_do_not_inherit_the_app_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    import os
+
     from bosun.agents import providers
 
+    for name in [n for n in os.environ if n.startswith("BOSUN_")]:
+        monkeypatch.delenv(name)
     monkeypatch.setattr(providers.sys, "prefix", "/opt/mc/.venv")
     monkeypatch.setattr(providers.sys, "base_prefix", "/usr")
     monkeypatch.setenv("PATH", "/opt/mc/.venv/bin:/usr/local/bin:/usr/bin")
     monkeypatch.setenv("VIRTUAL_ENV", "/opt/mc/.venv")
+    monkeypatch.setenv("BOSUN_GITHUB_TOKEN", "ghp_" + "a" * 36)
+    monkeypatch.setenv("BOSUN_PORT", "8787")
     overrides = providers._app_environment_overrides()
-    assert overrides == {"PATH": "/usr/local/bin:/usr/bin", "VIRTUAL_ENV": ""}
+    assert overrides == {
+        "PATH": "/usr/local/bin:/usr/bin",
+        "VIRTUAL_ENV": "",
+        "BOSUN_GITHUB_TOKEN": "",
+        "BOSUN_PORT": "",
+    }
 
 
 # -- startup workspace -------------------------------------------------------------------
@@ -387,3 +398,31 @@ def test_startup_workspace_is_the_launch_directory_unless_inside_bosun(
 
     configured = Settings(_env_file=None, initial_workspace=tmp_path / "x")  # pyright: ignore[reportCallIssue]
     assert configured.startup_workspace() == (tmp_path / "x").resolve()
+
+    monkeypatch.setenv("BOSUN_LAUNCH_CWD", str(APP_ROOT))
+    projects = Settings(_env_file=None, projects_dir=tmp_path)  # pyright: ignore[reportCallIssue]
+    assert projects.startup_workspace() is None
+    assert projects.default_initial_workspace() == tmp_path.resolve()
+
+
+# -- bind address ------------------------------------------------------------------------
+
+
+def test_bosun_listens_beyond_loopback_only_when_that_cannot_expose_it() -> None:
+    from bosun.main import check_bind_address
+
+    def settings(**values: object) -> Settings:
+        return Settings(_env_file=None, **values)  # pyright: ignore[reportCallIssue]
+
+    check_bind_address(settings(), in_container=False)
+    check_bind_address(
+        settings(host="0.0.0.0", allow_remote=True, auth_token="t"), in_container=False
+    )
+    check_bind_address(settings(host="0.0.0.0", published_on_loopback=True), in_container=True)
+    with pytest.raises(RuntimeError, match="Refusing to bind"):
+        check_bind_address(settings(host="0.0.0.0"), in_container=True)
+    with pytest.raises(RuntimeError, match="Refusing to bind"):
+        check_bind_address(settings(host="0.0.0.0", allow_remote=True), in_container=False)
+    # The loopback-publish promise only means something inside a container.
+    with pytest.raises(RuntimeError, match="inside a container"):
+        check_bind_address(settings(host="0.0.0.0", published_on_loopback=True), in_container=False)

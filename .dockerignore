@@ -1,0 +1,11 @@
+# The image needs only the backend package and the frontend sources.
+*
+!backend/pyproject.toml
+!backend/uv.lock
+!backend/src/
+!frontend/
+frontend/node_modules
+frontend/dist
+frontend/openapi.json
+**/__pycache__
+**/*.tsbuildinfo

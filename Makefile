@@ -1,4 +1,7 @@
-.PHONY: help install dev start build test test-backend test-frontend lint typecheck types fixtures clean
+.PHONY: help install dev start build test test-backend test-frontend lint typecheck types fixtures clean \
+	docker-setup docker-up docker-down docker-login docker-logs
+
+COMPOSE ?= docker compose
 
 help:
 	@echo "make install   Install backend (uv) and frontend (npm) dependencies"
@@ -7,6 +10,12 @@ help:
 	@echo "make test      Run backend and frontend tests"
 	@echo "make lint      Lint and type-check backend and frontend"
 	@echo "make types     Regenerate frontend API types from the backend OpenAPI schema"
+	@echo ""
+	@echo "make docker-setup [PROJECTS=dir]  Write the Docker settings to .env"
+	@echo "make docker-up     Build the image and start Bosun (http://127.0.0.1:8787)"
+	@echo "make docker-login  Sign the container's Claude Code in to your subscription"
+	@echo "make docker-logs   Follow the server log"
+	@echo "make docker-down   Stop Bosun (data and login are kept)"
 
 install:
 	cd backend && uv sync --all-extras
@@ -45,3 +54,18 @@ fixtures:
 
 clean:
 	rm -rf frontend/dist backend/.pytest_cache .data
+
+docker-setup:
+	@./scripts/docker-setup.sh $(PROJECTS)
+
+docker-up:
+	$(COMPOSE) up -d --build
+
+docker-down:
+	$(COMPOSE) down
+
+docker-login:
+	$(COMPOSE) exec bosun claude auth login
+
+docker-logs:
+	$(COMPOSE) logs -f bosun

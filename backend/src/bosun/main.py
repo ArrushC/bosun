@@ -32,7 +32,7 @@ from bosun.api.routes import (
     workspaces,
     ws,
 )
-from bosun.config import Settings, get_settings
+from bosun.config import Settings, get_settings, running_in_container
 from bosun.db.migrate import upgrade_to_head
 from bosun.db.models import Workspace
 from bosun.db.session import Database
@@ -76,6 +76,23 @@ async def _register_initial_workspace(services: Services) -> None:
         log.exception("Initial workspace scan failed")
 
 
+def check_bind_address(cfg: Settings, *, in_container: bool) -> None:
+    """Bosun executes code: listen beyond loopback only when that cannot expose it."""
+    if cfg.host in ("127.0.0.1", "localhost", "::1") or (cfg.allow_remote and cfg.auth_token):
+        return
+    if cfg.published_on_loopback:
+        if in_container:
+            return
+        raise RuntimeError(
+            "BOSUN_PUBLISHED_ON_LOOPBACK only applies inside a container whose port is "
+            "published on the host's loopback (see compose.yaml)."
+        )
+    raise RuntimeError(
+        f"Refusing to bind to {cfg.host}: Bosun executes code. Set BOSUN_ALLOW_REMOTE=true and "
+        "BOSUN_AUTH_TOKEN to expose it beyond localhost."
+    )
+
+
 def create_app(
     cfg: Settings | None = None,
     *,
@@ -85,13 +102,7 @@ def create_app(
 ) -> FastAPI:
     cfg = cfg or get_settings()
     configure_logging(cfg.log_level, cfg.log_json)
-    if cfg.host not in ("127.0.0.1", "localhost", "::1") and not (
-        cfg.allow_remote and cfg.auth_token
-    ):
-        raise RuntimeError(
-            f"Refusing to bind to {cfg.host}: Bosun executes code. Set BOSUN_ALLOW_REMOTE=true and "
-            "BOSUN_AUTH_TOKEN to expose it beyond localhost."
-        )
+    check_bind_address(cfg, in_container=running_in_container())
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

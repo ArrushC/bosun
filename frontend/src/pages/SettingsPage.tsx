@@ -317,7 +317,12 @@ export function SettingsPage() {
                   checked={ex.sandbox_bash}
                   onChange={(sandbox_bash) => setEx({ sandbox_bash })}
                 />
-                {ex.sandbox_bash && meta && !meta.sandbox.supported && (
+                {meta?.sandbox.container && (
+                  <Notice tone={ex.sandbox_bash ? "warn" : undefined} className="ml-12">
+                    Bosun is running in a container, so agents' shell commands can only reach the container and the folders mounted into it. Claude Code's sandbox can't start inside a container{ex.sandbox_bash ? ": runs will stop before doing anything while this is on." : ", so leave this off."}
+                  </Notice>
+                )}
+                {ex.sandbox_bash && meta && !meta.sandbox.supported && !meta.sandbox.container && (
                   <Notice tone="warn" className="ml-12">
                     {meta.sandbox.missing.length
                       ? `This machine is missing ${meta.sandbox.missing.join(" and ")}. Runs will stop before doing anything until ${meta.sandbox.missing.length > 1 ? "they are" : "it is"} installed.`

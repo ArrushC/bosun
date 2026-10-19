@@ -67,18 +67,19 @@ def _blank_inherited_billing_env() -> dict[str, str]:
 
 
 def _app_environment_overrides() -> dict[str, str]:
-    """Keep Bosun's own Python environment out of agent shells.
+    """Keep Bosun's own environment out of agent shells.
 
-    Started with `uv run`, the backend's virtualenv is first on PATH; agents would
-    otherwise run the user's tests with Bosun's interpreter.
+    Bosun's settings (tokens and keys included, as passed to a container) are
+    blanked. Started with `uv run`, the backend's virtualenv is first on PATH;
+    agents would otherwise run the user's tests with Bosun's interpreter.
     """
+    overrides = {name: "" for name in os.environ if name.startswith("BOSUN_")}
     if sys.prefix == sys.base_prefix:
-        return {}
+        return overrides
     venv_bin = str(Path(sys.prefix) / ("Scripts" if os.name == "nt" else "bin"))
-    path = os.pathsep.join(
+    overrides["PATH"] = os.pathsep.join(
         entry for entry in os.environ.get("PATH", "").split(os.pathsep) if entry != venv_bin
     )
-    overrides = {"PATH": path}
     if os.environ.get("VIRTUAL_ENV"):
         overrides["VIRTUAL_ENV"] = ""
     return overrides

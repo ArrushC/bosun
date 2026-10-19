@@ -27,18 +27,73 @@ approvals.
 ## Requirements
 
 - Linux or macOS (Windows through WSL2)
-- Python 3.11+ and [uv](https://docs.astral.sh/uv/)
-- Node.js 20+ and npm
-- git
-- A Claude subscription with Claude Code signed in, or an Anthropic API key,
-  or Google Vertex AI
-- Optional: the GitHub CLI (`gh`) for GitHub import
-- Optional: `bubblewrap` and `socat` (Linux) for OS-level shell sandboxing
+- A Claude subscription, or an Anthropic API key, or Google Vertex AI
+- To self-host: Docker with Compose 2.24 or later. Nothing else.
+- To run from source:
+  - Python 3.11+ and [uv](https://docs.astral.sh/uv/), Node.js 20+ and npm,
+    git
+  - Optional: the GitHub CLI (`gh`) for GitHub import
+  - Optional: `bubblewrap` and `socat` (Linux) for OS-level shell sandboxing
 
-The Claude Code CLI ships inside the `claude-agent-sdk` Python package, so a
-separate install is only needed to sign in (see below).
+The Claude Code CLI ships inside the `claude-agent-sdk` Python package (and the
+Docker image), so a separate install is only needed to sign in (see below).
 
-## Quick start
+## Run with Docker (self-hosting)
+
+```bash
+git clone https://github.com/ArrushC/bosun.git
+cd bosun
+make docker-setup PROJECTS=~/code   # writes .env: projects folder, data folder, your user ID
+make docker-up                      # docker compose up -d --build
+make docker-login                   # sign the container's Claude Code in to your subscription
+```
+
+Open <http://127.0.0.1:8787>. `make docker-login` prints a sign-in link; open
+it, approve, and paste the code it shows back into the terminal.
+
+How the container is set up (`compose.yaml`):
+
+- **Your projects folder** (`BOSUN_PROJECTS_DIR`) is mounted read-write at the
+  same path as on your machine. Paths in Bosun, and the git worktree links it
+  writes into your repositories, stay valid outside the container. Agents can
+  only reach this folder, Bosun's data folder and the container itself. To
+  give Bosun more folders, add them, again at the same path, in a
+  `compose.override.yaml`:
+
+  ```yaml
+  services:
+    bosun:
+      volumes:
+        - /home/you/notes:/home/you/notes
+  ```
+
+- **Data**: the database and run worktrees live in `BOSUN_DOCKER_DATA_DIR`
+  (default `~/.local/share/bosun`) on your machine. To back up, copy that
+  folder while Bosun is stopped.
+- **Claude login**: it lives in the `bosun_home` volume, separate from your own
+  Claude Code login. `make docker-down` keeps it; `docker compose down -v`
+  deletes it.
+- **Your user**: the container runs as your user and group IDs, so files Bosun
+  writes stay yours.
+- **Localhost only**: the port is published on `127.0.0.1`. Do not publish it
+  on other interfaces: the web UI has no login.
+- **GitHub**: the image has no GitHub CLI. Put a fine-grained, read-only
+  token in `.env` as `BOSUN_GITHUB_TOKEN`, then run `make docker-up`. Agents
+  run in the same container as the same user. Anything the container holds
+  (this token, the Claude login) is within reach of a command you approve, so
+  keep the token read-only.
+- **Agent tools**: agents get git, Python 3.12 with uv, Node.js 24 with npm,
+  make, ripgrep and jq. For other toolchains, set for example
+  `BOSUN_EXTRA_APT_PACKAGES="build-essential golang"` in `.env` and run
+  `make docker-up`.
+- **Shell sandbox**: Claude Code's OS sandbox can't start inside a container.
+  Leave it off; the container is the boundary.
+
+To update, run `git pull && make docker-up`; database migrations run at
+start-up. `make docker-logs` follows the log and `make docker-down` stops
+Bosun.
+
+## Run from source
 
 ```bash
 git clone https://github.com/ArrushC/bosun.git
@@ -50,8 +105,10 @@ make dev          # backend :8787 + Vite :5173 with hot reload
 Open <http://127.0.0.1:5173>. For a single-process build, run `make start` and
 open <http://127.0.0.1:8787>.
 
-On first start Bosun creates its SQLite database in `.data/`. Add your first
-workspace under **Integrations → Workspaces**, or set
+## First steps
+
+On first start Bosun creates its SQLite database (in `.data/` when run from
+source). Add your first workspace under **Integrations → Workspaces**, or set
 `BOSUN_INITIAL_WORKSPACE=/path/to/project` when you start Bosun to register
 one automatically.
 
@@ -62,7 +119,9 @@ backend. The demo backend makes no Claude calls.
 
 ## 1. Connect Claude with your subscription
 
-Bosun runs agents through your own Claude Code login.
+Bosun runs agents through your own Claude Code login. With Docker, run
+`make docker-login` (or `docker compose exec bosun claude auth login`). From
+source:
 
 ```bash
 # Use any Claude Code CLI; the bundled one is fine:
@@ -98,11 +157,11 @@ choose that provider explicitly in Settings.
 
 Bosun only reads from GitHub; every request it makes is a `GET`.
 
-- Easiest: `gh auth login`. Bosun borrows the CLI's token at request
-  time and never stores it.
-- Or create a fine-grained token with read-only access to Issues, Pull
-  requests, Metadata and Contents for the repositories you want, and set
-  `BOSUN_GITHUB_TOKEN` in `.env`.
+- Easiest when running from source: `gh auth login`. Bosun borrows the CLI's
+  token at request time and never stores it.
+- Or (always, with Docker) create a fine-grained token with read-only access
+  to Issues, Pull requests, Metadata and Contents for the repositories you
+  want, and set `BOSUN_GITHUB_TOKEN` in `.env`.
 
 In **Integrations → GitHub**, check the connection status and press **Connect
 repositories**. Pick one or more repositories and choose filters: open or all,
@@ -172,7 +231,7 @@ in the graph as message edges.
 | Untrusted input | Issue and PR text, code comments and imported content are wrapped as untrusted task data, never as instructions. Repository `.claude/` settings, hooks and MCP servers are ignored unless you mark the workspace trusted. |
 | Credentials | GitHub tokens are never stored or shown. Secrets are redacted before events, transcripts, results, summaries and approvals are stored or sent to the browser. |
 | Git and GitHub | No pushes, no PRs, no GitHub writes. Merging into your branch is a separate, confirmed action. |
-| Network exposure | Binds to `127.0.0.1`. Requests must carry a local `Host`. Mutations and WebSockets must come from an allowed `Origin`. Remote access needs both `BOSUN_ALLOW_REMOTE=true` and `BOSUN_AUTH_TOKEN`. |
+| Network exposure | Binds to `127.0.0.1`; the Docker setup publishes its port on `127.0.0.1` only. Requests must carry a local `Host`. Mutations and WebSockets must come from an allowed `Origin`. Remote access needs both `BOSUN_ALLOW_REMOTE=true` and `BOSUN_AUTH_TOKEN`; the API then requires the token, which the web UI cannot send yet. |
 | Restarts | Runs that were active when Bosun stopped are marked interrupted, never assumed alive. Orphaned Claude Code processes it started are terminated. Resume continues the same Claude sessions. |
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and
@@ -193,6 +252,19 @@ from Claude Code, add this to `.mcp.json`:
     "bosun": {
       "command": "uv",
       "args": ["--directory", "/path/to/bosun/backend", "run", "bosun-mcp"]
+    }
+  }
+}
+```
+
+With Docker, run it inside the container instead:
+
+```json
+{
+  "mcpServers": {
+    "bosun": {
+      "command": "docker",
+      "args": ["compose", "--project-directory", "/path/to/bosun", "exec", "-T", "bosun", "bosun-mcp"]
     }
   }
 }

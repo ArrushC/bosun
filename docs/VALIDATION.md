@@ -57,10 +57,30 @@ theme.
 
 ![Team run](images/team-run.png)
 
+## Docker image and compose setup
+
+Checked on Docker Desktop 29.8 (WSL2) with Docker Compose 5.5, and before
+that on Podman 5.8, using the same `docker compose` CLI against Podman's
+Docker-compatible API. End-to-end checks used a separate throwaway stack
+(`-p`, its own port, data and test repository).
+
+| Check | Result |
+|---|---|
+| Image | `docker compose build` (BuildKit) succeeded in about 90 seconds. Inside: Claude Code 2.1.301, Python 3.12, uv, Node.js 24, git, running as uid 1000. |
+| `make docker-setup` | Wrote UID/GID, projects and data folders to `.env` and kept them on a re-run. It refused `/`, the home directory and a missing folder. shellcheck is clean. |
+| Network | Published on `127.0.0.1` only. A foreign `Host` and a cross-site `Origin` were both rejected with 403. |
+| Same-path mounts | A workspace in the mounted projects folder was scanned (TODO found). A demo-backend run created its worktree in the mounted data folder. The host's own `git worktree list` showed it at a valid path, and the database, worktree and git metadata were owned by the host user. **Merge into main** produced a merge commit in the host repository. |
+| Agent environment | Inside the container, agent processes saw no `BOSUN_*` variables, and `python3` resolved to the system interpreter, not Bosun's virtualenv. |
+| Lifecycle | `compose stop` shut down cleanly in about a second (tini forwards SIGTERM). After a restart, data was intact and the health check reported healthy. |
+| Claude login | `claude auth status` reported signed out. `claude auth login` printed a sign-in URL and waited for the pasted code. A full sign-in needs a person, so it was not completed. |
+| MCP | `bosun-mcp` run with `exec -i` inside the container listed its six tools and returned live data. |
+| UI | The Settings page served from the container showed the container notice under the sandbox setting, with no console errors. |
+| Podman | Compose's BuildKit builder crashes under rootless Podman, so there the image has to be built with `podman build`. Everything else above also passed on Podman. |
+
 ## Automated tests
 
 - `make test`
-  - Backend: 106 tests. They cover:
+  - Backend: 108 tests. They cover:
     - the scanner, GitHub client and connector (mock transport);
     - single, team and auto runs with the demo backend;
     - worktrees and integration;
@@ -82,5 +102,7 @@ theme.
   by unit tests for environment and billing-guard expectations, but no billed
   run was made.
 - macOS (Seatbelt) sandboxing.
+- A real Claude run inside the Docker container (it needs the container's own
+  Claude sign-in).
 - Very long runs (hours), and runs near the subscription usage limit. The
   `usage_limit` path is tested with scripted CLI output only.

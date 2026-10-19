@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query
 from bosun import __version__
 from bosun.api.deps import ServicesDep
 from bosun.api.schemas import BrowseOut, DirEntry, MetaOut, SandboxSupport
-from bosun.config import APP_ROOT
+from bosun.config import APP_ROOT, running_in_container
 
 router = APIRouter(tags=["meta"])
 
@@ -39,7 +39,12 @@ def sandbox_support() -> SandboxSupport:
         return SandboxSupport(platform="macos", supported=True, missing=[])
     if sys.platform.startswith("linux"):
         missing = [tool for tool in ("bwrap", "socat") if shutil.which(tool) is None]
-        return SandboxSupport(platform="linux", supported=not missing, missing=missing)
+        return SandboxSupport(
+            platform="linux",
+            supported=not missing,
+            missing=missing,
+            container=running_in_container(),
+        )
     return SandboxSupport(platform=sys.platform, supported=False, missing=[])
 
 

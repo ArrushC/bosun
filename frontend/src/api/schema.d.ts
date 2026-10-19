@@ -1928,6 +1928,11 @@ export interface components {
             supported: boolean;
             /** Missing */
             missing: string[];
+            /**
+             * Container
+             * @default false
+             */
+            container: boolean;
         };
         /** ScanSettings */
         "ScanSettings-Input": {

@@ -331,7 +331,11 @@ reducer over event logs recorded from real backend runs
   - a mutation with a non-JSON body.
 
   Remote binding requires both `BOSUN_ALLOW_REMOTE` and `BOSUN_AUTH_TOKEN` (bearer
-  token, constant-time comparison).
+  token, constant-time comparison). The web UI cannot send a token yet.
+  In a container, `BOSUN_PUBLISHED_ON_LOOPBACK` lets Bosun listen on the
+  container's interfaces without a token, because `compose.yaml` publishes the
+  port on the host's loopback only. Bosun ignores that promise outside a
+  container (`/.dockerenv` or `/run/.containerenv`) and refuses to start.
 - **Boundary.** File tools are confined to the session's worktree by a hook
   that runs before every tool call, including auto-approved ones. Bash
   commands get a heuristic check. It blocks:
@@ -368,8 +372,29 @@ reducer over event logs recorded from real backend runs
     values.
   - GitHub tokens are read from the environment or `gh` when needed and never
     stored.
+  - Agent processes get every `BOSUN_*` variable blanked, so settings passed
+    to a container (tokens, keys) are not in their environment. They run as
+    the same user as Bosun, though, so this keeps secrets out of casual reach
+    (`env`, test output), not out of reach of a command that reads Bosun's
+    files or process. Keep tokens read-only.
 - **No external writes.** The GitHub client only issues `GET`. Nothing is
   pushed. Merging into your branch is explicit and confirmed.
+
+### Running in a container
+
+The image holds the backend, the built UI, the bundled Claude Code CLI and
+the tools agents need (git, Python with uv, Node.js with npm). Agents run in
+the same container, so the container is their boundary: they can reach the
+mounted projects folder, the data folder, the container user's home (a named
+volume holding the container's own Claude login) and the network.
+
+Projects and data are bind-mounted at the same path inside and out. The
+database stores host paths, and the `.git/worktrees/*/gitdir` links that
+`git worktree add` writes into your repositories point at the data folder.
+With matching paths, `git worktree list` (and `git worktree prune`) on the
+host see valid worktrees instead of pruning them. The image is built with your
+user and group IDs so those files stay yours. tini runs as PID 1 and
+forwards `SIGTERM`, so a stop marks active runs interrupted as usual.
 
 ### Trade-offs and limitations
 

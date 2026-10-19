@@ -19,3 +19,6 @@ frontend/openapi.json
 .DS_Store
 .idea/
 .vscode/
+
+# Local Docker additions (extra mounts)
+compose.override.yaml

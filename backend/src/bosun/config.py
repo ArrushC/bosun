@@ -30,12 +30,17 @@ class Settings(BaseSettings):
     # Opt-in for binding to a non-loopback interface. Requires `auth_token`.
     allow_remote: bool = False
     auth_token: str | None = None
+    # Inside a container: listen on all of the container's interfaces without a token,
+    # because its port is published on the host's loopback only (see compose.yaml).
+    published_on_loopback: bool = False
 
     data_dir: Path = Field(default=APP_ROOT / ".data")
     database_url: str | None = None
 
     # Directory registered as the first workspace on a fresh database.
     initial_workspace: Path | None = None
+    # Folder holding your projects; the workspace picker starts browsing here.
+    projects_dir: Path | None = None
 
     # Extra origins allowed to call the API (the Vite dev server is always allowed).
     allowed_origins: list[str] = Field(default_factory=list)
@@ -57,7 +62,7 @@ class Settings(BaseSettings):
     # Serve the built frontend from FastAPI (single-port mode).
     serve_frontend: bool = True
 
-    @field_validator("initial_workspace", mode="before")
+    @field_validator("initial_workspace", "projects_dir", mode="before")
     @classmethod
     def _empty_path_is_none(cls, value: object) -> object:
         return None if value in ("", None) else value
@@ -90,7 +95,16 @@ class Settings(BaseSettings):
 
     def default_initial_workspace(self) -> Path:
         """Where the workspace picker starts browsing."""
-        return self.startup_workspace() or APP_ROOT.parent
+        if workspace := self.startup_workspace():
+            return workspace
+        if self.projects_dir:
+            return self.projects_dir.expanduser().resolve()
+        return APP_ROOT.parent
+
+
+def running_in_container() -> bool:
+    """Docker creates /.dockerenv and Podman /run/.containerenv in every container."""
+    return Path("/.dockerenv").exists() or Path("/run/.containerenv").exists()
 
 
 @lru_cache
