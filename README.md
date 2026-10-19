@@ -43,7 +43,7 @@ Docker image), so a separate install is only needed to sign in (see below).
 ```bash
 git clone https://github.com/ArrushC/bosun.git
 cd bosun
-scripts/docker-setup.sh ~/code                # writes .env: projects folder, data folder, your user ID
+scripts/docker-setup.sh ~/code                # writes .env: projects, data and home folders, your user ID
 docker compose up -d --build
 docker compose exec bosun claude auth login   # sign the container's Claude Code in to your subscription
 ```
@@ -68,11 +68,15 @@ How the container is set up (`compose.yaml`):
   ```
 
 - **Data**: the database and run worktrees live in `BOSUN_DOCKER_DATA_DIR`
-  (default `~/.local/share/bosun`) on your machine. To back up, copy that
-  folder while Bosun is stopped.
-- **Claude login**: it lives in the `bosun_home` volume, separate from your own
-  Claude Code login. `docker compose down` keeps it; `docker compose down -v`
-  deletes it.
+  (default `~/.local/share/bosun`) on your machine.
+- **Logins and settings**: the container user's home folder is
+  `BOSUN_DOCKER_HOME_DIR` (default `~/.config/bosun`) on your machine. It
+  holds the container's Claude Code login (separate from your own), its
+  settings, the MCP servers it knows and their tokens, and whatever else tools
+  keep in a home folder. Caches go in its `.cache` folder, which is safe to
+  delete. The setup script makes the folder private to you.
+- **Backups**: copy the data and home folders while Bosun is stopped. Nothing
+  is kept in Docker volumes, so `docker compose down -v` deletes nothing.
 - **Your user**: the container runs as your user and group IDs, so files Bosun
   writes stay yours.
 - **Localhost only**: the port is published on `127.0.0.1`. Do not publish it

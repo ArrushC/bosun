@@ -46,21 +46,38 @@ if [[ "$projects" == "/" || "$projects" == "$(cd "$HOME" && pwd -P)" ]]; then
   exit 1
 fi
 
-data="$(current BOSUN_DOCKER_DATA_DIR)"
-data="${data:-${XDG_DATA_HOME:-$HOME/.local/share}/bosun}"
-data="${data/#\~/$HOME}"
-mkdir -p "$data"
-data="$(cd "$data" && pwd -P)"
+# host_dir VAR DEFAULT: the folder already set in .env, or DEFAULT; created if missing.
+host_dir() {
+  local dir
+  dir="$(current "$1")"
+  dir="${dir:-$2}"
+  dir="${dir/#\~/$HOME}"
+  mkdir -p "$dir"
+  (cd "$dir" && pwd -P)
+}
+
+data="$(host_dir BOSUN_DOCKER_DATA_DIR "${XDG_DATA_HOME:-$HOME/.local/share}/bosun")"
+home_dir="$(host_dir BOSUN_DOCKER_HOME_DIR "${XDG_CONFIG_HOME:-$HOME/.config}/bosun")"
+for other in "$projects" "$data"; do
+  if [[ "$home_dir/" == "$other/"* || "$other/" == "$home_dir/"* ]]; then
+    echo "Keep the container's home ($home_dir) apart from $other: it holds logins." >&2
+    exit 1
+  fi
+done
+# It holds the container's Claude login and other credentials.
+chmod 700 "$home_dir"
 
 set_var BOSUN_UID "$(id -u)"
 set_var BOSUN_GID "$(id -g)"
 set_var BOSUN_PROJECTS_DIR "$projects"
 set_var BOSUN_DOCKER_DATA_DIR "$data"
+set_var BOSUN_DOCKER_HOME_DIR "$home_dir"
 
 cat <<EOF
 Wrote $ENV_FILE:
   Projects (mounted read-write):  $projects
   Data (database and worktrees):  $data
+  Home (logins and settings):     $home_dir
   Runs as user:                   $(id -u):$(id -g)
 
 Next:

@@ -61,6 +61,9 @@ ENV PATH=/app/backend/.venv/bin:$PATH \
     HOME=/home/bosun \
     BOSUN_DATA_DIR=/data \
     DISABLE_AUTOUPDATER=1
+# The home folder is mounted from your machine; keep every tool cache in ~/.cache
+# so it stays easy to tell apart from logins and settings.
+ENV npm_config_cache=/home/bosun/.cache/npm
 USER bosun
 WORKDIR /app
 EXPOSE 8787

@@ -385,14 +385,16 @@ reducer over event logs recorded from real backend runs
 The image holds the backend, the built UI, the bundled Claude Code CLI and
 the tools agents need (git, Python with uv, Node.js with npm). Agents run in
 the same container, so the container is their boundary: they can reach the
-mounted projects folder, the data folder, the container user's home (a named
-volume holding the container's own Claude login) and the network.
+mounted projects folder, the data folder, the container user's home (holding
+the container's own Claude login, settings and MCP tokens) and the network.
 
 Projects and data are bind-mounted at the same path inside and out. The
 database stores host paths, and the `.git/worktrees/*/gitdir` links that
 `git worktree add` writes into your repositories point at the data folder.
 With matching paths, `git worktree list` (and `git worktree prune`) on the
-host see valid worktrees instead of pruning them. The image is built with your
+host see valid worktrees instead of pruning them. The home folder is also a
+bind mount, at `/home/bosun`, so all state (logins included) lives in host
+folders and none in Docker volumes. The image is built with your
 user and group IDs so those files stay yours. tini runs as PID 1 and
 forwards `SIGTERM`, so a stop marks active runs interrupted as usual.
 

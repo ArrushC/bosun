@@ -32,12 +32,10 @@ services:
       # it writes into your repositories are valid on your machine too.
       - ${BOSUN_PROJECTS_DIR}:${BOSUN_PROJECTS_DIR}
       - ${BOSUN_DOCKER_DATA_DIR}:${BOSUN_DOCKER_DATA_DIR}
-      # Home of the container user: your Claude Code login and tool caches.
-      - home:/home/bosun
+      # Home of the container user, kept on your machine: Claude Code's login and
+      # settings, MCP servers and their tokens, and tool caches.
+      - ${BOSUN_DOCKER_HOME_DIR:?Set BOSUN_DOCKER_HOME_DIR in .env (run scripts/docker-setup.sh)}:/home/bosun
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     # Lets Bosun mark active runs as interrupted before it stops.
     stop_grace_period: 30s
-
-volumes:
-  home:

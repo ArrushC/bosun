@@ -67,7 +67,8 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
 | Check | Result |
 |---|---|
 | Image | `docker compose build` (BuildKit) succeeded in about 90 seconds. Inside: Claude Code 2.1.301, Python 3.12, uv, Node.js 24, git, running as uid 1000. |
-| `scripts/docker-setup.sh` | Wrote UID/GID, projects and data folders to `.env` and kept them on a re-run. It refused `/`, the home directory and a missing folder. shellcheck is clean. |
+| `scripts/docker-setup.sh` | Wrote UID/GID and the projects, data and home folders to `.env` and kept them on a re-run. It made the home folder private (`drwx------`). It refused `/`, the home directory, a missing folder and a container home inside the projects folder. shellcheck is clean. |
+| Home folder | The container's home is the host's `~/.config/bosun`, with no Docker volumes left. Claude Code's `.claude.json` and `.claude/` appeared there, owned by the host user. An MCP server added with `claude mcp add --scope user` in the container was written to that `.claude.json`, and removing it removed it there. npm's cache is in its `.cache` folder. |
 | Network | Published on `127.0.0.1` only. A foreign `Host` and a cross-site `Origin` were both rejected with 403. |
 | Same-path mounts | A workspace in the mounted projects folder was scanned (TODO found). A demo-backend run created its worktree in the mounted data folder. The host's own `git worktree list` showed it at a valid path, and the database, worktree and git metadata were owned by the host user. **Merge into main** produced a merge commit in the host repository. |
 | Agent environment | Inside the container, agent processes saw no `BOSUN_*` variables, and `python3` resolved to the system interpreter, not Bosun's virtualenv. |
