@@ -55,7 +55,7 @@ export function RunsPage() {
           </EmptyState>
         )}
         {rows.length > 0 && (
-          <div className="mx-auto max-w-[1180px] px-8 pt-2 pb-12">
+          <div className="px-8 pt-2 pb-12">
             <ul className="divide-y divide-line-soft overflow-hidden rounded-panel bg-panel">
               {rows.map((r) => {
                 const tokens = Number(r.usage.output_tokens ?? 0);

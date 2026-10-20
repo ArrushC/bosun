@@ -81,7 +81,7 @@ export function DashboardPage() {
         }
       />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[1180px] space-y-12 px-8 pt-2 pb-12">
+        <div className="space-y-12 px-8 pt-2 pb-12">
           <nav aria-label="Status" className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {strip.map((s) => (
               <Link
