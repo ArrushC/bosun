@@ -826,6 +826,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workflows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Workflows */
+        get: operations["list_workflows_api_v1_workflows_get"];
+        put?: never;
+        /** Create Workflow */
+        post: operations["create_workflow_api_v1_workflows_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workflows/{workflow_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Workflow */
+        get: operations["get_workflow_api_v1_workflows__workflow_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Workflow */
+        delete: operations["delete_workflow_api_v1_workflows__workflow_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Workflow */
+        patch: operations["update_workflow_api_v1_workflows__workflow_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/workflows/{workflow_id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Workflow
+         * @description Run the current draft on an existing task, or on a new task created for it.
+         */
+        post: operations["run_workflow_api_v1_workflows__workflow_id__runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1499,6 +1556,22 @@ export interface components {
              */
             confirm: boolean;
         };
+        /** Issue */
+        Issue: {
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "error" | "warning";
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /** Steps */
+            steps?: string[];
+            /** Field */
+            field?: string | null;
+        };
         /** MessageIn */
         MessageIn: {
             /** Text */
@@ -1526,6 +1599,18 @@ export interface components {
             /** Github Write Enabled */
             github_write_enabled: boolean;
             sandbox: components["schemas"]["SandboxSupport"];
+        };
+        /** NewTaskIn */
+        NewTaskIn: {
+            /** Title */
+            title: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /** Workspace Id */
+            workspace_id: string;
         };
         /** OverviewGraph */
         OverviewGraph: {
@@ -1734,6 +1819,8 @@ export interface components {
             }[];
             /** Integration Status */
             integration_status: string | null;
+            /** Workflow Name */
+            workflow_name: string | null;
         };
         /** RunCreate */
         RunCreate: {
@@ -1816,6 +1903,10 @@ export interface components {
             is_demo: boolean;
             /** Integration Status */
             integration_status: string;
+            /** Workflow Id */
+            workflow_id: string | null;
+            /** Workflow Name */
+            workflow_name: string | null;
         };
         /** RunOut */
         RunOut: {
@@ -2149,6 +2240,19 @@ export interface components {
             /** State */
             state: string;
         };
+        /** StepPosition */
+        StepPosition: {
+            /**
+             * X
+             * @default 0
+             */
+            x: number;
+            /**
+             * Y
+             * @default 0
+             */
+            y: number;
+        };
         /** SubtaskAction */
         SubtaskAction: {
             /**
@@ -2442,6 +2546,136 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WorkflowCreate */
+        WorkflowCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            spec?: components["schemas"]["WorkflowSpec"];
+        };
+        /** WorkflowListItem */
+        WorkflowListItem: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Steps */
+            steps: number;
+            /** Revision */
+            revision: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Run Count */
+            run_count: number;
+            last_run: components["schemas"]["WorkflowRunBrief"] | null;
+        };
+        /** WorkflowOut */
+        WorkflowOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            spec: components["schemas"]["WorkflowSpec"];
+            /** Revision */
+            revision: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Issues */
+            issues: components["schemas"]["Issue"][];
+        };
+        /** WorkflowRunBrief */
+        WorkflowRunBrief: {
+            /** Id */
+            id: string;
+            /** Number */
+            number: number;
+            /** Status */
+            status: string;
+            /** Task Id */
+            task_id: string;
+            /** Task Key */
+            task_key: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** WorkflowRunCreate */
+        WorkflowRunCreate: {
+            /** Revision */
+            revision: number;
+            /** Task Id */
+            task_id?: string | null;
+            new_task?: components["schemas"]["NewTaskIn"] | null;
+        };
+        /** WorkflowSpec */
+        WorkflowSpec: {
+            /** Steps */
+            steps?: components["schemas"]["WorkflowStep"][];
+        };
+        /** WorkflowStep */
+        WorkflowStep: {
+            /** Key */
+            key: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /** Agent */
+            agent?: string | null;
+            /**
+             * Instructions
+             * @default
+             */
+            instructions: string;
+            /**
+             * Changes Code
+             * @default false
+             */
+            changes_code: boolean;
+            /** After */
+            after?: string[];
+            position?: components["schemas"]["StepPosition"];
+            /** Model */
+            model?: string | null;
+            /** Max Turns */
+            max_turns?: number | null;
+            /** Timeout Minutes */
+            timeout_minutes?: number | null;
+            /** Retries */
+            retries?: number | null;
+        };
+        /** WorkflowUpdate */
+        WorkflowUpdate: {
+            /** Revision */
+            revision: number;
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            spec?: components["schemas"]["WorkflowSpec"] | null;
         };
         /** WorkspaceCreate */
         WorkspaceCreate: {
@@ -3519,6 +3753,7 @@ export interface operations {
             query?: {
                 status?: string | null;
                 task_id?: string | null;
+                workflow_id?: string | null;
                 limit?: number;
             };
             header?: never;
@@ -4322,6 +4557,191 @@ export interface operations {
                     "application/json": {
                         [key: string]: number;
                     };
+                };
+            };
+        };
+    };
+    list_workflows_api_v1_workflows_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowListItem"][];
+                };
+            };
+        };
+    };
+    create_workflow_api_v1_workflows_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_workflow_api_v1_workflows__workflow_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workflow_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_workflow_api_v1_workflows__workflow_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workflow_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_workflow_api_v1_workflows__workflow_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workflow_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_workflow_api_v1_workflows__workflow_id__runs_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                workflow_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowRunCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

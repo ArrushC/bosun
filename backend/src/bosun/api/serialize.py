@@ -107,6 +107,7 @@ async def run_briefs(
             pending_approvals=approvals.get(run.id, 0),
             agents=list(roles_seen.values()),
             integration_status=run.integration_status,
+            workflow_name=((run.config or {}).get("workflow") or {}).get("name"),
         )
     return briefs
 

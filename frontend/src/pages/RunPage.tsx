@@ -13,7 +13,8 @@ import { Transcript } from "@/components/run/Transcript";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorNote, Spinner, StatusPill, TabPanel, Tabs } from "@/components/ui/display";
 import { adviceFor } from "@/lib/errors";
-import { RUN_LABEL, runState } from "@/lib/status";
+import { RUN_LABEL, runState, strategyLabel } from "@/lib/status";
+import { runWorkflow } from "@/lib/workflow";
 import { elapsed, formatDuration } from "@/lib/utils";
 import { useEvents, useRunLog } from "@/stores/events";
 
@@ -90,6 +91,7 @@ export function RunPage() {
 
   const pending = run.approvals.filter((a) => a.status === "pending");
   const advice = run.status === "failed" ? adviceFor(run.error_kind) : null;
+  const workflow = runWorkflow(run);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -111,8 +113,14 @@ export function RunPage() {
           <button onClick={() => openTask(run.task_id)} className="mono mr-3 text-text-2 hover:text-text">
             {run.task_key}
           </button>
+          {workflow && (
+            <Link to={`/workflows/${workflow.id}`} className="mr-1 text-text-2 hover:text-text">
+              Workflow {workflow.name}
+            </Link>
+          )}
+          {workflow && ", "}
           {[
-            run.strategy === "team" ? "Agent team" : run.mode === "auto" ? (run.strategy ? "Auto: single agent" : "Auto: planning") : run.mode === "team" ? "Agent team" : "Single agent",
+            ...(workflow ? [] : [strategyLabel(run)]),
             run.backend === "demo" ? "Demo" : run.provider === "subscription" ? "Claude subscription" : run.provider === "api_key" ? "Anthropic API" : "Vertex AI",
             formatDuration(elapsed(run.started_at, run.ended_at)),
           ].join(", ")}

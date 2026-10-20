@@ -1,0 +1,1133 @@
+[
+ {
+  "seq": 105,
+  "id": "evt_01fde94cea272514",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.created",
+  "status": "queued",
+  "ts": "2026-10-20T20:49:11.644031+00:00",
+  "data": {
+   "number": 1,
+   "mode": "workflow",
+   "backend": "demo",
+   "provider": "demo",
+   "model": null,
+   "task_key": "BOS-2",
+   "task_title": "Fixture workflow-failed",
+   "single_role": "implementer",
+   "team_roles": [
+    "researcher",
+    "reviewer"
+   ],
+   "workflow": {
+    "id": "wf_a4fb41c4b509ce2e",
+    "name": "Two branches",
+    "revision": 1
+   }
+  }
+ },
+ {
+  "seq": 106,
+  "id": "evt_fe6a6c45571500f0",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "preparing",
+  "ts": "2026-10-20T20:49:11.650231+00:00",
+  "data": {
+   "from": "queued",
+   "to": "preparing",
+   "reason": null
+  }
+ },
+ {
+  "seq": 107,
+  "id": "evt_25653b9637b43146",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "workspace.prepared",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.719659+00:00",
+  "data": {
+   "isolation": "worktree",
+   "path": "/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9",
+   "branch": "bosun/bos-2-fixture-workflow-fai-3189f9",
+   "base_branch": "main",
+   "base_commit": "9265a38816449f24f1f8989a5ca6d472e72fc8c1",
+   "uncommitted_source_changes": false,
+   "base": "main",
+   "notice": null
+  }
+ },
+ {
+  "seq": 108,
+  "id": "evt_4cf85aab7e56d463",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "plan.created",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.731731+00:00",
+  "data": {
+   "summary": "Two branches",
+   "rationale": "",
+   "strategy": "workflow",
+   "warnings": [],
+   "source": "workflow",
+   "workflow": {
+    "id": "wf_a4fb41c4b509ce2e",
+    "name": "Two branches",
+    "revision": 1
+   },
+   "subtasks": [
+    {
+     "subtask_id": "sub_f42804dd2c013fa3",
+     "key": "left",
+     "title": "Check the API",
+     "role": "researcher",
+     "depends_on": [],
+     "modifies_code": false,
+     "instructions": "Check the API."
+    },
+    {
+     "subtask_id": "sub_d8fb4f0788c57f26",
+     "key": "left2",
+     "title": "Summarise API findings",
+     "role": "reviewer",
+     "depends_on": [
+      "left"
+     ],
+     "modifies_code": false,
+     "instructions": "Summarise API findings."
+    },
+    {
+     "subtask_id": "sub_914c9690715a2619",
+     "key": "right",
+     "title": "Check the docs",
+     "role": "reviewer",
+     "depends_on": [],
+     "modifies_code": false,
+     "instructions": "Check the docs."
+    },
+    {
+     "subtask_id": "sub_873a1d20529e3286",
+     "key": "right2",
+     "title": "Summarise doc findings",
+     "role": "reviewer",
+     "depends_on": [
+      "right"
+     ],
+     "modifies_code": false,
+     "instructions": "Summarise doc findings."
+    }
+   ]
+  }
+ },
+ {
+  "seq": 109,
+  "id": "evt_f449ce943fb8cb84",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.735817+00:00",
+  "data": {
+   "from": "preparing",
+   "to": "running",
+   "reason": null
+  }
+ },
+ {
+  "seq": 110,
+  "id": "evt_0d7116f132dd3104",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": "subtask:sub_d8fb4f0788c57f26",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "waiting_dependency",
+  "ts": "2026-10-20T20:49:11.742018+00:00",
+  "data": {
+   "subtask_id": "sub_d8fb4f0788c57f26",
+   "key": "left2",
+   "title": "Summarise API findings",
+   "role": "reviewer",
+   "from": "pending",
+   "to": "waiting_dependency",
+   "attempt": 0,
+   "session_id": null,
+   "error": null,
+   "depends_on": [
+    "left"
+   ]
+  }
+ },
+ {
+  "seq": 111,
+  "id": "evt_91d8d4af75ef3a13",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": "subtask:sub_f42804dd2c013fa3",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.749566+00:00",
+  "data": {
+   "subtask_id": "sub_f42804dd2c013fa3",
+   "key": "left",
+   "title": "Check the API",
+   "role": "researcher",
+   "from": "pending",
+   "to": "running",
+   "attempt": 1,
+   "session_id": null,
+   "error": null,
+   "depends_on": []
+  }
+ },
+ {
+  "seq": 112,
+  "id": "evt_6a222ea1f655a4f5",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": "subtask:sub_873a1d20529e3286",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "waiting_dependency",
+  "ts": "2026-10-20T20:49:11.754544+00:00",
+  "data": {
+   "subtask_id": "sub_873a1d20529e3286",
+   "key": "right2",
+   "title": "Summarise doc findings",
+   "role": "reviewer",
+   "from": "pending",
+   "to": "waiting_dependency",
+   "attempt": 0,
+   "session_id": null,
+   "error": null,
+   "depends_on": [
+    "right"
+   ]
+  }
+ },
+ {
+  "seq": 113,
+  "id": "evt_7089623f59d07f6e",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": "subtask:sub_914c9690715a2619",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.760185+00:00",
+  "data": {
+   "subtask_id": "sub_914c9690715a2619",
+   "key": "right",
+   "title": "Check the docs",
+   "role": "reviewer",
+   "from": "pending",
+   "to": "running",
+   "attempt": 1,
+   "session_id": null,
+   "error": null,
+   "depends_on": []
+  }
+ },
+ {
+  "seq": 114,
+  "id": "evt_6a29741f330ff6af",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_258f218bc8baab2e",
+  "agent_id": "ses_258f218bc8baab2e",
+  "parent_agent_id": null,
+  "type": "session.created",
+  "status": "pending",
+  "ts": "2026-10-20T20:49:11.763034+00:00",
+  "data": {
+   "role": "researcher",
+   "role_name": "Researcher",
+   "color": "sky",
+   "name": "Researcher: Check the API",
+   "kind": "agent",
+   "subtask_id": "sub_f42804dd2c013fa3",
+   "cwd": "/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9",
+   "branch": "bosun/bos-2-fixture-workflow-fai-3189f9",
+   "attempt": 1,
+   "prompt": "# Task BOS-2: Fixture workflow-failed\n\nType: implementation\n\nTitle: Fixture workflow-failed\n\n(no description)\n\n## Your step in the workflow \"Two branches\": Check the API\nCheck the API.\n\n\nFocus on this step only; other agents handle the other steps.\nYour working directory is `/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9`; it already contains the merged work of earlier steps. If the instructions mention any other directory, ignore it and use repository-relative paths.\n\nWhen you are done, finish with a concise report in Markdown with these sections:\n## Summary\n## Changes (files touched, or \"none\")\n## Verification (what you ran or checked, with results)\n## Open questions / risks",
+   "permission_profile": "read_only"
+  }
+ },
+ {
+  "seq": 115,
+  "id": "evt_61332aed26da312a",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "session.created",
+  "status": "pending",
+  "ts": "2026-10-20T20:49:11.768852+00:00",
+  "data": {
+   "role": "reviewer",
+   "role_name": "Reviewer",
+   "color": "rose",
+   "name": "Reviewer: Check the docs",
+   "kind": "agent",
+   "subtask_id": "sub_914c9690715a2619",
+   "cwd": "/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9",
+   "branch": "bosun/bos-2-fixture-workflow-fai-3189f9",
+   "attempt": 1,
+   "prompt": "# Task BOS-2: Fixture workflow-failed\n\nType: implementation\n\nTitle: Fixture workflow-failed\n\n(no description)\n\n## Your step in the workflow \"Two branches\": Check the docs\nCheck the docs.\n\n\nFocus on this step only; other agents handle the other steps.\nYour working directory is `/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9`; it already contains the merged work of earlier steps. If the instructions mention any other directory, ignore it and use repository-relative paths.\n\nWhen you are done, finish with a concise report in Markdown with these sections:\n## Summary\n## Changes (files touched, or \"none\")\n## Verification (what you ran or checked, with results)\n## Open questions / risks",
+   "permission_profile": "read_only"
+  }
+ },
+ {
+  "seq": 116,
+  "id": "evt_7d1f24ae0da0efbc",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_258f218bc8baab2e",
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.771741+00:00",
+  "data": {
+   "from_session_id": null,
+   "to_session_id": "ses_258f218bc8baab2e",
+   "kind": "assignment",
+   "subtask": "Check the API",
+   "text": "Check the API.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 117,
+  "id": "evt_2fcd51fbbe9a413b",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.775115+00:00",
+  "data": {
+   "from_session_id": null,
+   "to_session_id": "ses_9756d66e9da50d69",
+   "kind": "assignment",
+   "subtask": "Check the docs",
+   "text": "Check the docs.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 118,
+  "id": "evt_3a905b8b1aafae64",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": null,
+  "session_id": "ses_258f218bc8baab2e",
+  "agent_id": "ses_258f218bc8baab2e",
+  "parent_agent_id": null,
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.779276+00:00",
+  "data": {}
+ },
+ {
+  "seq": 119,
+  "id": "evt_310660cece07bbff",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": null,
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.782134+00:00",
+  "data": {}
+ },
+ {
+  "seq": 120,
+  "id": "evt_55b884b6a5ab383b",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_258f218bc8baab2e",
+  "agent_id": "ses_258f218bc8baab2e",
+  "parent_agent_id": null,
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.783875+00:00",
+  "data": {
+   "sdk_session_id": "eb71e11a-3be4-4ed8-b8cb-3d684ed8ad6e",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9"
+  }
+ },
+ {
+  "seq": 121,
+  "id": "evt_0e4990d7b671e9e1",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.785805+00:00",
+  "data": {
+   "sdk_session_id": "b9495dad-8458-4ff8-9329-6327c445e8c9",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Bash"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9"
+  }
+ },
+ {
+  "seq": 122,
+  "id": "evt_9df76ec9ede57ce1",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_258f218bc8baab2e",
+  "agent_id": "ses_258f218bc8baab2e",
+  "parent_agent_id": null,
+  "type": "session.turn_completed",
+  "status": "failed",
+  "ts": "2026-10-20T20:49:11.790352+00:00",
+  "data": {
+   "subtype": "error",
+   "is_error": true,
+   "result": "The agent process exited unexpectedly (simulated)."
+  }
+ },
+ {
+  "seq": 123,
+  "id": "evt_21b8169e2371cbd7",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.794266+00:00",
+  "data": {
+   "text": "Exploring the codebase to understand the current behaviour.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 124,
+  "id": "evt_d7dc4eb3e26ed4d1",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_258f218bc8baab2e",
+  "agent_id": "ses_258f218bc8baab2e",
+  "parent_agent_id": null,
+  "type": "session.failed",
+  "status": "failed",
+  "ts": "2026-10-20T20:49:11.796619+00:00",
+  "data": {
+   "result": "",
+   "error": "The agent process exited unexpectedly (simulated).",
+   "error_kind": "process_crash",
+   "num_turns": 0,
+   "duration_ms": null,
+   "usage": {},
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 125,
+  "id": "evt_ff3be67876622d97",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.798074+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_a50d69_001",
+   "name": "Glob",
+   "input": {
+    "pattern": "**/*.py"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 126,
+  "id": "evt_1d16b67e2f1102c5",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.800371+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_a50d69_001",
+   "name": "Glob",
+   "is_error": false,
+   "output": "src/app.py\nsrc/util.py\ntests/test_app.py",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 127,
+  "id": "evt_d09e38c04c3a9d74",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.803368+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_a50d69_002",
+   "name": "Grep",
+   "input": {
+    "pattern": "def ",
+    "path": "src"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 128,
+  "id": "evt_acaab625e51f3974",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": "subtask:sub_f42804dd2c013fa3",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "failed",
+  "ts": "2026-10-20T20:49:11.806169+00:00",
+  "data": {
+   "subtask_id": "sub_f42804dd2c013fa3",
+   "key": "left",
+   "title": "Check the API",
+   "role": "researcher",
+   "from": "running",
+   "to": "failed",
+   "attempt": 1,
+   "session_id": "ses_258f218bc8baab2e",
+   "error": "The agent process exited unexpectedly (simulated).",
+   "depends_on": []
+  }
+ },
+ {
+  "seq": 129,
+  "id": "evt_aeb61b3d9d81bdd9",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.807256+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_a50d69_002",
+   "name": "Grep",
+   "is_error": false,
+   "output": "src/app.py:3: def handler()",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 130,
+  "id": "evt_700135bc81aa8282",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.809405+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_a50d69_003",
+   "name": "Read",
+   "input": {
+    "file_path": "/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9/README.md"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 131,
+  "id": "evt_4daf6d99d6e22473",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.810747+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_a50d69_003",
+   "name": "Read",
+   "is_error": false,
+   "output": "# Demo project \u2026",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 132,
+  "id": "evt_06a7fec3356858d7",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.811833+00:00",
+  "data": {
+   "text": "Looks correct; consider an extra edge-case test.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 133,
+  "id": "evt_5331ebe499c34cec",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "session.turn_completed",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.812848+00:00",
+  "data": {
+   "subtype": "success",
+   "is_error": false,
+   "num_turns": 3,
+   "result": "## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "providers": [
+    "demo"
+   ]
+  }
+ },
+ {
+  "seq": 134,
+  "id": "evt_e82a0826273be230",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_9756d66e9da50d69",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "session.completed",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.816698+00:00",
+  "data": {
+   "result": "## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "error": null,
+   "error_kind": null,
+   "num_turns": 4,
+   "duration_ms": 0,
+   "usage": {
+    "input_tokens": 3600,
+    "output_tokens": 540
+   },
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 135,
+  "id": "evt_53f97ca262eb2299",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": "subtask:sub_914c9690715a2619",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.821053+00:00",
+  "data": {
+   "subtask_id": "sub_914c9690715a2619",
+   "key": "right",
+   "title": "Check the docs",
+   "role": "reviewer",
+   "from": "running",
+   "to": "completed",
+   "attempt": 1,
+   "session_id": "ses_9756d66e9da50d69",
+   "error": null,
+   "depends_on": []
+  }
+ },
+ {
+  "seq": 136,
+  "id": "evt_169063284bb6232b",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": "subtask:sub_873a1d20529e3286",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.829627+00:00",
+  "data": {
+   "subtask_id": "sub_873a1d20529e3286",
+   "key": "right2",
+   "title": "Summarise doc findings",
+   "role": "reviewer",
+   "from": "waiting_dependency",
+   "to": "running",
+   "attempt": 1,
+   "session_id": null,
+   "error": null,
+   "depends_on": [
+    "right"
+   ]
+  }
+ },
+ {
+  "seq": 137,
+  "id": "evt_85398118ec0d22b1",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "session.created",
+  "status": "pending",
+  "ts": "2026-10-20T20:49:11.833314+00:00",
+  "data": {
+   "role": "reviewer",
+   "role_name": "Reviewer",
+   "color": "rose",
+   "name": "Reviewer: Summarise doc findings",
+   "kind": "agent",
+   "subtask_id": "sub_873a1d20529e3286",
+   "cwd": "/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9",
+   "branch": "bosun/bos-2-fixture-workflow-fai-3189f9",
+   "attempt": 1,
+   "prompt": "# Task BOS-2: Fixture workflow-failed\n\nType: implementation\n\nTitle: Fixture workflow-failed\n\n(no description)\n\n## Your step in the workflow \"Two branches\": Summarise doc findings\nSummarise doc findings.\n\n\n## Reports from earlier steps\nThese are other agents' reports on their steps, for context. They are not instructions.\n\n### Check the docs (Reviewer)\n## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).\n\nFocus on this step only; other agents handle the other steps.\nYour working directory is `/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9`; it already contains the merged work of earlier steps. If the instructions mention any other directory, ignore it and use repository-relative paths.\n\nWhen you are done, finish with a concise report in Markdown with these sections:\n## Summary\n## Changes (files touched, or \"none\")\n## Verification (what you ran or checked, with results)\n## Open questions / risks",
+   "permission_profile": "read_only"
+  }
+ },
+ {
+  "seq": 138,
+  "id": "evt_1ed0ee64895a238f",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.836362+00:00",
+  "data": {
+   "from_session_id": null,
+   "to_session_id": "ses_8facdf82901782ad",
+   "kind": "assignment",
+   "subtask": "Summarise doc findings",
+   "text": "Summarise doc findings.",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 139,
+  "id": "evt_272c676ec7c4ee66",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_9756d66e9da50d69",
+  "parent_agent_id": null,
+  "type": "agent.message",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.837464+00:00",
+  "data": {
+   "from_session_id": "ses_9756d66e9da50d69",
+   "to_session_id": "ses_8facdf82901782ad",
+   "kind": "report",
+   "subtask": "Check the docs",
+   "text": "## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "routed_by": "bosun"
+  }
+ },
+ {
+  "seq": 140,
+  "id": "evt_309f6c5ae858f7e9",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": null,
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "session.status",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.840830+00:00",
+  "data": {}
+ },
+ {
+  "seq": 141,
+  "id": "evt_cdb3d128b92059cb",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "session.init",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.842361+00:00",
+  "data": {
+   "sdk_session_id": "40e44278-5245-401f-810b-3c9280402b18",
+   "model": "demo-agent",
+   "tools": [
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Bash"
+   ],
+   "permission_mode": "default",
+   "api_key_source": "demo",
+   "cwd": "/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9"
+  }
+ },
+ {
+  "seq": 142,
+  "id": "evt_646e39bdf8705338",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.848067+00:00",
+  "data": {
+   "text": "Exploring the codebase to understand the current behaviour.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 143,
+  "id": "evt_23a9752b76ece3bd",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.849981+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_1782ad_001",
+   "name": "Glob",
+   "input": {
+    "pattern": "**/*.py"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 144,
+  "id": "evt_f4ec8820f5e33103",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.851165+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_1782ad_001",
+   "name": "Glob",
+   "is_error": false,
+   "output": "src/app.py\nsrc/util.py\ntests/test_app.py",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 145,
+  "id": "evt_a5e37dbfc9818ff3",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.852246+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_1782ad_002",
+   "name": "Grep",
+   "input": {
+    "pattern": "def ",
+    "path": "src"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 146,
+  "id": "evt_4e51f1e43cb9eacb",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.853545+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_1782ad_002",
+   "name": "Grep",
+   "is_error": false,
+   "output": "src/app.py:3: def handler()",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 147,
+  "id": "evt_949afef6c390a709",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "tool.call",
+  "status": "running",
+  "ts": "2026-10-20T20:49:11.854687+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_1782ad_003",
+   "name": "Read",
+   "input": {
+    "file_path": "/tmp/tmpjzt2_gtn/data/worktrees/run_299aa58d2c3189f9/README.md"
+   },
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 148,
+  "id": "evt_30584c9f0949639a",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "tool.result",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.855902+00:00",
+  "data": {
+   "tool_use_id": "toolu_demo_1782ad_003",
+   "name": "Read",
+   "is_error": false,
+   "output": "# Demo project \u2026",
+   "duration_ms": 0,
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 149,
+  "id": "evt_1ab39f3d060e64a6",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "assistant.text",
+  "status": null,
+  "ts": "2026-10-20T20:49:11.856903+00:00",
+  "data": {
+   "text": "Looks correct; consider an extra edge-case test.",
+   "parent_tool_use_id": null
+  }
+ },
+ {
+  "seq": 150,
+  "id": "evt_e5304f43682a12c2",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "session.turn_completed",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.857963+00:00",
+  "data": {
+   "subtype": "success",
+   "is_error": false,
+   "num_turns": 3,
+   "result": "## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "providers": [
+    "demo"
+   ]
+  }
+ },
+ {
+  "seq": 151,
+  "id": "evt_0c060c740ecb3946",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": "ses_8facdf82901782ad",
+  "agent_id": "ses_8facdf82901782ad",
+  "parent_agent_id": null,
+  "type": "session.completed",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.862553+00:00",
+  "data": {
+   "result": "## Summary\nLooks correct; consider an extra edge-case test.\n\n## Changes\nnone\n\n## Verification\nRead the relevant files.\n\n## Open questions / risks\nNone (demo).",
+   "error": null,
+   "error_kind": null,
+   "num_turns": 4,
+   "duration_ms": 0,
+   "usage": {
+    "input_tokens": 3600,
+    "output_tokens": 540
+   },
+   "model": "demo-agent"
+  }
+ },
+ {
+  "seq": 152,
+  "id": "evt_c2a7dd44768b5dfb",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": "subtask:sub_873a1d20529e3286",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "completed",
+  "ts": "2026-10-20T20:49:11.866991+00:00",
+  "data": {
+   "subtask_id": "sub_873a1d20529e3286",
+   "key": "right2",
+   "title": "Summarise doc findings",
+   "role": "reviewer",
+   "from": "running",
+   "to": "completed",
+   "attempt": 1,
+   "session_id": "ses_8facdf82901782ad",
+   "error": null,
+   "depends_on": [
+    "right"
+   ]
+  }
+ },
+ {
+  "seq": 153,
+  "id": "evt_f6e63e45aaaaf0d6",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": "subtask:sub_d8fb4f0788c57f26",
+  "parent_agent_id": null,
+  "type": "subtask.status",
+  "status": "skipped",
+  "ts": "2026-10-20T20:49:11.873866+00:00",
+  "data": {
+   "subtask_id": "sub_d8fb4f0788c57f26",
+   "key": "left2",
+   "title": "Summarise API findings",
+   "role": "reviewer",
+   "from": "waiting_dependency",
+   "to": "skipped",
+   "attempt": 0,
+   "session_id": null,
+   "error": "Not run: it waits for Check the API, which did not finish.",
+   "depends_on": [
+    "left"
+   ]
+  }
+ },
+ {
+  "seq": 154,
+  "id": "evt_911d5426657379e3",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.status",
+  "status": "failed",
+  "ts": "2026-10-20T20:49:11.974388+00:00",
+  "data": {
+   "from": "running",
+   "to": "failed",
+   "reason": "Check the API failed: The agent process exited unexpectedly (simulated). Not run: Summarise API findings."
+  }
+ },
+ {
+  "seq": 155,
+  "id": "evt_f8d76c25151b9bad",
+  "run_id": "run_299aa58d2c3189f9",
+  "task_id": "tsk_2d82af4637a09f3c",
+  "session_id": null,
+  "agent_id": null,
+  "parent_agent_id": null,
+  "type": "run.failed",
+  "status": "failed",
+  "ts": "2026-10-20T20:49:11.975608+00:00",
+  "data": {
+   "summary": "",
+   "error": "Check the API failed: The agent process exited unexpectedly (simulated). Not run: Summarise API findings.",
+   "error_kind": "process_crash",
+   "reason": "Check the API failed: The agent process exited unexpectedly (simulated). Not run: Summarise API findings.",
+   "usage": {
+    "sessions": 3,
+    "num_turns": 8,
+    "input_tokens": 7200,
+    "output_tokens": 1080
+   },
+   "diff": {
+    "files": 0,
+    "additions": 0,
+    "deletions": 0,
+    "commits": 0
+   }
+  }
+ }
+]

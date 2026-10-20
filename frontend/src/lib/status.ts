@@ -11,6 +11,7 @@ import {
   type LucideIcon,
   PauseCircle,
   PlugZap,
+  SkipForward,
 } from "lucide-react";
 
 /**
@@ -26,6 +27,7 @@ export type VisualState =
   | "success"
   | "failed"
   | "cancelled"
+  | "skipped"
   | "paused";
 
 export interface StateMeta {
@@ -44,6 +46,7 @@ export const STATE: Record<VisualState, StateMeta> = {
   success: { label: "Done", color: "var(--st-ok)", icon: CheckCircle2, pattern: "solid" },
   failed: { label: "Failed", color: "var(--st-fail)", icon: AlertOctagon, pattern: "solid" },
   cancelled: { label: "Cancelled", color: "var(--st-cancel)", icon: Ban, pattern: "struck" },
+  skipped: { label: "Skipped", color: "var(--st-cancel)", icon: SkipForward, pattern: "dashed" },
   paused: { label: "Paused", color: "var(--st-dep)", icon: PauseCircle, pattern: "dashed" },
 };
 
@@ -104,6 +107,7 @@ export function subtaskState(status: string | null | undefined): VisualState {
     case "conflict":
       return "failed";
     case "skipped":
+      return "skipped";
     case "cancelled":
       return "cancelled";
     default:
@@ -170,4 +174,12 @@ const ROLE_DEFAULT_COLOR: Record<string, string> = {
 
 export function roleColor(role: string | null | undefined, color?: string | null): string {
   return ROLE_COLOR[color ?? ROLE_DEFAULT_COLOR[role ?? ""] ?? "slate"] ?? ROLE_COLOR.slate;
+}
+
+/** How a run executes, in words: "Workflow", "Agent team", "Single agent"… */
+export function strategyLabel(run: { mode: string; strategy?: string | null }): string {
+  if (run.mode === "workflow") return "Workflow";
+  if (run.strategy === "team" || run.mode === "team") return "Agent team";
+  if (run.mode === "auto") return run.strategy === "single" ? "Auto: single agent" : "Auto: planning";
+  return "Single agent";
 }

@@ -9,7 +9,7 @@ import { RunGraphView } from "@/components/run/RunGraphView";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Spinner, StatusPill } from "@/components/ui/display";
 import type { GraphEdge, GraphNode } from "@/lib/graph/reduce";
-import { RUN_LABEL, roleColor, runState, sessionState, type VisualState } from "@/lib/status";
+import { RUN_LABEL, roleColor, runState, sessionState, strategyLabel, type VisualState } from "@/lib/status";
 import { cn, relativeTime } from "@/lib/utils";
 import { useEvents, useRunLog } from "@/stores/events";
 import { useUi } from "@/stores/ui";
@@ -40,7 +40,7 @@ function Overview() {
           id: String(n.id),
           kind: "outcome",
           label: `Run ${d.number}`,
-          sublabel: `${RUN_LABEL[d.status] ?? d.status}, ${d.strategy ?? d.mode}`,
+          sublabel: `${RUN_LABEL[d.status] ?? d.status}, ${strategyLabel({ mode: d.mode, strategy: d.strategy })}`,
           state: runState(d.status),
           firstSeq: 0,
           lastSeq: 0,

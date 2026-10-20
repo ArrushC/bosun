@@ -10,6 +10,7 @@ import { KeyValue, Md, StatusPill } from "@/components/ui/display";
 import { Checkbox, Textarea } from "@/components/ui/inputs";
 import type { GraphNode, RunModel, ToolCall } from "@/lib/graph/reduce";
 import { cn, formatDuration, formatTokens, relativeTime } from "@/lib/utils";
+import { strategyLabel } from "@/lib/status";
 
 import { TOOL_ICON } from "./nodes";
 
@@ -286,7 +287,7 @@ export function Inspector({ node, model, run, onClose, onFocus }: { node: GraphN
             <KeyValue
               items={[
                 ["Task", <Link to={`?task=${run.task_id}`} className="hover:text-accent-strong">{run.task_key} {run.task_title}</Link>],
-                ["Strategy", run.strategy ?? run.mode],
+                ["Strategy", strategyLabel(run)],
                 ["Branch", run.branch ? <span className="mono break-all">{run.branch}</span> : "Edits in place"],
                 ["Started", relativeTime(run.started_at)],
               ]}

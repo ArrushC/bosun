@@ -2,6 +2,8 @@ import type { ExecutionEvent } from "@/api/types";
 import { mergeEvents } from "@/stores/events";
 import single from "@/test/fixtures/single-run.json";
 import team from "@/test/fixtures/team-run.json";
+import workflowFailed from "@/test/fixtures/workflow-failed.json";
+import workflowRun from "@/test/fixtures/workflow-run.json";
 
 import { DEFAULT_VIEW, reduceEvents, viewGraph, type ViewOptions } from "./reduce";
 
@@ -155,5 +157,52 @@ describe("reduceEvents — SDK subagents", () => {
     expect(visible.nodes.some((n) => n.kind === "toolgroup" && n.owner === "ses/a1")).toBe(true);
     // The Agent tool call itself is represented by the subagent node, not a tool node.
     expect(visible.nodes.some((n) => n.label === "Agent")).toBe(false);
+  });
+});
+
+describe("reduceEvents — workflow runs (a plan without a coordinator)", () => {
+  const model = reduceEvents(workflowRun as ExecutionEvent[]);
+  const nodes = [...model.nodes.values()];
+  const edges = [...model.edges.values()];
+  const step = (key: string) => nodes.find((n) => n.kind === "subtask" && n.data.key === key)!.id;
+  const agentOf = (key: string, m = model) => [...m.edges.values()].find((e) => e.kind === "assigned" && e.source === [...m.nodes.values()].find((n) => n.kind === "subtask" && n.data.key === key)!.id)!.target;
+  const task = nodes.find((n) => n.kind === "task")!;
+
+  it("draws each step, its agent and the authored order", () => {
+    expect(nodes.filter((n) => n.kind === "coordinator")).toHaveLength(0);
+    expect(nodes.filter((n) => n.kind === "subtask")).toHaveLength(5);
+    expect(nodes.filter((n) => n.kind === "agent")).toHaveLength(5);
+    const deps = edges.filter((e) => e.kind === "depends").map((e) => `${model.nodes.get(e.source)!.data.key}>${model.nodes.get(e.target)!.data.key}`);
+    expect(deps.sort()).toEqual(["implement>review", "implement>test", "research>implement", "review>final", "test>final"]);
+    expect(edges.some((e) => e.kind === "message" && e.label === "report" && e.source === agentOf("research") && e.target === agentOf("implement"))).toBe(true);
+  });
+
+  it("connects the task to the first step and the last step to the outcome", () => {
+    expect(edges.filter((e) => e.target === step("research")).map((e) => [e.source, e.kind])).toEqual([[task.id, "planned"]]);
+    expect(edges.filter((e) => e.kind === "outcome").map((e) => e.source)).toEqual([agentOf("final")]);
+    expect(model.nodes.get("outcome")?.state).toBe("success");
+  });
+
+  it("keeps agents attached to the task when the plan is hidden", () => {
+    const g = viewGraph(model, view({ hidden: new Set(["plan"]) }));
+    const agents = g.nodes.filter((n) => n.kind === "agent");
+    expect(agents.every((a) => g.edges.some((e) => e.source === task.id && e.target === a.id))).toBe(true);
+  });
+
+  it("shows steps that never ran as skipped, and ends at each branch's last step", () => {
+    const failed = reduceEvents(workflowFailed as ExecutionEvent[]);
+    const state = (key: string) => [...failed.nodes.values()].find((n) => n.kind === "subtask" && n.data.key === key)!.state;
+    expect([state("left"), state("left2"), state("right"), state("right2")]).toEqual(["failed", "skipped", "success", "success"]);
+    const left2 = [...failed.nodes.values()].find((n) => n.data.key === "left2")!.id;
+    const sources = [...failed.edges.values()].filter((e) => e.kind === "outcome").map((e) => e.source);
+    expect(sources.sort()).toEqual([left2, agentOf("right2", failed)].sort());
+    expect(failed.nodes.get("outcome")?.state).toBe("failed");
+  });
+
+  it("leaves team runs hanging off their coordinator", () => {
+    const teamModel = reduceEvents(teamEvents);
+    const coordinator = [...teamModel.nodes.values()].find((n) => n.kind === "coordinator")!.id;
+    expect([...teamModel.edges.values()].filter((e) => e.kind === "outcome").map((e) => e.source)).toEqual([coordinator]);
+    expect([...teamModel.edges.values()].filter((e) => e.kind === "planned").every((e) => e.source === coordinator)).toBe(true);
   });
 });

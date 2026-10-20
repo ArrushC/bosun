@@ -148,7 +148,7 @@ interface PlanItem {
 }
 
 function terminal(state: VisualState) {
-  return state === "success" || state === "failed" || state === "cancelled" || state === "paused";
+  return state === "success" || state === "failed" || state === "cancelled" || state === "skipped" || state === "paused";
 }
 
 export function emptyModel(): RunModel {
@@ -433,7 +433,9 @@ export function createBuilder(): ModelBuilder {
           const id = `subtask:${s.subtask_id}`;
           subtaskByKey.set(s.key, id);
           node({ id, kind: "subtask", label: s.title, sublabel: s.key, state: "pending", color: roleColor(s.role), seq: e.seq, data: { key: s.key, role: s.role, instructions: s.instructions, modifiesCode: s.modifies_code, dependsOn: s.depends_on } });
-          if (coordinator) edge({ id: `plan:${id}`, source: coordinator, target: id, kind: "planned", seq: e.seq });
+          // A workflow's plan has no coordinator: the steps that wait for nothing start from the task.
+          const from = coordinator ?? (s.depends_on?.length ? undefined : taskNodeId());
+          if (from) edge({ id: `plan:${id}`, source: from, target: id, kind: "planned", seq: e.seq });
         }
         for (const s of (d.subtasks ?? []) as PlanItem[]) {
           for (const dep of s.depends_on ?? []) {
@@ -477,9 +479,12 @@ export function createBuilder(): ModelBuilder {
             m.meta.endTs = e.ts;
             const state = runState(kind);
             node({ id: "outcome", kind: "outcome", label: kind === "completed" ? "Ready for review" : kind[0].toUpperCase() + kind.slice(1), sublabel: d.error ?? d.reason ?? undefined, state, seq: e.seq, data: { summary: d.summary, error: d.error, errorKind: d.error_kind, usage: d.usage, diff: d.diff } });
-            const source = findCoordinator(m) ?? lastAgent(m) ?? taskNodeId();
+            // The coordinator summarises; without one, the outcome follows the plan's last steps.
+            const coordinator = findCoordinator(m);
+            const sources = coordinator ? [coordinator] : finalSteps(m);
+            if (!sources.length) sources.push(lastAgent(m) ?? taskNodeId());
             for (const id of [...m.edges.keys()]) if (id.startsWith("outcome:")) m.edges.delete(id);
-            edge({ id: `outcome:${source}`, source, target: "outcome", kind: "outcome", seq: e.seq });
+            for (const source of sources) edge({ id: `outcome:${source}`, source, target: "outcome", kind: "outcome", seq: e.seq });
             update(taskNodeId(), { state }, e.seq);
           } else if (kind === "merged" || kind === "discarded") {
             update("outcome", { data: { integration: kind } }, e.seq);
@@ -513,6 +518,19 @@ export function reduceEvents(events: ExecutionEvent[], upToSeq?: number): RunMod
 function findCoordinator(m: RunModel): string | undefined {
   for (const n of m.nodes.values()) if (n.kind === "coordinator") return n.id;
   return undefined;
+}
+
+/** The plan steps nothing waits for: their agent, or the step itself if it never ran. */
+function finalSteps(m: RunModel): string[] {
+  const steps = [...m.nodes.values()].filter((n) => n.kind === "subtask");
+  const awaited = new Set(steps.flatMap((n) => (n.data.dependsOn as string[] | undefined) ?? []));
+  return steps
+    .filter((n) => !awaited.has(n.data.key as string))
+    .map((n) => {
+      let agent: string | undefined;
+      for (const e of m.edges.values()) if (e.kind === "assigned" && e.source === n.id) agent = e.target;
+      return agent ?? n.id;
+    });
 }
 
 function lastAgent(m: RunModel): string | undefined {
@@ -571,8 +589,9 @@ export function viewGraph(model: RunModel, opts: ViewOptions): { nodes: GraphNod
     // Re-attach agents that were assigned through a (now hidden) subtask to their coordinator.
     for (const n of model.nodes.values()) {
       if (n.kind === "agent" && n.data.subtaskId) {
-        const coordinator = findCoordinator(model);
-        if (coordinator) edges.set(`deleg:${coordinator}:${n.id}`, { id: `deleg:${coordinator}:${n.id}`, source: coordinator, target: n.id, kind: "delegated", seq: n.firstSeq, active: n.state === "running" });
+        // A workflow has no coordinator, so its agents hang off the task instead.
+        const parent = findCoordinator(model) ?? [...model.nodes.values()].find((t) => t.kind === "task")?.id;
+        if (parent) edges.set(`deleg:${parent}:${n.id}`, { id: `deleg:${parent}:${n.id}`, source: parent, target: n.id, kind: "delegated", seq: n.firstSeq, active: n.state === "running" });
       }
     }
   }

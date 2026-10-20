@@ -1,9 +1,12 @@
 import { ListTree } from "lucide-react";
+import type { ReactNode } from "react";
+import { Link } from "react-router";
 
 import type { Run } from "@/api/types";
 import { KeyValue, Md, Notice, RoleTag, StatusPill } from "@/components/ui/display";
-import { roleColor, subtaskState } from "@/lib/status";
-import { formatDuration, formatTokens, relativeTime } from "@/lib/utils";
+import { roleColor, strategyLabel, subtaskState } from "@/lib/status";
+import { cn, formatDuration, formatTokens, plural, relativeTime } from "@/lib/utils";
+import { runWorkflow } from "@/lib/workflow";
 
 export function RunSummary({ run }: { run: Run }) {
   const config = run.config as {
@@ -14,6 +17,7 @@ export function RunSummary({ run }: { run: Run }) {
     timeout_minutes?: number;
     require_plan_approval?: boolean;
     max_team_size?: number;
+    max_parallel?: number;
     allow_subagents?: boolean;
     instructions?: string | null;
     plan?: { summary?: string; rationale?: string };
@@ -22,6 +26,8 @@ export function RunSummary({ run }: { run: Run }) {
     scope?: Record<string, { name: string; description: string }>;
   };
   const usage = run.usage as Record<string, number | undefined>;
+  const workflow = runWorkflow(run);
+  const titles = new Map(run.subtasks.map((s) => [s.key, s.title]));
 
   return (
     <div className="mx-auto grid max-w-[1180px] gap-12 px-8 py-8 lg:grid-cols-[1fr_320px]">
@@ -44,22 +50,24 @@ export function RunSummary({ run }: { run: Run }) {
         {run.subtasks.length > 0 && (
           <section>
             <h2 className="mb-3 flex items-center gap-2 text-md font-semibold">
-              <ListTree className="size-5 text-text-3" /> Plan
+              <ListTree className="size-5 text-text-3" /> {workflow ? "Steps" : "Plan"}
             </h2>
             {config.plan?.summary && <Md className="mb-3 text-sm text-text-2">{config.plan.summary}</Md>}
             {config.plan_warnings?.length ? <Notice tone="warn" className="mb-3">{config.plan_warnings.join(" ")}</Notice> : null}
             <ol className="divide-y divide-line-soft overflow-hidden rounded-panel bg-panel">
               {run.subtasks.map((s) => (
                 <li key={s.id} className="flex items-start gap-4 px-5 py-4">
-                  <span className="mono mt-0.5 text-xs text-text-3">{s.key}</span>
+                  {!workflow && <span className="mono mt-0.5 text-xs text-text-3">{s.key}</span>}
                   <div className="min-w-0 flex-1">
                     <p className="text-base font-medium">{s.title}</p>
                     <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-text-3">
                       <RoleTag name={s.role} color={roleColor(s.role)} />
-                      {s.depends_on.length > 0 && <span>after {s.depends_on.join(", ")}</span>}
+                      {s.depends_on.length > 0 && (
+                        <span>after {(workflow ? s.depends_on.map((k) => titles.get(k) ?? k) : s.depends_on).join(", ")}</span>
+                      )}
                       {s.attempts > 1 && <span>{s.attempts} attempts</span>}
                     </p>
-                    {s.error && <p className="mt-1 text-xs text-st-fail">{s.error}</p>}
+                    {s.error && <p className={cn("mt-1 text-xs", s.status === "skipped" ? "text-text-3" : "text-st-fail")}>{s.error}</p>}
                   </div>
                   <StatusPill state={subtaskState(s.status)} />
                 </li>
@@ -95,11 +103,19 @@ export function RunSummary({ run }: { run: Run }) {
           <h2 className="mb-3 text-md font-semibold">Configuration</h2>
           <KeyValue
             items={[
-              ["Mode", String(config.mode ?? run.mode)],
-              ...(config.mode === "single" ? [["Role", String(config.single_role)] as [string, string]] : [["Roles", (config.team_roles ?? []).join(", ")] as [string, string]]),
+              ...(workflow
+                ? ([
+                    ["Workflow", <Link to={`/workflows/${workflow.id}`} className="hover:text-accent-strong">{workflow.name}</Link>],
+                    ["Steps", `${plural(workflow.steps.length, "step")}, up to ${config.max_parallel ?? "?"} at a time`],
+                    ["Agents", (config.team_roles ?? []).join(", ")],
+                  ] as [string, ReactNode][])
+                : ([
+                    ["Mode", strategyLabel(run)],
+                    config.mode === "single" ? ["Role", String(config.single_role)] : ["Roles", (config.team_roles ?? []).join(", ")],
+                  ] as [string, ReactNode][])),
               ["Max turns", String(config.max_turns ?? "")],
               ["Time limit", `${config.timeout_minutes ?? "?"} min per session`],
-              ...(config.mode !== "single" ? [["Plan approval", config.require_plan_approval ? "Required" : "Off"] as [string, string]] : []),
+              ...(config.mode === "team" || config.mode === "auto" ? [["Plan approval", config.require_plan_approval ? "Required" : "Off"] as [string, string]] : []),
               ["Isolation", run.isolation === "worktree" ? "Git worktree" : "In place"],
               ["Created", relativeTime(run.created_at)],
             ]}

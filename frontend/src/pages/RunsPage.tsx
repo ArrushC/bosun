@@ -6,7 +6,7 @@ import { useRuns } from "@/api/hooks";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState, ErrorNote, Spinner, StatusPill } from "@/components/ui/display";
 import { SearchInput, Segmented } from "@/components/ui/inputs";
-import { RUN_LABEL, runState } from "@/lib/status";
+import { RUN_LABEL, runState, strategyLabel } from "@/lib/status";
 import { elapsed, formatDuration, formatTokens, relativeTime } from "@/lib/utils";
 
 const FILTERS = {
@@ -60,7 +60,7 @@ export function RunsPage() {
               {rows.map((r) => {
                 const tokens = Number(r.usage.output_tokens ?? 0);
                 const details = [
-                  r.mode === "single" ? "Single agent" : r.strategy === "team" ? "Agent team" : r.mode === "auto" ? "Automatic" : "Agent team",
+                  r.workflow_name ? `Workflow ${r.workflow_name}` : strategyLabel(r),
                   r.backend === "demo" ? "Demo" : r.provider === "subscription" ? "Subscription" : r.provider === "api_key" ? "API key" : "Vertex AI",
                   relativeTime(r.started_at ?? r.created_at),
                   formatDuration(r.duration_ms ?? elapsed(r.started_at)),

@@ -140,7 +140,7 @@ describe("task cards", () => {
       ...baseTask,
       open_dependencies: 1,
       sources: [{ id: "s", kind: "github_issue", title: "Crash", url: "u", path: null, line: null, repo: "acme/shop", number: 42, state: "open" }],
-      latest_run: { id: "run_1", number: 1, status: "waiting_approval", mode: "team", strategy: "team", backend: "claude", started_at: null, ended_at: null, error_kind: null, sessions: 2, active_sessions: 2, subtasks: 3, subtasks_done: 1, pending_approvals: 1, agents: [{ role: "implementer", name: "Implementer", status: "waiting_approval", count: 1 }], integration_status: "pending" },
+      latest_run: { id: "run_1", number: 1, status: "waiting_approval", mode: "team", strategy: "team", backend: "claude", started_at: null, ended_at: null, error_kind: null, sessions: 2, active_sessions: 2, subtasks: 3, subtasks_done: 1, pending_approvals: 1, agents: [{ role: "implementer", name: "Implementer", status: "waiting_approval", count: 1 }], integration_status: "pending", workflow_name: null },
     } as Task;
     renderWithProviders(<TaskCardView task={task} />);
     expect(screen.getByText("shop#42")).toBeInTheDocument();

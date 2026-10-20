@@ -144,7 +144,7 @@ function RunRow({ run }: { run: RunBrief }) {
         <p className="text-sm font-medium">
           Run {run.number}
           <span className="ml-2 text-xs font-normal text-text-3">
-            {run.mode === "single" ? "Single agent" : run.strategy === "single" ? "Auto: single agent" : `Team of ${run.sessions}`}
+            {run.workflow_name ? `Workflow ${run.workflow_name}` : run.mode === "single" ? "Single agent" : run.strategy === "single" ? "Auto: single agent" : `Team of ${run.sessions}`}
             {run.backend === "demo" ? ", demo" : ""}
           </span>
         </p>

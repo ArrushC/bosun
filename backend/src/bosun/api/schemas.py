@@ -218,6 +218,7 @@ class RunBrief(Schema):
     pending_approvals: int = 0
     agents: list[dict[str, Any]] = Field(default_factory=list)
     integration_status: str | None = None
+    workflow_name: str | None = None
 
 
 class TaskOut(ORM):

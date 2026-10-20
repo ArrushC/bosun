@@ -71,6 +71,8 @@ function stateBorder(state: VisualState, selected?: boolean) {
     case "waiting_dependency":
     case "pending":
       return "border-dashed border-line";
+    case "skipped":
+      return "border-dashed border-line opacity-80";
     case "cancelled":
     case "paused":
       return "border-line opacity-80";
