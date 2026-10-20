@@ -13,8 +13,9 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from bosun.agents.permissions import tool_policy
-from bosun.domain.enums import ExecutionBackend, ExecutionMode, Provider
+from bosun.domain.enums import ExecutionBackend, ExecutionMode, Provider, RunMode
 from bosun.settings_store import ExecutionSettings
+from bosun.workflows.spec import WorkflowSnapshot
 
 
 class RoleConfig(BaseModel):
@@ -33,6 +34,8 @@ class RoleConfig(BaseModel):
 
 class RunRequest(BaseModel):
     mode: ExecutionMode | None = None
+    # Run this workflow's current draft instead of a single agent or a team.
+    workflow_id: str | None = None
     role: str | None = None
     team_roles: list[str] | None = None
     backend: ExecutionBackend | None = None
@@ -48,7 +51,7 @@ class RunRequest(BaseModel):
 
 
 class RunConfig(BaseModel):
-    mode: ExecutionMode
+    mode: RunMode
     backend: ExecutionBackend
     provider: Provider
     model: str | None = None
@@ -72,6 +75,8 @@ class RunConfig(BaseModel):
     instructions: str | None = None
     remembered_approvals: list[dict[str, str]] = Field(default_factory=list)
     demo_scenario: dict[str, Any] = Field(default_factory=dict)
+    # The workflow draft this run executes (mode "workflow"), frozen at start.
+    workflow: WorkflowSnapshot | None = None
 
     def execution_settings(self) -> ExecutionSettings:
         return ExecutionSettings(
@@ -94,11 +99,12 @@ class RunConfig(BaseModel):
     def scope(self) -> dict[str, Any]:
         """Human-readable permissions per role for the launch dialog."""
         execution = self.execution_settings()
-        relevant = (
-            [self.single_role]
-            if self.mode == ExecutionMode.SINGLE
-            else [self.coordinator().key, *self.team_roles]
-        )
+        if self.mode == RunMode.SINGLE:
+            relevant = [self.single_role]
+        elif self.mode == RunMode.WORKFLOW:
+            relevant = self.team_roles
+        else:
+            relevant = [self.coordinator().key, *self.team_roles]
         roles = {}
         for key in relevant:
             role = self.roles.get(key)

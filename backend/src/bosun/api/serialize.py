@@ -240,6 +240,8 @@ async def run_list_items(session: AsyncSession, runs: Sequence[AgentRun]) -> lis
                 error_kind=run.error_kind,
                 is_demo=run.is_demo,
                 integration_status=run.integration_status,
+                workflow_id=run.workflow_id,
+                workflow_name=((run.config or {}).get("workflow") or {}).get("name"),
             )
         )
     return items

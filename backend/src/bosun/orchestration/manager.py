@@ -40,6 +40,7 @@ from bosun.db.models import (
     Artifact,
     Subtask,
     Task,
+    Workflow,
 )
 from bosun.domain.enums import (
     ACTIVE_RUN_STATUSES,
@@ -47,6 +48,7 @@ from bosun.domain.enums import (
     ExecutionBackend,
     ExecutionMode,
     Provider,
+    RunMode,
     RunStatus,
     SessionKind,
     SessionStatus,
@@ -64,6 +66,7 @@ from bosun.orchestration.sessions import SessionRequest, SessionRunner
 from bosun.orchestration.team import RunInfo, TeamExecutor, TeamResult
 from bosun.settings_store import ProviderSettings, load_settings
 from bosun.tasks.service import add_activity, load_task, system_transition
+from bosun.workflows.service import WorkflowInvalid, snapshot_for_run
 
 log = logging.getLogger(__name__)
 
@@ -124,12 +127,30 @@ class RunManager:
             raise RunConflict(
                 "No agent roles are enabled. Enable at least one role in Settings → Agent roles."
             )
-        mode = request.mode or ExecutionMode(task.execution_mode or settings.execution.default_mode)
+        workflow = None
+        if request.workflow_id:
+            row = await session.get(Workflow, request.workflow_id)
+            if row is None or row.archived:
+                raise RunNotFound("Workflow not found")
+            try:
+                workflow = await snapshot_for_run(session, row)
+            except WorkflowInvalid as exc:
+                raise RunConflict(str(exc)) from exc
+            mode = RunMode.WORKFLOW
+        else:
+            mode = RunMode(
+                request.mode
+                or ExecutionMode(task.execution_mode or settings.execution.default_mode)
+            )
         single_role = request.role or ("implementer" if "implementer" in workers else workers[0])
         if single_role not in role_configs:
             raise RunConflict(f"Role '{single_role}' is not enabled")
-        team_roles = [r for r in (request.team_roles or workers) if r in workers]
-        if mode != ExecutionMode.SINGLE and not team_roles:
+        if workflow is not None:
+            # The agents the workflow's steps use, in step order; validation checked them.
+            team_roles = list(dict.fromkeys(s.agent for s in workflow.steps if s.agent))
+        else:
+            team_roles = [r for r in (request.team_roles or workers) if r in workers]
+        if mode != RunMode.SINGLE and not team_roles:
             raise RunConflict("Select at least one role for the team")
         workspace = task.workspace
         execution = settings.execution
@@ -161,6 +182,7 @@ class RunManager:
             trusted_workspace=bool(workspace and workspace.trusted),
             instructions=request.instructions,
             demo_scenario=request.demo_scenario,
+            workflow=workflow,
         )
 
     async def _provider_runtime(self, config: RunConfig) -> ProviderRuntime:
@@ -260,7 +282,7 @@ class RunManager:
                     "summary": "Demo backend: no Claude calls are made",
                 }
             )
-        if config.mode == ExecutionMode.TEAM:
+        if config.mode == RunMode.TEAM:
             warnings.append(
                 f"A coordinator will plan up to {config.max_team_size} subtasks"
                 + (
@@ -319,6 +341,7 @@ class RunManager:
                     task_id=task_id,
                     number=number,
                     mode=config.mode,
+                    workflow_id=config.workflow.id if config.workflow else None,
                     status=RunStatus.QUEUED,
                     backend=config.backend,
                     provider="demo" if config.backend == ExecutionBackend.DEMO else config.provider,
@@ -340,7 +363,9 @@ class RunManager:
                     session,
                     task_id,
                     TaskStatus.IN_PROGRESS,
-                    f"Run #{number} started ({config.mode})",
+                    f"Run #{number} started (workflow {config.workflow.name})"
+                    if config.workflow
+                    else f"Run #{number} started ({config.mode})",
                     run_id=run.id,
                 )
                 await session.commit()
@@ -360,6 +385,17 @@ class RunManager:
                         "task_title": task.title,
                         "single_role": config.single_role,
                         "team_roles": config.team_roles,
+                        **(
+                            {
+                                "workflow": {
+                                    "id": config.workflow.id,
+                                    "name": config.workflow.name,
+                                    "revision": config.workflow.revision,
+                                }
+                            }
+                            if config.workflow
+                            else {}
+                        ),
                     },
                 )
             )
@@ -493,8 +529,10 @@ class RunManager:
                 result = await self._follow_up(
                     ctx, config, provider, info, message or "", target_session_id
                 )
-            elif config.mode == ExecutionMode.SINGLE:
+            elif config.mode == RunMode.SINGLE:
                 result = await self._single(ctx, config, provider, info, entry)
+            elif config.mode == RunMode.WORKFLOW:
+                result = await self._workflow(ctx, config, provider, info)
             else:
                 result = await self._team(ctx, config, provider, info)
         await self._finish(ctx, info, result)
@@ -678,6 +716,16 @@ class RunManager:
             await session.commit()
         await team.schedule()
         return await team.aggregate(plan.get("strategy", "team"))
+
+    async def _workflow(
+        self, ctx: RunContext, config: RunConfig, provider: ProviderRuntime, info: RunInfo
+    ) -> TeamResult:
+        """An authored workflow: the team engine with a fixed plan and no coordinator."""
+        task_ctx = await self._task_context(ctx, config)
+        team = TeamExecutor(self, ctx, info, config, provider, task_ctx)
+        await team.plan_workflow()
+        await team.schedule()
+        return await team.finish_workflow()
 
     async def _follow_up(
         self,

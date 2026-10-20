@@ -5,9 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from bosun.domain.enums import ExecutionMode, TaskKind, TaskPriority, TaskStatus
+from bosun.workflows.spec import WorkflowSpec
+from bosun.workflows.validation import Issue
 
 
 class Schema(BaseModel):
@@ -463,6 +465,8 @@ class RunListItem(Schema):
     error_kind: str | None
     is_demo: bool
     integration_status: str
+    workflow_id: str | None = None
+    workflow_name: str | None = None
 
 
 class RunCreate(Schema):
@@ -617,3 +621,69 @@ class DashboardOut(Schema):
 class OverviewGraph(Schema):
     nodes: list[dict[str, Any]]
     edges: list[dict[str, Any]]
+
+
+# -- workflows --------------------------------------------------------------------------
+class WorkflowRunBrief(Schema):
+    id: str
+    number: int
+    status: str
+    task_id: str
+    task_key: str
+    created_at: datetime
+
+
+class WorkflowListItem(Schema):
+    id: str
+    name: str
+    description: str
+    steps: int
+    revision: int
+    updated_at: datetime
+    run_count: int
+    last_run: WorkflowRunBrief | None = None
+
+
+class WorkflowOut(Schema):
+    id: str
+    name: str
+    description: str
+    spec: WorkflowSpec
+    revision: int
+    created_at: datetime
+    updated_at: datetime
+    # Problems found in the saved draft; errors block a run.
+    issues: list[Issue]
+
+
+class WorkflowCreate(Schema):
+    name: str = Field(min_length=1, max_length=120)
+    description: str = Field(default="", max_length=2000)
+    spec: WorkflowSpec = Field(default_factory=WorkflowSpec)
+
+
+class WorkflowUpdate(Schema):
+    # The revision this edit is based on; a different current revision means a conflict.
+    revision: int
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=2000)
+    spec: WorkflowSpec | None = None
+
+
+class NewTaskIn(Schema):
+    title: str = Field(min_length=1, max_length=500)
+    description: str = Field(default="", max_length=20_000)
+    workspace_id: str
+
+
+class WorkflowRunCreate(Schema):
+    # The revision shown when the person chose to run; refused if the draft changed since.
+    revision: int
+    task_id: str | None = None
+    new_task: NewTaskIn | None = None
+
+    @model_validator(mode="after")
+    def _one_target(self) -> WorkflowRunCreate:
+        if (self.task_id is None) == (self.new_task is None):
+            raise ValueError("Choose an existing task or describe a new one.")
+        return self

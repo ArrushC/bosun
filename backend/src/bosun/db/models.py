@@ -230,6 +230,20 @@ class AgentRole(TimestampMixin, Base):
     is_coordinator: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
+class Workflow(TimestampMixin, Base):
+    """An authored graph of agent steps (see bosun.workflows.spec)."""
+
+    __tablename__ = "workflows"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_id("wf"))
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    spec: Mapped[JsonDict] = mapped_column(JSON, default=dict, nullable=False)
+    # Increases on every saved edit; a save must name the revision it started from.
+    revision: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
 class AgentRun(TimestampMixin, Base):
     __tablename__ = "agent_runs"
     __table_args__ = (
@@ -251,7 +265,9 @@ class AgentRun(TimestampMixin, Base):
     )
     number: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     mode: Mapped[str] = mapped_column(String, nullable=False)
-    strategy: Mapped[str | None] = mapped_column(String)  # resolved: single | team
+    strategy: Mapped[str | None] = mapped_column(String)  # resolved: single | team | workflow
+    # The workflow this run executed (its draft is frozen in `config.workflow`).
+    workflow_id: Mapped[str | None] = mapped_column(String, index=True)
     status: Mapped[str] = mapped_column(
         String, default=RunStatus.QUEUED, nullable=False, index=True
     )

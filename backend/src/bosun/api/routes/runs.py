@@ -38,7 +38,7 @@ _PUBLIC_CONFIG_KEYS = (
     "mode", "backend", "provider", "model", "effort", "single_role", "team_roles", "max_turns", "timeout_minutes",
     "require_plan_approval", "max_team_size", "max_parallel", "subtask_max_attempts", "allow_subagents",
     "allow_web_tools", "commit_agent_changes", "trusted_workspace", "instructions", "plan", "plan_warnings",
-    "plan_approved", "remembered_approvals",
+    "plan_approved", "remembered_approvals", "workflow",
 )  # fmt: skip
 
 
@@ -97,6 +97,7 @@ async def list_runs(
     session: SessionDep,
     status: str | None = None,
     task_id: str | None = None,
+    workflow_id: str | None = None,
     limit: int = Query(default=200, ge=1, le=1000),
 ) -> list[RunListItem]:
     stmt = select(AgentRun)
@@ -104,6 +105,8 @@ async def list_runs(
         stmt = stmt.where(AgentRun.status.in_(status.split(",")))
     if task_id:
         stmt = stmt.where(AgentRun.task_id == task_id)
+    if workflow_id:
+        stmt = stmt.where(AgentRun.workflow_id == workflow_id)
     rows = (await session.scalars(stmt.order_by(AgentRun.created_at.desc()).limit(limit))).all()
     return await run_list_items(session, rows)
 

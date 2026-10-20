@@ -29,6 +29,7 @@ from bosun.api.routes import (
     settings,
     sources,
     tasks,
+    workflows,
     workspaces,
     ws,
 )
@@ -159,6 +160,7 @@ def create_app(
         settings,
         dashboard,
         demo,
+        workflows,
         ws,
     ):
         app.include_router(router.router, prefix=API_PREFIX)

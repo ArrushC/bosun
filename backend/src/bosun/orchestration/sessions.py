@@ -47,6 +47,8 @@ class SessionRequest:
     resume: AgentSession | None = None
     attempt: int = 1
     allow_subagents: bool = False
+    # Overrides the run's session time limit (a workflow step's own limit).
+    timeout_minutes: int | None = None
     scenario: dict[str, Any] = field(default_factory=dict)
     # Called once the session row exists (used to emit routed messages to it).
     on_created: Callable[[str], Awaitable[None]] | None = None
@@ -115,7 +117,7 @@ class SessionRunner:
             model=role.model or config.model,
             effort=role.effort or config.effort,
             max_turns=role.max_turns or config.max_turns,
-            timeout_s=config.timeout_minutes * 60.0,
+            timeout_s=(req.timeout_minutes or config.timeout_minutes) * 60.0,
             resume_sdk_session_id=req.resume.sdk_session_id if req.resume else None,
             output_schema=req.output_schema,
             subagents=self._subagents(config) if allow_subagents else None,

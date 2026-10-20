@@ -36,6 +36,15 @@ class ExecutionMode(StrEnum):
     AUTO = "auto"
 
 
+class RunMode(StrEnum):
+    """How a run executes: one of the execution modes a task offers, or a workflow."""
+
+    SINGLE = "single"
+    TEAM = "team"
+    AUTO = "auto"
+    WORKFLOW = "workflow"
+
+
 class RunStatus(StrEnum):
     QUEUED = "queued"
     PREPARING = "preparing"

@@ -32,13 +32,14 @@ from bosun.agents.prompts import (
     coordinator_prompt,
     plan_from_text,
     subtask_prompt,
+    workflow_step_prompt,
 )
 from bosun.db.models import AgentRun, AgentSession, Subtask
 from bosun.domain.enums import (
     TERMINAL_SUBTASK_STATUSES,
     ApprovalKind,
     ApprovalStatus,
-    ExecutionMode,
+    RunMode,
     RunStatus,
     SessionKind,
     SessionStatus,
@@ -52,6 +53,8 @@ from bosun.orchestration.sessions import SessionRequest
 log = logging.getLogger(__name__)
 
 PLAN_APPROVAL_TIMEOUT_S = 24 * 3600.0
+# Error prefix of workflow steps skipped because something they wait for failed.
+NOT_RUN = "Not run"
 CONTINUE_PROMPT = (
     "Your previous session was interrupted before you finished. Continue the assignment from where you "
     "left off, then finish with the report format requested earlier."
@@ -288,7 +291,7 @@ class TeamExecutor:
         await self.services.store.set_run_status(self.ctx.run_id, RunStatus.PLANNING)
         self.ctx.active_status = RunStatus.PLANNING
         coordinator = self.config.coordinator()
-        allow_single = self.config.mode == ExecutionMode.AUTO
+        allow_single = self.config.mode == RunMode.AUTO
         team_roles = [
             {
                 "key": k,
@@ -408,6 +411,137 @@ class TeamExecutor:
         resolution = await self.services.approvals.wait(self.ctx, approval, PLAN_APPROVAL_TIMEOUT_S)
         return resolution.get("decision") == "approve"
 
+    # -- authored workflows ------------------------------------------------------------------
+    async def plan_workflow(self) -> None:
+        """Write the workflow's steps as the run's plan (once; a resumed run keeps its plan).
+
+        The plan is announced with the same `plan.created` event a coordinator's plan
+        uses, without a coordinator session, so the live graph and the run page work
+        unchanged.
+        """
+        workflow = self.config.workflow
+        assert workflow is not None
+        existing = await self._subtasks()
+        if existing:
+            # Steps marked "not run" when the run last ended get another chance now.
+            for s in existing:
+                if s.status == SubtaskStatus.SKIPPED and (s.error or "").startswith(NOT_RUN):
+                    await self._set_subtask(s.id, SubtaskStatus.PENDING, error=None)
+            return
+        async with self.services.db.session() as session:
+            run = await session.get(AgentRun, self.ctx.run_id)
+            assert run is not None
+            for position, step in enumerate(workflow.steps):
+                session.add(
+                    Subtask(
+                        run_id=self.ctx.run_id,
+                        key=step.key,
+                        position=position,
+                        title=step.title,
+                        role=step.agent or "",
+                        instructions=step.instructions,
+                        depends_on=list(step.after),
+                        modifies_code=step.changes_code,
+                        max_attempts=step.retries + 1
+                        if step.retries is not None
+                        else self.config.subtask_max_attempts,
+                    )
+                )
+            run.strategy = RunMode.WORKFLOW
+            await session.commit()
+        subtasks = await self._subtasks()
+        await self._emit(
+            "plan.created",
+            {
+                "summary": workflow.name,
+                "rationale": "",
+                "strategy": RunMode.WORKFLOW,
+                "warnings": [],
+                "source": "workflow",
+                "workflow": {
+                    "id": workflow.id,
+                    "name": workflow.name,
+                    "revision": workflow.revision,
+                },
+                "subtasks": [
+                    {
+                        "subtask_id": s.id,
+                        "key": s.key,
+                        "title": s.title,
+                        "role": s.role,
+                        "depends_on": s.depends_on,
+                        "modifies_code": s.modifies_code,
+                        "instructions": s.instructions[:2000],
+                    }
+                    for s in subtasks
+                ],
+            },
+        )
+
+    async def finish_workflow(self) -> TeamResult:
+        """The run's result once no step can run: a summary, or what failed and what didn't run."""
+        if self.ctx.stop_event.is_set():
+            return TeamResult("stopped")
+        subtasks = await self._subtasks()
+        by_key = {s.key: s for s in subtasks}
+        blocked = {
+            SubtaskStatus.FAILED,
+            SubtaskStatus.CONFLICT,
+            SubtaskStatus.CANCELLED,
+            SubtaskStatus.SKIPPED,
+        }
+        # Steps that never started because something they wait for did not complete.
+        for s in subtasks:
+            if s.status not in (SubtaskStatus.PENDING, SubtaskStatus.WAITING_DEPENDENCY):
+                continue
+            causes = [
+                by_key[k].title for k in _upstream(s.key, by_key) if by_key[k].status in blocked
+            ]
+            await self._set_subtask(
+                s.id,
+                SubtaskStatus.SKIPPED,
+                error=f"{NOT_RUN}: it waits for {_join(causes)}, which did not finish."
+                if causes
+                else f"{NOT_RUN}.",
+            )
+        subtasks = await self._subtasks()
+        failed = [
+            s
+            for s in subtasks
+            if s.status in (SubtaskStatus.FAILED, SubtaskStatus.CONFLICT, SubtaskStatus.CANCELLED)
+        ]
+        skipped = [s for s in subtasks if s.status == SubtaskStatus.SKIPPED]
+        if failed:
+            what = "; ".join(f"{s.title} failed: {s.error or 'no details'}" for s in failed)
+            not_run = f" Not run: {_join([s.title for s in skipped])}." if skipped else ""
+            return TeamResult(
+                "failed",
+                error=f"{what}{'' if what.endswith('.') else '.'}{not_run}",
+                error_kind=await self._first_error_kind(failed),
+            )
+        results = [
+            {
+                "title": s.title,
+                "role": self.config.roles[s.role].name if s.role in self.config.roles else s.role,
+                "status": s.status,
+                "report": s.report or "",
+                "session_id": s.session_id or "",
+            }
+            for s in subtasks
+            if s.status == SubtaskStatus.COMPLETED
+        ]
+        if len(results) == 1:
+            return TeamResult("completed", summary=results[0]["report"])
+        return TeamResult("completed", summary=_fallback_summary(results))
+
+    async def _first_error_kind(self, failed: list[Subtask]) -> str:
+        async with self.services.db.session() as session:
+            for s in failed:
+                row = await session.get(AgentSession, s.session_id) if s.session_id else None
+                if row is not None and row.error_kind:
+                    return row.error_kind
+        return ErrorKind.UNKNOWN
+
     # -- phase 2: schedule -----------------------------------------------------------------
     async def schedule(self) -> None:
         self.ctx.active_status = RunStatus.RUNNING
@@ -508,7 +642,23 @@ class TeamExecutor:
             await self._after_subtask(s.id, prior.id, outcome, s.attempts, recovered=True)
             return
         attempt = s.attempts + 1
-        role = self.config.roles.get(s.role) or next(iter(self.config.roles.values()))
+        workflow = self.config.workflow
+        step = workflow.step(s.key) if workflow else None
+        if workflow is None:
+            role = self.config.roles.get(s.role) or next(iter(self.config.roles.values()))
+        else:
+            # Workflow steps name their agent; never substitute another one.
+            base = self.config.roles.get(s.role)
+            if base is None:
+                await self._set_subtask(
+                    s.id,
+                    SubtaskStatus.FAILED,
+                    attempts=attempt,
+                    error=f"The {s.role} agent was not available when this run started.",
+                )
+                return
+            overrides = {"model": step.model, "max_turns": step.max_turns} if step else {}
+            role = base.model_copy(update={k: v for k, v in overrides.items() if v is not None})
         coordinator = await self._coordinator_session()
 
         resume = (
@@ -552,17 +702,25 @@ class TeamExecutor:
                 deps_reports.append((who, dep.title, dep.report))
                 dep_sessions.append((dep.session_id, dep.title, dep.report))
 
-        prompt = (
-            CONTINUE_PROMPT
-            if resume
-            else subtask_prompt(
+        if resume:
+            prompt = CONTINUE_PROMPT
+        elif workflow is not None:
+            prompt = workflow_step_prompt(
+                self.task_ctx,
+                workflow=workflow.name,
+                title=s.title,
+                instructions=s.instructions,
+                earlier_reports=deps_reports,
+                cwd=str(cwd),
+            )
+        else:
+            prompt = subtask_prompt(
                 self.task_ctx,
                 title=s.title,
                 instructions=s.instructions,
                 dependency_reports=deps_reports,
                 cwd=str(cwd),
             )
-        )
         request = SessionRequest(
             ctx=self.ctx,
             config=self.config,
@@ -578,6 +736,7 @@ class TeamExecutor:
             resume=resume,
             attempt=attempt,
             allow_subagents=self.config.allow_subagents,
+            timeout_minutes=step.timeout_minutes if step else None,
             scenario={"task_title": self.info.task_title},
         )
 
@@ -818,6 +977,25 @@ def _finished_but_unrecorded(s: Subtask, prior: AgentSession | None) -> bool:
         and s.status in (SubtaskStatus.PENDING, SubtaskStatus.WAITING_DEPENDENCY)
         and s.attempts > 0
     )
+
+
+def _upstream(key: str, by_key: dict[str, Subtask]) -> list[str]:
+    """Every step `key` waits for, directly or not, in plan order."""
+    seen: list[str] = []
+    stack = list(by_key[key].depends_on) if key in by_key else []
+    while stack:
+        dep = stack.pop()
+        if dep in seen or dep not in by_key:
+            continue
+        seen.append(dep)
+        stack.extend(by_key[dep].depends_on)
+    return sorted(seen, key=lambda k: by_key[k].position)
+
+
+def _join(names: list[str]) -> str:
+    if len(names) <= 1:
+        return "".join(names)
+    return f"{', '.join(names[:-1])} and {names[-1]}"
 
 
 def _fallback_summary(results: list[dict[str, str]]) -> str:
