@@ -9,16 +9,16 @@ import { useOpenTask } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ApprovalCard } from "@/components/run/ApprovalCard";
 import { Button } from "@/components/ui/button";
-import { EmptyState, ErrorNote, RoleTag, Spinner, StatusPill } from "@/components/ui/display";
-import { RUN_LABEL, roleColor, runState } from "@/lib/status";
+import { EmptyState, ErrorNote, Spinner, StatusPill } from "@/components/ui/display";
+import { RUN_LABEL, runState } from "@/lib/status";
 import { cn, elapsed, formatDuration, formatTokens, relativeTime } from "@/lib/utils";
 import { useUi } from "@/stores/ui";
 
 function Panel({ title, action, children, className }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={cn("min-w-0", className)}>
-      <header className="mb-2 flex items-center gap-2">
-        <h2 className="text-sm font-semibold">{title}</h2>
+      <header className="mb-4 flex items-center gap-2">
+        <h2 className="text-md font-semibold">{title}</h2>
         <div className="ml-auto">{action}</div>
       </header>
       {children}
@@ -30,25 +30,20 @@ function RunLine({ run, live }: { run: RunListItem; live?: boolean }) {
   return (
     <Link
       to={`/runs/${run.id}`}
-      className="group grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-line-soft px-1 py-2.5 last:border-b-0 hover:bg-panel"
+      className="group grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 transition-colors hover:bg-raised/50"
     >
-      <StatusPill state={runState(run.status)} label={RUN_LABEL[run.status]} />
       <div className="min-w-0">
-        <p className="truncate text-sm">
-          <span className="mono mr-2 text-xs text-text-3">{run.task_key}</span>
-          {run.task_title}
+        <p className="truncate text-base">{run.task_title}</p>
+        <p className="mt-1 flex items-center gap-2 text-xs text-text-3">
+          <span className="mono">{run.task_key}</span>
+          <span>
+            {run.sessions} agent{run.sessions === 1 ? "" : "s"}
+            {run.backend === "demo" ? ", demo" : ""}
+          </span>
+          <span>{live ? formatDuration(elapsed(run.started_at)) : relativeTime(run.ended_at ?? run.created_at)}</span>
         </p>
-        <div className="mt-1 flex flex-wrap items-center gap-1">
-          {run.roles.map((r) => (
-            <RoleTag key={r} name={r} color={roleColor(r)} />
-          ))}
-          {run.backend === "demo" && <span className="text-2xs text-text-3">demo</span>}
-        </div>
       </div>
-      <div className="text-right text-xs text-text-3">
-        <p>{live ? formatDuration(elapsed(run.started_at)) : relativeTime(run.ended_at ?? run.created_at)}</p>
-        <p>{run.sessions} agent{run.sessions === 1 ? "" : "s"}</p>
-      </div>
+      <StatusPill state={runState(run.status)} label={RUN_LABEL[run.status]} />
     </Link>
   );
 }
@@ -80,33 +75,33 @@ export function DashboardPage() {
         title="Overview"
         subtitle={`${c.workspaces} workspace${c.workspaces === 1 ? "" : "s"}, ${c.tasks} open task${c.tasks === 1 ? "" : "s"}, ${c.connections} GitHub connection${c.connections === 1 ? "" : "s"}`}
         actions={
-          <Button variant="primary" size="sm" onClick={() => setCreate(true)}>
+          <Button variant="primary" onClick={() => setCreate(true)}>
             <Plus /> New task
           </Button>
         }
       />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[1280px] space-y-6 px-6 py-5">
-          <nav aria-label="Status" className="grid grid-cols-2 overflow-hidden rounded-[10px] border border-line-soft sm:grid-cols-5">
-            {strip.map((s, i) => (
+        <div className="mx-auto max-w-[1180px] space-y-12 px-8 pt-2 pb-12">
+          <nav aria-label="Status" className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {strip.map((s) => (
               <Link
                 key={s.label}
                 to={s.to}
-                className={cn("flex flex-col gap-0.5 px-4 py-3 transition-colors hover:bg-panel", i > 0 && "sm:border-l sm:border-line-soft")}
+                className="flex flex-col gap-1 rounded-panel bg-panel px-5 py-4 transition-colors hover:bg-raised"
               >
                 <span className={cn("text-xl font-semibold tabular-nums", s.tone)}>{s.value}</span>
-                <span className="text-xs text-text-2">{s.label}</span>
+                <span className="text-sm text-text-2">{s.label}</span>
               </Link>
             ))}
           </nav>
 
           {isEmpty && (
-            <section className="rounded-[10px] border border-dashed border-line px-6 py-8">
-              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+            <section className="rounded-panel border border-dashed border-line px-8 py-8">
+              <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
                 <Radar className="size-8 text-accent" strokeWidth={1.5} />
                 <div className="flex-1">
-                  <p className="text-base font-semibold">Start with your own work, or explore a demo</p>
-                  <p className="text-sm text-text-2">
+                  <p className="text-md font-semibold">Start with your own work, or explore a demo</p>
+                  <p className="mt-1 text-sm leading-6 text-text-2">
                     Promote TODOs and GitHub issues from the Inbox, or load a demo project whose agents run without calling Claude.
                   </p>
                 </div>
@@ -124,30 +119,30 @@ export function DashboardPage() {
             </section>
           )}
 
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
-            <div className="space-y-8">
-              <Panel title="Live now" action={<Link to="/graph" className="text-xs text-text-2 hover:text-text">Agent graph</Link>}>
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-12">
+              <Panel title="Live now" action={<Link to="/graph" className="text-sm text-text-2 hover:text-text">Agent graph</Link>}>
                 {data.active_runs.length ? (
-                  <div className="rounded-[10px] border border-line-soft px-3">{data.active_runs.map((r) => <RunLine key={r.id} run={r} live />)}</div>
+                  <div className="divide-y divide-line-soft overflow-hidden rounded-panel bg-panel">{data.active_runs.map((r) => <RunLine key={r.id} run={r} live />)}</div>
                 ) : (
-                  <p className="rounded-[10px] border border-line-soft px-4 py-5 text-sm text-text-3">
+                  <p className="rounded-panel bg-panel px-5 py-5 text-sm text-text-3">
                     No agents are running. Open a task and choose Run with agent.
                   </p>
                 )}
               </Panel>
-              <Panel title="Recent results" action={<Link to="/runs" className="text-xs text-text-2 hover:text-text">All runs</Link>}>
+              <Panel title="Recent results" action={<Link to="/runs" className="text-sm text-text-2 hover:text-text">All runs</Link>}>
                 {data.recent_runs.length ? (
-                  <div className="rounded-[10px] border border-line-soft px-3">{data.recent_runs.map((r) => <RunLine key={r.id} run={r} />)}</div>
+                  <div className="divide-y divide-line-soft overflow-hidden rounded-panel bg-panel">{data.recent_runs.map((r) => <RunLine key={r.id} run={r} />)}</div>
                 ) : (
                   <p className="text-sm text-text-3">Finished runs will appear here.</p>
                 )}
               </Panel>
               <Panel title="Activity">
                 {data.activity.length ? (
-                  <ol className="space-y-2">
-                    {data.activity.slice(0, 14).map((a) => (
-                      <li key={String(a.id)} className="flex items-baseline gap-3 text-sm">
-                        <span className="w-20 shrink-0 text-xs text-text-3">{relativeTime(String(a.created_at))}</span>
+                  <ol className="space-y-3">
+                    {data.activity.slice(0, 6).map((a) => (
+                      <li key={String(a.id)} className="flex items-baseline gap-4 text-sm">
+                        <span className="w-24 shrink-0 text-xs text-text-3">{relativeTime(String(a.created_at))}</span>
                         <button onClick={() => openTask(String(a.task_id))} className="mono shrink-0 text-xs text-text-2 hover:text-text">
                           {String(a.task_key)}
                         </button>
@@ -161,10 +156,10 @@ export function DashboardPage() {
               </Panel>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-12">
               <Panel title="Waiting for you">
                 {data.pending_approvals.length ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {data.pending_approvals.map((a) => (
                       <ApprovalCard key={a.id} approval={a} compact />
                     ))}
@@ -177,13 +172,13 @@ export function DashboardPage() {
                 <ThroughputChart data={data.throughput as never} />
               </Panel>
               <Panel title="Usage this week">
-                <div className="space-y-2 text-sm">
-                  <p className="text-text-2">
+                <div className="space-y-3 text-sm">
+                  <p className="leading-6 text-text-2">
                     {formatTokens(Number(data.usage.input_tokens ?? 0) + Number(data.usage.cache_read_input_tokens ?? 0))} input and{" "}
                     {formatTokens(Number(data.usage.output_tokens ?? 0))} output tokens across {Number(data.usage.num_turns ?? 0)} model turns.
                   </p>
                   {rateLimits.length > 0 ? (
-                    <ul className="space-y-1.5">
+                    <ul className="space-y-2">
                       {rateLimits.map((r) => (
                         <li key={r.type} className="flex items-center gap-2 text-xs">
                           <span
@@ -200,18 +195,18 @@ export function DashboardPage() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-xs text-text-3">Subscription limit status appears after the first Claude run.</p>
+                    <p className="text-sm text-text-3">Subscription limit status appears after the first Claude run.</p>
                   )}
                 </div>
               </Panel>
-              <Panel title="Workspaces" action={<Link to="/integrations" className="text-xs text-text-2 hover:text-text">Manage</Link>}>
-                <ul className="space-y-2">
+              <Panel title="Workspaces" action={<Link to="/integrations" className="text-sm text-text-2 hover:text-text">Manage</Link>}>
+                <ul className="space-y-3">
                   {data.workspaces.map((w) => (
-                    <li key={w.id} className="flex items-center gap-2 text-sm">
+                    <li key={w.id} className="flex items-center gap-3 text-sm">
                       <FolderGit2 className={cn("size-4 shrink-0", w.status === "missing" ? "text-st-fail" : "text-text-3")} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate">{w.name}</p>
-                        <p className="text-2xs text-text-3">
+                        <p className="text-xs text-text-3">
                           {w.status === "missing" ? "Directory missing" : `${w.open_items} discovered, scanned ${relativeTime(w.last_scanned_at)}`}
                         </p>
                       </div>

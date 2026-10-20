@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorNote, Spinner, StatusPill, TabPanel, Tabs } from "@/components/ui/display";
 import { adviceFor } from "@/lib/errors";
 import { RUN_LABEL, runState } from "@/lib/status";
-import { elapsed, formatDuration, formatTokens } from "@/lib/utils";
+import { elapsed, formatDuration } from "@/lib/utils";
 import { useEvents, useRunLog } from "@/stores/events";
 
 function RunControls({ run }: { run: Run }) {
@@ -23,10 +23,10 @@ function RunControls({ run }: { run: Run }) {
   if (run.active) {
     return (
       <>
-        <Button size="sm" variant="secondary" disabled={busy} onClick={() => action.mutate({ action: "pause" })}>
+        <Button variant="secondary" disabled={busy} onClick={() => action.mutate({ action: "pause" })}>
           <Pause /> Pause
         </Button>
-        <Button size="sm" variant="danger" disabled={busy} onClick={() => action.mutate({ action: "cancel" })}>
+        <Button variant="danger" disabled={busy} onClick={() => action.mutate({ action: "cancel" })}>
           <Ban /> Cancel
         </Button>
       </>
@@ -35,30 +35,21 @@ function RunControls({ run }: { run: Run }) {
   return (
     <>
       {(run.status === "paused" || run.status === "interrupted") && (
-        <Button size="sm" variant="primary" disabled={busy} onClick={() => action.mutate({ action: "resume" })}>
+        <Button variant="primary" disabled={busy} onClick={() => action.mutate({ action: "resume" })}>
           <Play /> Resume
         </Button>
       )}
       {(run.status === "failed" || run.status === "interrupted") && (
-        <Button size="sm" variant={run.status === "failed" ? "primary" : "secondary"} disabled={busy} onClick={() => action.mutate({ action: "retry" })}>
+        <Button variant={run.status === "failed" ? "primary" : "secondary"} disabled={busy} onClick={() => action.mutate({ action: "retry" })}>
           <RotateCcw /> Retry
         </Button>
       )}
       {["paused", "interrupted", "failed", "queued"].includes(run.status) && (
-        <Button size="sm" variant="ghost" disabled={busy} onClick={() => action.mutate({ action: "cancel" })}>
+        <Button variant="ghost" disabled={busy} onClick={() => action.mutate({ action: "cancel" })}>
           <Ban /> Cancel run
         </Button>
       )}
     </>
-  );
-}
-
-function Stat({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <span className="flex items-baseline gap-1.5">
-      <span className="text-text-3">{label}</span>
-      <span className="text-text">{children}</span>
-    </span>
   );
 }
 
@@ -99,39 +90,36 @@ export function RunPage() {
 
   const pending = run.approvals.filter((a) => a.status === "pending");
   const advice = run.status === "failed" ? adviceFor(run.error_kind) : null;
-  const tokensIn = Number(run.usage.input_tokens ?? 0) + Number(run.usage.cache_read_input_tokens ?? 0) + Number(run.usage.cache_creation_input_tokens ?? 0);
-  const tokensOut = Number(run.usage.output_tokens ?? 0);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="shrink-0 border-b border-line-soft">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 pt-3 pb-2">
-          <Link to="/runs" className="rounded-control p-1 text-text-3 hover:bg-raised hover:text-text" aria-label="All runs">
-            <ArrowLeft className="size-4" />
+      <header className="shrink-0">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-8 pt-7">
+          <Link to="/runs" className="-ml-2 rounded-control p-2 text-text-3 hover:bg-raised hover:text-text" aria-label="All runs">
+            <ArrowLeft className="size-5" />
           </Link>
-          <button onClick={() => openTask(run.task_id)} className="mono text-xs text-text-3 hover:text-text-2">
-            {run.task_key}
-          </button>
-          <h1 className="min-w-0 truncate text-md font-semibold tracking-tight">
+          <h1 className="min-w-0 truncate text-lg font-semibold tracking-tight">
             Run {run.number}: {run.task_title}
           </h1>
           <StatusPill state={runState(run.status)} label={RUN_LABEL[run.status]} />
-          {run.is_demo && <span className="rounded-[4px] bg-raised px-1.5 text-2xs text-text-2">demo</span>}
+          {run.is_demo && <span className="rounded-full bg-raised px-2 text-xs text-text-2">demo</span>}
           <div className="ml-auto flex items-center gap-2">
             <RunControls run={run} />
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-5 pb-2.5 text-xs">
-          <Stat label="Strategy">{run.strategy === "team" ? "Agent team" : run.mode === "auto" ? (run.strategy ? "Auto: single agent" : "Auto: planning") : run.mode === "team" ? "Agent team" : "Single agent"}</Stat>
-          <Stat label="Backend">{run.backend === "demo" ? "Demo" : run.provider === "subscription" ? "Claude subscription" : run.provider === "api_key" ? "Anthropic API" : "Vertex AI"}</Stat>
-          {run.model && <Stat label="Model"><span className="mono">{run.model}</span></Stat>}
-          <Stat label="Branch">{run.branch ? <span className="mono">{run.branch}</span> : run.isolation === "in_place" ? "edits in place" : "preparing"}</Stat>
-          <Stat label="Elapsed">{formatDuration(elapsed(run.started_at, run.ended_at))}</Stat>
-          {tokensOut > 0 && <Stat label="Tokens">{formatTokens(tokensIn)} in, {formatTokens(tokensOut)} out</Stat>}
-          {run.cost_usd != null && <Stat label="Cost">${run.cost_usd.toFixed(2)}</Stat>}
-        </div>
+        <p className="truncate px-8 pt-2 pb-6 text-sm text-text-3">
+          <button onClick={() => openTask(run.task_id)} className="mono mr-3 text-text-2 hover:text-text">
+            {run.task_key}
+          </button>
+          {[
+            run.strategy === "team" ? "Agent team" : run.mode === "auto" ? (run.strategy ? "Auto: single agent" : "Auto: planning") : run.mode === "team" ? "Agent team" : "Single agent",
+            run.backend === "demo" ? "Demo" : run.provider === "subscription" ? "Claude subscription" : run.provider === "api_key" ? "Anthropic API" : "Vertex AI",
+            formatDuration(elapsed(run.started_at, run.ended_at)),
+          ].join(", ")}
+          <span className="mono ml-3">{run.branch ?? (run.isolation === "in_place" ? "edits in place" : "preparing worktree")}</span>
+        </p>
         {(pending.length > 0 || advice || run.status_reason) && (
-          <div className="space-y-2 px-5 pb-3">
+          <div className="space-y-3 px-8 pb-6">
             {advice && (
               <ErrorNote title={advice.title}>
                 <span className="block">{run.error}</span>
@@ -139,10 +127,10 @@ export function RunPage() {
               </ErrorNote>
             )}
             {!advice && run.status_reason && !run.active && run.status !== "completed" && (
-              <p className="text-xs text-text-2">{run.status_reason}</p>
+              <p className="text-sm text-text-2">{run.status_reason}</p>
             )}
             {pending.length > 0 && (
-              <div className="grid gap-2 lg:grid-cols-2">
+              <div className="grid gap-3 lg:grid-cols-2">
                 {pending.map((a) => (
                   <ApprovalCard key={a.id} approval={a} compact={a.kind === "tool_permission"} />
                 ))}
@@ -165,7 +153,7 @@ export function RunPage() {
       >
         <TabPanel value="graph" className="flex flex-col overflow-hidden">
           {log.error ? (
-            <div className="p-5">
+            <div className="px-8 py-5">
               <ErrorNote title="Event history could not be loaded" action={<Button size="sm" onClick={() => void load(runId, true)}>Retry</Button>}>
                 {log.error}
               </ErrorNote>

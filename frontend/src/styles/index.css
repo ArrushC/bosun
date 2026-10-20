@@ -1,8 +1,6 @@
 @import "tailwindcss";
-@import "@fontsource/barlow/400.css";
-@import "@fontsource/barlow/500.css";
-@import "@fontsource/barlow/600.css";
-@import "@fontsource/barlow/700.css";
+/* Atkinson Hyperlegible Next: wide, open letterforms that keep 0/O and 1/l/I apart. */
+@import "@fontsource-variable/atkinson-hyperlegible-next/index.css";
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
 
@@ -21,8 +19,8 @@
   --line: #2a3650;
   --line-soft: #212b3f;
   --text: #e4e9f2;
-  --text-2: #8d99af;
-  --text-3: #5d6880;
+  --text-2: #9ca8bd;
+  --text-3: #838fa6;
   --accent: #8b9cff;
   --accent-strong: #a7b4ff;
   --accent-soft: rgb(139 156 255 / 0.14);
@@ -57,8 +55,8 @@
   --line: #d6dce7;
   --line-soft: #e3e8f0;
   --text: #182032;
-  --text-2: #56627a;
-  --text-3: #8a94a8;
+  --text-2: #4c5770;
+  --text-3: #626c83;
   --accent: #4a5bd8;
   --accent-strong: #3445c4;
   --accent-soft: rgb(74 91 216 / 0.1);
@@ -106,26 +104,27 @@
   --color-st-idle: var(--st-idle);
   --color-st-cancel: var(--st-cancel);
 
-  --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --text-2xs: 11px;
-  --text-2xs--line-height: 14px;
-  --text-xs: 12px;
-  --text-xs--line-height: 16px;
-  --text-sm: 13px;
-  --text-sm--line-height: 19px;
-  --text-base: 14px;
-  --text-base--line-height: 21px;
-  --text-md: 16px;
-  --text-md--line-height: 23px;
-  --text-lg: 20px;
-  --text-lg--line-height: 26px;
-  --text-xl: 26px;
-  --text-xl--line-height: 31px;
+  /* 12px is the smallest text anywhere; secondary text sits one step under body. */
+  --text-2xs: 12px;
+  --text-2xs--line-height: 16px;
+  --text-xs: 13px;
+  --text-xs--line-height: 18px;
+  --text-sm: 14px;
+  --text-sm--line-height: 21px;
+  --text-base: 16px;
+  --text-base--line-height: 24px;
+  --text-md: 18px;
+  --text-md--line-height: 26px;
+  --text-lg: 24px;
+  --text-lg--line-height: 32px;
+  --text-xl: 30px;
+  --text-xl--line-height: 38px;
 
-  --radius-control: 6px;
-  --radius-panel: 10px;
+  --radius-control: 10px;
+  --radius-panel: 16px;
   --shadow-pop: var(--shadow-pop);
 
   --animate-sweep: sweep 2.4s linear infinite;
@@ -181,8 +180,8 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--font-sans);
-    font-size: 13px;
-    line-height: 19px;
+    font-size: 14px;
+    line-height: 21px;
     font-feature-settings: "tnum" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -235,13 +234,13 @@
     background-size: 18px 18px;
   }
   .prose-bosun {
-    font-size: 13.5px;
-    line-height: 21px;
+    font-size: 16px;
+    line-height: 26px;
     color: var(--text);
     overflow-wrap: anywhere;
   }
   .prose-bosun > * + * {
-    margin-top: 0.6em;
+    margin-top: 0.75em;
   }
   .prose-bosun h1,
   .prose-bosun h2,
@@ -251,13 +250,13 @@
     color: var(--text);
   }
   .prose-bosun h1 {
-    font-size: 17px;
+    font-size: 19px;
   }
   .prose-bosun h2 {
-    font-size: 15px;
+    font-size: 17px;
   }
   .prose-bosun h3 {
-    font-size: 14px;
+    font-size: 15px;
   }
   .prose-bosun ul {
     list-style: disc;
@@ -277,7 +276,7 @@
   }
   .prose-bosun code {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 0.87em;
     background: var(--raised);
     border: 1px solid var(--line-soft);
     border-radius: 4px;
@@ -285,8 +284,8 @@
   }
   .prose-bosun pre {
     font-family: var(--font-mono);
-    font-size: 12px;
-    line-height: 18px;
+    font-size: 13px;
+    line-height: 20px;
     background: var(--sunken);
     border: 1px solid var(--line-soft);
     border-radius: 8px;
@@ -305,7 +304,7 @@
   }
   .prose-bosun table {
     border-collapse: collapse;
-    font-size: 12.5px;
+    font-size: 0.93em;
   }
   .prose-bosun th,
   .prose-bosun td {

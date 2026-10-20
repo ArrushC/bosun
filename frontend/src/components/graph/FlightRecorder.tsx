@@ -166,7 +166,7 @@ export function FlightRecorder({ model, version, events, cursor, onCursor, onSel
           {cursorX !== null && (
             <div className="pointer-events-none absolute top-0 bottom-0 left-[176px] right-3">
               <div className="absolute top-0 bottom-0 w-px bg-accent" style={{ left: `${cursorX}%` }}>
-                <span className="absolute -top-0 left-1 rounded-[3px] bg-accent px-1 text-[10px] font-semibold text-accent-fg">
+                <span className="absolute -top-0 left-1 rounded-[3px] bg-accent px-1 text-2xs font-semibold text-accent-fg">
                   {cursorEvent ? clockTime(cursorEvent.ts) : ""}
                 </span>
               </div>

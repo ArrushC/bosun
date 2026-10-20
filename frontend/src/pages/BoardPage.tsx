@@ -43,11 +43,11 @@ function Column({ id, label, icon: Icon, ids, tasks, onOpen, onAdd }: {
   const { groupBy } = useUi((s) => s.board);
   let lastGroup: string | null = null;
   return (
-    <section aria-label={label} className="flex h-full w-[280px] shrink-0 flex-col">
-      <header className="flex h-9 items-center gap-2 px-1">
-        <Icon className={cn("size-3.5 text-text-3", id === "in_progress" && "text-st-run")} />
+    <section aria-label={label} className="flex h-full w-[304px] shrink-0 flex-col">
+      <header className="flex h-10 items-center gap-2.5 px-1.5">
+        <Icon className={cn("size-4 text-text-3", id === "in_progress" && "text-st-run")} />
         <h2 className="text-sm font-semibold">{label}</h2>
-        <span className="text-xs text-text-3">{ids.length}</span>
+        <span className="text-sm text-text-3">{ids.length}</span>
         <Button size="icon-sm" variant="ghost" className="ml-auto" aria-label={`Add task to ${label}`} onClick={onAdd}>
           <Plus />
         </Button>
@@ -55,7 +55,7 @@ function Column({ id, label, icon: Icon, ids, tasks, onOpen, onAdd }: {
       <div
         ref={setNodeRef}
         className={cn(
-          "flex min-h-24 flex-1 flex-col gap-1.5 overflow-y-auto rounded-[10px] border border-transparent p-1 pb-6 transition-colors",
+          "flex min-h-24 flex-1 flex-col gap-3 overflow-y-auto rounded-[16px] border border-transparent p-1 pb-8 transition-colors",
           isOver && "border-dashed border-line bg-panel/40",
         )}
       >
@@ -68,13 +68,13 @@ function Column({ id, label, icon: Icon, ids, tasks, onOpen, onAdd }: {
             lastGroup = group;
             return (
               <div key={taskId}>
-                {header && <p className="px-1 pt-2 pb-1 text-2xs font-medium text-text-3 capitalize">{group}</p>}
+                {header && <p className="px-1.5 pt-3 pb-2 text-xs font-medium text-text-3 capitalize">{group}</p>}
                 <SortableTaskCard task={task} onOpen={() => onOpen(taskId)} />
               </div>
             );
           })}
         </SortableContext>
-        {ids.length === 0 && <p className="px-2 py-6 text-center text-xs text-text-3">Drop tasks here</p>}
+        {ids.length === 0 && <p className="rounded-[14px] border border-dashed border-line-soft px-3 py-8 text-center text-sm text-text-3">Drop tasks here</p>}
       </div>
     </section>
   );
@@ -173,9 +173,8 @@ export function BoardPage() {
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         title="Board"
-        subtitle="Drag cards between columns. Agents move cards to In progress and Review; only you mark work done."
         actions={
-          <Button variant="primary" size="sm" onClick={() => setCreate(true)}>
+          <Button variant="primary" onClick={() => setCreate(true)}>
             <Plus /> New task
           </Button>
         }
@@ -188,7 +187,7 @@ export function BoardPage() {
         </div>
       )}
       {error && (
-        <div className="p-5">
+        <div className="px-8 py-4">
           <ErrorNote title="The board could not be loaded">{(error as Error).message}</ErrorNote>
         </div>
       )}
@@ -212,7 +211,7 @@ export function BoardPage() {
       )}
       {tasks.length > 0 && (
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveId(null); setItems(grouped); }}>
-          <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto px-4 pt-3 pb-2">
+          <div className="flex min-h-0 flex-1 gap-5 overflow-x-auto px-7 pt-1 pb-2">
             {TASK_COLUMNS.filter((c) => board.showDone || c.id !== "done").map((c) => (
               <Column
                 key={c.id}

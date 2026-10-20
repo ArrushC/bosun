@@ -21,49 +21,47 @@ function RecordRow({ record, checked, onCheck, origin }: { record: SourceRecord;
   const [open, setOpen] = useState(false);
   const meta = record.meta as Record<string, unknown>;
   return (
-    <li className={cn("border-b border-line-soft last:border-b-0", checked && "bg-accent-soft")}>
-      <div className="flex items-center gap-3 px-3 py-2">
+    <li className={cn("transition-colors", checked && "bg-accent-soft")}>
+      <div className="flex items-center gap-4 px-5 py-4">
         <Checkbox checked={checked} onCheckedChange={onCheck} aria-label={`Select ${record.title}`} />
-        <button onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left" aria-expanded={open}>
-          {open ? <ChevronDown className="size-3.5 shrink-0 text-text-3" /> : <ChevronRight className="size-3.5 shrink-0 text-text-3" />}
-          <SourceIcon kind={record.kind} />
-          <span className="min-w-0 flex-1 truncate text-sm">{record.title}</span>
-          {record.tag && <span className="mono shrink-0 rounded-[4px] border border-line-soft px-1 text-2xs text-text-2">{record.tag}</span>}
-          {record.labels.slice(0, 3).map((l) => (
-            <span key={l} className="hidden shrink-0 rounded-[4px] border border-line-soft px-1.5 text-2xs text-text-2 md:inline">
-              {l}
+        <button onClick={() => setOpen((v) => !v)} className="flex min-w-0 flex-1 items-center gap-3 text-left" aria-expanded={open}>
+          <SourceIcon kind={record.kind} className="size-4" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-base">{record.title}</span>
+            <span className="mono mt-0.5 block truncate text-xs text-text-3" title={location(record)}>
+              {location(record)}
             </span>
-          ))}
-          <span className="mono hidden w-60 shrink-0 truncate text-right text-xs text-text-3 lg:inline" title={location(record)}>
-            {location(record)}
           </span>
-          <span className="w-20 shrink-0 text-right text-xs text-text-3">{relativeTime(record.external_updated_at ?? record.first_seen_at)}</span>
+          {record.tag && <span className="mono shrink-0 rounded-full bg-raised px-2 text-xs text-text-2">{record.tag}</span>}
+          <span className="w-24 shrink-0 text-right text-xs text-text-3">{relativeTime(record.external_updated_at ?? record.first_seen_at)}</span>
+          {open ? <ChevronDown className="size-4 shrink-0 text-text-3" /> : <ChevronRight className="size-4 shrink-0 text-text-3" />}
         </button>
         {record.task_ids.length > 0 && (
-          <Link to={`/board?task=${record.task_ids[0]}`} className="shrink-0 text-xs text-accent-strong hover:underline">
+          <Link to={`/board?task=${record.task_ids[0]}`} className="shrink-0 text-sm text-accent-strong hover:underline">
             View task
           </Link>
         )}
       </div>
       {open && (
-        <div className="space-y-2 px-11 pb-3">
-          <p className="text-xs text-text-3">
+        <div className="space-y-3 pr-5 pb-5 pl-[60px]">
+          <p className="text-sm text-text-2">
             {SOURCE_ICON[record.kind]?.label} in {origin}
             {meta.section ? `, section "${String(meta.section)}"` : ""}
             {meta.owner ? `, owner ${String(meta.owner)}` : ""}
             {record.author ? `, opened by @${record.author}` : ""}
             {meta.head ? `, branch ${String(meta.head)} into ${String(meta.base)}` : ""}
+            {record.labels.length > 0 ? `. Labels: ${record.labels.join(", ")}` : ""}
           </p>
           {record.context && (
-            <pre className="overflow-x-auto rounded-[6px] border border-line-soft bg-sunken px-3 py-2 font-mono text-[11.5px] leading-[17px] text-text-2">{record.context}</pre>
+            <pre className="overflow-x-auto rounded-[10px] bg-sunken px-4 py-3 font-mono text-xs leading-5 text-text-2">{record.context}</pre>
           )}
           {record.body && record.kind.startsWith("github") && (
-            <div className="max-h-72 overflow-y-auto rounded-[6px] border border-line-soft px-3 py-2">
-              <Md className="text-[13px]">{record.body}</Md>
+            <div className="max-h-72 overflow-y-auto rounded-[10px] bg-sunken px-4 py-3">
+              <Md className="text-sm">{record.body}</Md>
             </div>
           )}
           {record.url && (
-            <a href={record.url} target="_blank" rel="noreferrer noopener" className="text-xs text-accent-strong hover:underline">
+            <a href={record.url} target="_blank" rel="noreferrer noopener" className="text-sm text-accent-strong hover:underline">
               Open on GitHub
             </a>
           )}
@@ -127,14 +125,14 @@ export function InboxPage() {
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         title="Inbox"
-        subtitle="Work discovered in your workspaces and on GitHub. Nothing becomes a task, or runs, until you promote it."
+        subtitle="Work found in your projects and on GitHub. Nothing becomes a task until you create one."
         actions={
-          <Button size="sm" variant="secondary" onClick={() => void rescan()} disabled={scan.isPending || sync.isPending}>
+          <Button variant="secondary" onClick={() => void rescan()} disabled={scan.isPending || sync.isPending}>
             <RefreshCw className={cn((scan.isPending || sync.isPending) && "animate-spin")} /> Rescan sources
           </Button>
         }
       >
-        <div className="flex flex-wrap items-center gap-2 px-5 pb-2.5">
+        <div className="flex flex-wrap items-center gap-3 px-8 pb-5">
           <Segmented
             value={triage}
             onChange={(v) => {
@@ -155,7 +153,7 @@ export function InboxPage() {
             <option value="github_issue">GitHub issues</option>
             <option value="github_pr">Pull requests</option>
           </NativeSelect>
-          <NativeSelect value={origin} onChange={(e) => setOrigin(e.target.value)} className="w-48" aria-label="Origin">
+          <NativeSelect value={origin} onChange={(e) => setOrigin(e.target.value)} className="w-56" aria-label="Origin">
             <option value="">Every workspace and repo</option>
             {workspaces.map((w) => (
               <option key={w.id} value={`ws:${w.id}`}>
@@ -168,14 +166,14 @@ export function InboxPage() {
               </option>
             ))}
           </NativeSelect>
-          <SearchInput value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search discovered work" aria-label="Search" className="w-60" />
-          {isFetching && <Spinner className="size-3.5" />}
-          <span className="ml-auto text-xs text-text-3">{data ? `${data.total} items` : ""}</span>
+          <SearchInput value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search discovered work" aria-label="Search" className="w-64" />
+          {isFetching && <Spinner className="size-4" />}
+          <span className="ml-auto text-sm text-text-3">{data ? `${data.total} items` : ""}</span>
         </div>
       </PageHeader>
 
       {selected.size > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-line-soft bg-panel px-5 py-2">
+        <div className="mx-8 mb-4 flex flex-wrap items-center gap-3 rounded-panel bg-panel px-5 py-3">
           <span className="text-sm font-medium">{selected.size} selected</span>
           <Button size="xs" variant="ghost" onClick={() => setSelected(new Set())}>
             Clear
@@ -183,13 +181,13 @@ export function InboxPage() {
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {triage !== "dismissed" && (
               <>
-                <span className="text-xs text-text-2">Create tasks in</span>
-                <NativeSelect value={targetStatus} onChange={(e) => setTargetStatus(e.target.value as TaskStatus)} className="h-7 w-28 text-xs" aria-label="Target column">
+                <span className="text-sm text-text-2">Create tasks in</span>
+                <NativeSelect value={targetStatus} onChange={(e) => setTargetStatus(e.target.value as TaskStatus)} className="h-9 w-32" aria-label="Target column">
                   <option value="backlog">Backlog</option>
                   <option value="ready">Ready</option>
                 </NativeSelect>
                 {needsWorkspace && (
-                  <NativeSelect value={targetWorkspace} onChange={(e) => setTargetWorkspace(e.target.value)} className="h-7 w-44 text-xs" aria-label="Workspace for GitHub items">
+                  <NativeSelect value={targetWorkspace} onChange={(e) => setTargetWorkspace(e.target.value)} className="h-9 w-56" aria-label="Workspace for GitHub items">
                     <option value="">Workspace for GitHub items…</option>
                     {workspaces.map((w) => (
                       <option key={w.id} value={w.id}>
@@ -234,7 +232,7 @@ export function InboxPage() {
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {isLoading && <div className="flex justify-center p-10"><Spinner /></div>}
-        {error && <div className="p-5"><ErrorNote title="Discovered work could not be loaded">{(error as Error).message}</ErrorNote></div>}
+        {error && <div className="px-8 py-4"><ErrorNote title="Discovered work could not be loaded">{(error as Error).message}</ErrorNote></div>}
         {!isLoading && records.length === 0 && (
           <EmptyState
             icon={Inbox}
@@ -250,13 +248,13 @@ export function InboxPage() {
             {triage === "untriaged" ? "TODO and FIXME comments, unchecked Markdown tasks, TODO files and GitHub issues appear here." : undefined}
           </EmptyState>
         )}
-        <div className="space-y-5 px-5 py-4">
+        <div className="mx-auto max-w-[1180px] space-y-10 px-8 pt-2 pb-12">
           {groups.map(([key, items]) => {
             const all = items.every((r) => selected.has(r.id));
             const some = items.some((r) => selected.has(r.id));
             return (
               <section key={key}>
-                <header className="mb-1.5 flex items-center gap-3 px-3">
+                <header className="mb-3 flex items-center gap-4 px-5">
                   <Checkbox
                     checked={all ? true : some ? "indeterminate" : false}
                     onCheckedChange={(on) => {
@@ -270,9 +268,9 @@ export function InboxPage() {
                     aria-label={`Select all from ${originName(items[0])}`}
                   />
                   <h2 className="text-sm font-semibold">{originName(items[0])}</h2>
-                  <span className="text-xs text-text-3">{items.length}</span>
+                  <span className="text-sm text-text-3">{items.length}</span>
                 </header>
-                <ul className="rounded-[10px] border border-line-soft">
+                <ul className="divide-y divide-line-soft overflow-hidden rounded-panel bg-panel">
                   {items.map((r) => (
                     <RecordRow key={r.id} record={r} checked={selected.has(r.id)} onCheck={(on) => toggle(r.id, on)} origin={originName(r)} />
                   ))}

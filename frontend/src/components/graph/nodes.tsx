@@ -113,12 +113,12 @@ export const AgentNode = memo(function AgentNode({ data }: NodeProps) {
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-2.5 py-1.5">
         <div className="flex items-center gap-1.5">
           <Icon className="size-3.5 shrink-0" style={{ color: node.color }} />
-          <span className="node-title truncate text-[13px] font-semibold text-text">{node.label}</span>
-          {sub && <span className="rounded-[3px] bg-raised px-1 text-[10px] text-text-3">subagent</span>}
+          <span className="node-title truncate text-sm font-semibold text-text">{node.label}</span>
+          {sub && <span className="rounded-[3px] bg-raised px-1 text-2xs text-text-3">subagent</span>}
           <StateIcon state={node.state} className="ml-auto" />
         </div>
         {node.sublabel && <p className="truncate text-xs text-text-2">{node.sublabel}</p>}
-        <div className="flex items-center gap-2 text-[10.5px] text-text-3">
+        <div className="flex items-center gap-2 text-2xs text-text-3">
           {node.data.model && <span className="mono truncate">{String(node.data.model).replace(/^claude-/, "")}</span>}
           {node.data.attempt > 1 && <span>attempt {node.data.attempt}</span>}
           {node.data.collapsedCount ? <span>{node.data.collapsedCount} hidden</span> : null}
@@ -161,10 +161,10 @@ export const SubtaskNode = memo(function SubtaskNode({ data }: NodeProps) {
   return (
     <div className={cn("flex h-full w-full items-center gap-2 rounded-[8px] border bg-sunken px-2.5", stateBorder(node.state, selected), dimmed && "opacity-35")}>
       <Handles direction={direction} />
-      <span className="mono flex h-5 shrink-0 items-center rounded-[4px] border border-line px-1 text-[10.5px] text-text-2">{node.sublabel}</span>
+      <span className="mono flex h-5 shrink-0 items-center rounded-[4px] border border-line px-1 text-2xs text-text-2">{node.sublabel}</span>
       <div className="min-w-0 flex-1">
         <p className={cn("truncate text-xs font-medium text-text", node.state === "cancelled" && "line-through")}>{node.label}</p>
-        <p className="flex items-center gap-1 text-[10.5px] text-text-3">
+        <p className="flex items-center gap-1 text-2xs text-text-3">
           <span className="size-1.5 rounded-full" style={{ background: node.color }} />
           {node.data.role}
           {node.data.modifiesCode ? ", edits code" : ""}
@@ -181,12 +181,12 @@ export const TaskNode = memo(function TaskNode({ data }: NodeProps) {
   return (
     <div className={cn("flex h-full w-full flex-col justify-center rounded-[10px] border bg-raised px-3", stateBorder(node.state, selected), dimmed && "opacity-35")}>
       <Handles direction={direction} />
-      <div className="flex items-center gap-2 text-[11px] text-text-3">
+      <div className="flex items-center gap-2 text-2xs text-text-3">
         <span className="mono shrink-0">{node.sublabel}</span>
         {node.data.branch && <span className="mono truncate">{String(node.data.branch)}</span>}
         <StateIcon state={node.state} className="ml-auto" />
       </div>
-      <p className="mt-0.5 line-clamp-2 text-[13px] leading-[17px] font-semibold text-text">{node.label}</p>
+      <p className="mt-0.5 line-clamp-2 text-sm leading-[18px] font-semibold text-text">{node.label}</p>
     </div>
   );
 });
@@ -199,8 +199,8 @@ export const OutcomeNode = memo(function OutcomeNode({ data }: NodeProps) {
       <Handles direction={direction} />
       <Flag className="size-4 shrink-0" style={{ color }} />
       <div className="min-w-0">
-        <p className="truncate text-[13px] font-semibold text-text">{node.label}</p>
-        <p className="truncate text-[11px] text-text-3">{node.sublabel ?? (node.data.diff ? `${node.data.diff.files} files changed` : "Run finished")}</p>
+        <p className="truncate text-sm font-semibold text-text">{node.label}</p>
+        <p className="truncate text-2xs text-text-3">{node.sublabel ?? (node.data.diff ? `${node.data.diff.files} files changed` : "Run finished")}</p>
       </div>
     </div>
   );
@@ -209,7 +209,7 @@ export const OutcomeNode = memo(function OutcomeNode({ data }: NodeProps) {
 export const OperatorNode = memo(function OperatorNode({ data }: NodeProps) {
   const { direction, selected } = data as NodeData;
   return (
-    <div className={cn("flex h-full w-full items-center justify-center gap-2 rounded-full border bg-panel text-[12px] font-semibold", selected ? "border-accent" : "border-accent/50 text-accent-strong")}>
+    <div className={cn("flex h-full w-full items-center justify-center gap-2 rounded-full border bg-panel text-xs font-semibold", selected ? "border-accent" : "border-accent/50 text-accent-strong")}>
       <Handles direction={direction} />
       <User className="size-3.5" /> You
     </div>
@@ -234,13 +234,13 @@ export const ToolNode = memo(function ToolNode({ data }: NodeProps) {
       <Handles direction={direction} />
       <Icon className="size-3.5 shrink-0 text-text-2" />
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="flex items-center gap-1 text-[11.5px] font-semibold text-text">
+        <p className="flex items-center gap-1 text-xs font-semibold text-text">
           {node.label}
-          {count && count > 1 ? <span className="rounded-full bg-raised px-1 text-[10px] font-medium text-text-2">{count}</span> : null}
+          {count && count > 1 ? <span className="rounded-full bg-raised px-1 text-2xs font-medium text-text-2">{count}</span> : null}
         </p>
-        <p className="mono truncate text-[10.5px] text-text-3">{call?.denied ? "blocked by boundary" : node.sublabel}</p>
+        <p className="mono truncate text-2xs text-text-3">{call?.denied ? "blocked by boundary" : node.sublabel}</p>
       </div>
-      {call?.durationMs ? <span className="text-[10px] text-text-3">{formatDuration(call.durationMs)}</span> : null}
+      {call?.durationMs ? <span className="text-2xs text-text-3">{formatDuration(call.durationMs)}</span> : null}
       <StateIcon state={node.state} />
     </div>
   );
@@ -253,8 +253,8 @@ export const FileNode = memo(function FileNode({ data }: NodeProps) {
       <Handles direction={direction} />
       <FileCode2 className="size-3.5 shrink-0 text-st-ok" />
       <div className="min-w-0 leading-tight">
-        <p className="mono truncate text-[11.5px] text-text">{node.label}</p>
-        <p className="mono truncate text-[10px] text-text-3">{node.sublabel}</p>
+        <p className="mono truncate text-xs text-text">{node.label}</p>
+        <p className="mono truncate text-2xs text-text-3">{node.sublabel}</p>
       </div>
     </div>
   );
@@ -267,8 +267,8 @@ export const ApprovalNode = memo(function ApprovalNode({ data }: NodeProps) {
       <Handles direction={direction} />
       <Hand className="size-4 shrink-0 text-st-approval" />
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="truncate text-[12px] font-semibold text-text">{node.label}</p>
-        <p className="truncate text-[10.5px] text-text-3">
+        <p className="truncate text-xs font-semibold text-text">{node.label}</p>
+        <p className="truncate text-2xs text-text-3">
           {node.state === "waiting_approval" ? "Waiting for you" : STATE[node.state].label}
           {node.sublabel ? `, ${node.sublabel}` : ""}
         </p>

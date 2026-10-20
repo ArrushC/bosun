@@ -21,25 +21,25 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
         <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-[rgb(6_9_15/0.62)] backdrop-blur-[2px]" />
         <DialogPrimitive.Content
           className={cn(
-            "fixed top-[8vh] left-1/2 z-50 flex max-h-[84vh] w-[calc(100vw-32px)] -translate-x-1/2 flex-col rounded-panel border border-line bg-panel shadow-pop focus:outline-none",
+            "fixed top-[7vh] left-1/2 z-50 flex max-h-[86vh] w-[calc(100vw-32px)] -translate-x-1/2 flex-col rounded-[20px] border border-line-soft bg-panel shadow-pop focus:outline-none",
             width,
           )}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-line-soft px-5 pt-4 pb-3">
+          <div className="flex items-start justify-between gap-4 px-7 pt-6 pb-2">
             <div className="min-w-0">
               <DialogPrimitive.Title className="text-md font-semibold">{title}</DialogPrimitive.Title>
               {description ? (
-                <DialogPrimitive.Description className="mt-0.5 text-sm text-text-2">{description}</DialogPrimitive.Description>
+                <DialogPrimitive.Description className="mt-1 text-sm text-text-2">{description}</DialogPrimitive.Description>
               ) : (
                 <DialogPrimitive.Description className="sr-only">{typeof title === "string" ? title : "Dialog"}</DialogPrimitive.Description>
               )}
             </div>
-            <DialogPrimitive.Close className="rounded-control p-1 text-text-3 hover:bg-raised hover:text-text" aria-label="Close">
-              <X className="size-4" />
+            <DialogPrimitive.Close className="-mr-2 rounded-control p-2 text-text-3 hover:bg-raised hover:text-text" aria-label="Close">
+              <X className="size-5" />
             </DialogPrimitive.Close>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
-          {footer && <div className="flex items-center justify-end gap-2 border-t border-line-soft px-5 py-3">{footer}</div>}
+          <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">{children}</div>
+          {footer && <div className="flex items-center justify-end gap-3 px-7 pt-3 pb-6">{footer}</div>}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
@@ -61,7 +61,7 @@ export function Sheet({ open, onOpenChange, children, label, width = 640 }: {
         <DialogPrimitive.Content
           aria-describedby={undefined}
           style={{ width: `min(${width}px, 100vw)` }}
-          className="fixed top-0 right-0 z-30 flex h-full flex-col border-l border-line bg-panel shadow-pop focus:outline-none data-[state=open]:animate-[sheet-in_160ms_cubic-bezier(.2,.8,.2,1)]"
+          className="fixed top-0 right-0 z-30 flex h-full flex-col border-l border-line-soft bg-panel shadow-pop focus:outline-none data-[state=open]:animate-[sheet-in_160ms_cubic-bezier(.2,.8,.2,1)]"
         >
           <DialogPrimitive.Title className="sr-only">{label}</DialogPrimitive.Title>
           {children}
@@ -80,7 +80,7 @@ export function Tip({ label, children, side = "top" }: { label: ReactNode; child
         <TooltipPrimitive.Content
           side={side}
           sideOffset={6}
-          className="z-50 max-w-xs rounded-[5px] border border-line bg-raised px-2 py-1 text-xs text-text shadow-pop"
+          className="z-50 max-w-xs rounded-[8px] border border-line-soft bg-raised px-2.5 py-1.5 text-xs text-text shadow-pop"
         >
           {label}
         </TooltipPrimitive.Content>
@@ -101,7 +101,7 @@ export function DropdownContent({ children, align = "end" }: { children: ReactNo
       <Menu.Content
         align={align}
         sideOffset={6}
-        className="z-50 min-w-44 rounded-[8px] border border-line bg-panel p-1 shadow-pop"
+        className="z-50 min-w-52 rounded-[14px] border border-line-soft bg-panel p-1.5 shadow-pop"
       >
         {children}
       </Menu.Content>
@@ -115,7 +115,7 @@ export function DropdownItem({ children, onSelect, danger, disabled }: { childre
       disabled={disabled}
       onSelect={onSelect}
       className={cn(
-        "flex h-7 cursor-pointer items-center gap-2 rounded-[5px] px-2 text-sm text-text outline-none select-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40 data-[highlighted]:bg-raised [&_svg]:size-3.5 [&_svg]:text-text-2",
+        "flex h-9 cursor-pointer items-center gap-2.5 rounded-[8px] px-3 text-sm text-text outline-none select-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40 data-[highlighted]:bg-raised [&_svg]:size-4 [&_svg]:text-text-2",
         danger && "text-st-fail [&_svg]:text-st-fail",
       )}
     >
@@ -124,10 +124,10 @@ export function DropdownItem({ children, onSelect, danger, disabled }: { childre
   );
 }
 
-export const DropdownSeparator = () => <Menu.Separator className="my-1 h-px bg-line-soft" />;
+export const DropdownSeparator = () => <Menu.Separator className="my-1.5 h-px bg-line-soft" />;
 
 export function DropdownLabel({ children }: { children: ReactNode }) {
-  return <Menu.Label className="px-2 pt-1.5 pb-1 text-2xs text-text-3">{children}</Menu.Label>;
+  return <Menu.Label className="px-3 pt-2 pb-1 text-xs text-text-3">{children}</Menu.Label>;
 }
 
 export function DropdownCheckbox({ checked, onCheckedChange, children }: { checked: boolean; onCheckedChange: (v: boolean) => void; children: ReactNode }) {
@@ -136,9 +136,9 @@ export function DropdownCheckbox({ checked, onCheckedChange, children }: { check
       checked={checked}
       onCheckedChange={onCheckedChange}
       onSelect={(e) => e.preventDefault()}
-      className="flex h-7 cursor-pointer items-center gap-2 rounded-[5px] px-2 text-sm text-text outline-none select-none data-[highlighted]:bg-raised"
+      className="flex h-9 cursor-pointer items-center gap-2.5 rounded-[8px] px-3 text-sm text-text outline-none select-none data-[highlighted]:bg-raised"
     >
-      <span className={cn("flex size-3.5 items-center justify-center rounded-[3px] border border-line", checked && "border-accent bg-accent")}>
+      <span className={cn("flex size-4 items-center justify-center rounded-[4px] border border-line", checked && "border-accent bg-accent")}>
         {checked && <span className="size-1.5 rounded-[1px] bg-accent-fg" />}
       </span>
       {children}
@@ -156,7 +156,7 @@ export function PopoverContent({ children, className, align = "start" }: { child
       <PopoverPrimitive.Content
         align={align}
         sideOffset={6}
-        className={cn("z-50 rounded-[8px] border border-line bg-panel p-2 shadow-pop focus:outline-none", className)}
+        className={cn("z-50 rounded-[14px] border border-line-soft bg-panel p-3 shadow-pop focus:outline-none", className)}
       >
         {children}
       </PopoverPrimitive.Content>

@@ -24,12 +24,12 @@ export function RunSummary({ run }: { run: Run }) {
   const usage = run.usage as Record<string, number | undefined>;
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 px-6 py-5 lg:grid-cols-[1fr_300px]">
-      <div className="min-w-0 space-y-5">
+    <div className="mx-auto grid max-w-[1180px] gap-12 px-8 py-8 lg:grid-cols-[1fr_320px]">
+      <div className="min-w-0 space-y-10">
         <section>
-          <h2 className="mb-2 text-sm font-semibold">Result</h2>
+          <h2 className="mb-3 text-md font-semibold">Result</h2>
           {run.summary ? (
-            <div className="rounded-[10px] border border-line-soft bg-panel px-4 py-3">
+            <div className="rounded-panel bg-panel px-6 py-5">
               <Md>{run.summary}</Md>
             </div>
           ) : (
@@ -43,18 +43,18 @@ export function RunSummary({ run }: { run: Run }) {
         </section>
         {run.subtasks.length > 0 && (
           <section>
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <ListTree className="size-4 text-text-3" /> Plan
+            <h2 className="mb-3 flex items-center gap-2 text-md font-semibold">
+              <ListTree className="size-5 text-text-3" /> Plan
             </h2>
-            {config.plan?.summary && <Md className="mb-3 text-[13px] text-text-2">{config.plan.summary}</Md>}
+            {config.plan?.summary && <Md className="mb-3 text-sm text-text-2">{config.plan.summary}</Md>}
             {config.plan_warnings?.length ? <Notice tone="warn" className="mb-3">{config.plan_warnings.join(" ")}</Notice> : null}
-            <ol className="divide-y divide-line-soft rounded-[10px] border border-line-soft">
+            <ol className="divide-y divide-line-soft overflow-hidden rounded-panel bg-panel">
               {run.subtasks.map((s) => (
-                <li key={s.id} className="flex items-start gap-3 px-3 py-2.5">
+                <li key={s.id} className="flex items-start gap-4 px-5 py-4">
                   <span className="mono mt-0.5 text-xs text-text-3">{s.key}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{s.title}</p>
-                    <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-text-3">
+                    <p className="text-base font-medium">{s.title}</p>
+                    <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-text-3">
                       <RoleTag name={s.role} color={roleColor(s.role)} />
                       {s.depends_on.length > 0 && <span>after {s.depends_on.join(", ")}</span>}
                       {s.attempts > 1 && <span>{s.attempts} attempts</span>}
@@ -68,9 +68,9 @@ export function RunSummary({ run }: { run: Run }) {
           </section>
         )}
       </div>
-      <aside className="space-y-5">
+      <aside className="space-y-10">
         <section>
-          <h2 className="mb-2 text-sm font-semibold">Usage</h2>
+          <h2 className="mb-3 text-md font-semibold">Usage</h2>
           <KeyValue
             items={[
               ["Agent sessions", String(usage.sessions ?? run.sessions.length)],
@@ -92,7 +92,7 @@ export function RunSummary({ run }: { run: Run }) {
           />
         </section>
         <section>
-          <h2 className="mb-2 text-sm font-semibold">Configuration</h2>
+          <h2 className="mb-3 text-md font-semibold">Configuration</h2>
           <KeyValue
             items={[
               ["Mode", String(config.mode ?? run.mode)],
@@ -104,7 +104,7 @@ export function RunSummary({ run }: { run: Run }) {
               ["Created", relativeTime(run.created_at)],
             ]}
           />
-          {config.instructions && <p className="mt-2 text-xs text-text-2">Extra instructions: {config.instructions}</p>}
+          {config.instructions && <p className="mt-3 text-sm text-text-2">Extra instructions: {config.instructions}</p>}
           {config.remembered_approvals?.length ? (
             <p className="mt-2 text-xs text-text-2">
               Allowed for this run: {config.remembered_approvals.map((r) => r.command ?? r.tool).join(", ")}

@@ -123,7 +123,7 @@ export function TaskFormDialog({ open, onOpenChange, task, defaults }: {
       description={task ? undefined : "Describe the work. Agents only start when you press Run with agent."}
       footer={
         <>
-          <span className="mr-auto text-xs text-text-3">{workspaceMissing ? "Assign a workspace so agents know where to work." : "Markdown is supported."}</span>
+          <span className="mr-auto text-sm text-text-3">{workspaceMissing ? "Assign a workspace so agents know where to work." : "Markdown is supported."}</span>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -133,18 +133,18 @@ export function TaskFormDialog({ open, onOpenChange, task, defaults }: {
         </>
       }
     >
-      <form onSubmit={submit} className="grid gap-4">
+      <form onSubmit={submit} className="grid gap-6">
         <Input
           autoFocus
           aria-label="Title"
           placeholder="Title"
           value={form.title}
           onChange={(e) => set("title", e.target.value)}
-          className="h-10 text-md font-medium"
+          className="h-12 text-md font-medium"
         />
         <MarkdownEditor label="Description" value={form.description} onChange={(v) => set("description", v)} placeholder="What needs to happen, and why?" rows={6} />
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Field label="Workspace">
             <NativeSelect value={form.workspace_id ?? ""} onChange={(e) => set("workspace_id", e.target.value || null)}>
               <option value="">No workspace</option>
@@ -157,14 +157,14 @@ export function TaskFormDialog({ open, onOpenChange, task, defaults }: {
           </Field>
           <Field label="Priority">
             <div className="relative">
-              <NativeSelect value={form.priority} onChange={(e) => set("priority", e.target.value as Priority)} className="pl-8">
+              <NativeSelect value={form.priority} onChange={(e) => set("priority", e.target.value as Priority)} className="pl-9">
                 {Object.entries(PRIORITY).map(([value, p]) => (
                   <option key={value} value={value}>
                     {p.label}
                   </option>
                 ))}
               </NativeSelect>
-              <PriorityIcon priority={form.priority} className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2" />
+              <PriorityIcon priority={form.priority} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2" />
             </div>
           </Field>
           <Field label="Type">
@@ -201,16 +201,16 @@ export function TaskFormDialog({ open, onOpenChange, task, defaults }: {
           />
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           <MarkdownEditor label="Acceptance criteria" value={form.acceptance_criteria} onChange={(v) => set("acceptance_criteria", v)} placeholder="- Tests cover the new behaviour" rows={4} />
           <MarkdownEditor label="Instructions for agents" value={form.agent_instructions} onChange={(v) => set("agent_instructions", v)} placeholder="Constraints, approach, files to avoid…" rows={4} />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Labels">
-            <div className="flex flex-wrap items-center gap-1.5 rounded-control border border-line bg-sunken px-1.5 py-1">
+            <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-control border border-line-soft bg-sunken px-2 py-1.5">
               {form.labels.map((l) => (
-                <span key={l} className="inline-flex h-5 items-center gap-1 rounded-[4px] bg-raised px-1.5 text-xs">
+                <span key={l} className="inline-flex h-6 items-center gap-1 rounded-full bg-raised px-2.5 text-xs">
                   {l}
                   <button type="button" aria-label={`Remove ${l}`} onClick={() => set("labels", form.labels.filter((x) => x !== l))}>
                     <X className="size-3 text-text-3 hover:text-text" />
@@ -229,7 +229,7 @@ export function TaskFormDialog({ open, onOpenChange, task, defaults }: {
                 onBlur={addLabel}
                 placeholder={form.labels.length ? "" : "api, backend"}
                 aria-label="Add label"
-                className="h-6 min-w-24 flex-1 bg-transparent px-1 text-sm focus:outline-none"
+                className="h-7 min-w-24 flex-1 bg-transparent px-1.5 text-sm focus:outline-none"
               />
             </div>
           </Field>
@@ -260,7 +260,7 @@ export function TaskFormDialog({ open, onOpenChange, task, defaults }: {
                   ))}
                 </NativeSelect>
               )}
-              {task && <span className="text-2xs text-text-3">Manage dependencies from the task panel.</span>}
+              {task && <span className="text-xs text-text-3">Manage dependencies from the task panel.</span>}
             </div>
           </Field>
         </div>

@@ -15,7 +15,7 @@ import { TOOL_ICON } from "./nodes";
 
 function Section({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className={cn("space-y-2 border-t border-line-soft px-4 py-3", className)}>
+    <section className={cn("space-y-3 border-t border-line-soft px-6 py-5", className)}>
       <h3 className="text-xs font-semibold text-text-2">{title}</h3>
       {children}
     </section>
@@ -26,29 +26,29 @@ export function ToolCallDetail({ call, defaultOpen = false }: { call: ToolCall; 
   const [open, setOpen] = useState(defaultOpen);
   const Icon = TOOL_ICON[call.name];
   return (
-    <div className="rounded-[6px] border border-line-soft">
+    <div className="rounded-[10px] border border-line-soft">
       <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center gap-2 px-2 py-1.5 text-left" aria-expanded={open}>
         {Icon && <Icon className="size-3.5 shrink-0 text-text-3" />}
         <span className="text-xs font-semibold">{call.name}</span>
-        <span className="mono min-w-0 flex-1 truncate text-2xs text-text-3">{call.summary}</span>
+        <span className="mono min-w-0 flex-1 truncate text-xs text-text-3">{call.summary}</span>
         <StatusPill state={call.state} compact />
       </button>
       {open && (
         <div className="space-y-2 border-t border-line-soft px-2 py-2">
           {call.denied && <p className="text-xs text-st-fail">{call.denied}</p>}
           <div>
-            <p className="mb-1 text-2xs text-text-3">Input</p>
-            <pre className="max-h-48 overflow-auto rounded-[4px] bg-sunken p-2 font-mono text-[11px] whitespace-pre-wrap text-text-2">
+            <p className="mb-1 text-xs text-text-3">Input</p>
+            <pre className="max-h-48 overflow-auto rounded-[10px] bg-sunken p-3 font-mono text-xs leading-[18px] whitespace-pre-wrap text-text-2">
               {call.name === "Bash" ? String(call.input.command ?? "") : JSON.stringify(call.input, null, 2)}
             </pre>
           </div>
           {call.output !== undefined && (
             <div>
-              <p className="mb-1 text-2xs text-text-3">
+              <p className="mb-1 text-xs text-text-3">
                 Result{call.durationMs ? `, ${formatDuration(call.durationMs)}` : ""}
                 {call.isError ? ", error" : ""}
               </p>
-              <pre className={cn("max-h-56 overflow-auto rounded-[4px] bg-sunken p-2 font-mono text-[11px] whitespace-pre-wrap", call.isError ? "text-st-fail" : "text-text-2")}>
+              <pre className={cn("max-h-56 overflow-auto rounded-[10px] bg-sunken p-3 font-mono text-xs leading-[18px] whitespace-pre-wrap", call.isError ? "text-st-fail" : "text-text-2")}>
                 {call.output || "(empty)"}
               </pre>
             </div>
@@ -93,7 +93,7 @@ function Composer({ run, sessionId }: { run: Run; sessionId: string }) {
           <Send /> {run.active ? "Send" : "Continue session"}
         </Button>
       </div>
-      {!canSend && <p className="text-2xs text-text-3">{run.active ? "This agent is not running right now." : "This session cannot be continued."}</p>}
+      {!canSend && <p className="text-xs text-text-3">{run.active ? "This agent is not running right now." : "This session cannot be continued."}</p>}
     </Section>
   );
 }
@@ -109,7 +109,7 @@ function AgentDetail({ node, model, run, onFocus }: { node: GraphNode; model: Ru
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 px-4 pb-3">
+      <div className="flex flex-wrap gap-2 px-6 pb-4">
         <Button size="xs" variant="outline" onClick={onFocus}>
           <Crosshair /> Focus
         </Button>
@@ -134,25 +134,25 @@ function AgentDetail({ node, model, run, onFocus }: { node: GraphNode; model: Ru
             ...(session?.api_key_source ? [["Auth", session.api_key_source === "none" ? "Claude subscription" : session.api_key_source] as [string, React.ReactNode]] : []),
           ]}
         />
-        {session?.error && <p className="rounded-[6px] border border-st-fail/40 bg-st-fail/8 px-2 py-1.5 text-xs text-text">{session.error}</p>}
+        {session?.error && <p className="rounded-[10px] border border-st-fail/40 bg-st-fail/8 px-3 py-2.5 text-sm text-text">{session.error}</p>}
       </Section>
       {node.data.lastText && (
         <Section title="Latest message">
-          <Md className="max-h-64 overflow-y-auto text-[13px]">{String(node.data.lastText)}</Md>
+          <Md className="max-h-64 overflow-y-auto text-sm">{String(node.data.lastText)}</Md>
         </Section>
       )}
       {(inbox.length > 0 || instructions.length > 0) && (
         <Section title="Received">
           <ul className="space-y-2">
             {instructions.map((m, i) => (
-              <li key={`i${i}`} className="rounded-[6px] border border-accent/30 px-2 py-1.5 text-xs">
-                <p className="text-2xs text-accent-strong">From you{m.queued ? ", queued" : ""}</p>
+              <li key={`i${i}`} className="rounded-[10px] border border-accent/30 px-3 py-2.5 text-sm">
+                <p className="text-xs text-accent-strong">From you{m.queued ? ", queued" : ""}</p>
                 <p className="whitespace-pre-wrap text-text">{m.text}</p>
               </li>
             ))}
             {inbox.map((m, i) => (
-              <li key={i} className="rounded-[6px] border border-line-soft px-2 py-1.5 text-xs">
-                <p className="text-2xs text-text-3">
+              <li key={i} className="rounded-[10px] border border-line-soft px-3 py-2.5 text-sm">
+                <p className="text-xs text-text-3">
                   {m.kind === "assignment" ? "Assignment" : "Report"} from {model.nodes.get(m.from)?.label ?? "Bosun"}
                   {m.subtask ? `: ${m.subtask}` : ""}
                 </p>
@@ -189,7 +189,7 @@ function AgentDetail({ node, model, run, onFocus }: { node: GraphNode; model: Ru
       )}
       {session?.result && (
         <Section title="Final report">
-          <Md className="text-[13px]">{session.result}</Md>
+          <Md className="text-sm">{session.result}</Md>
         </Section>
       )}
       {node.kind !== "subagent" && <Composer key={node.id} run={run} sessionId={node.id} />}
@@ -214,7 +214,7 @@ function SubtaskDetail({ node, run }: { node: GraphNode; run: Run }) {
             ...(subtask.merge_commit ? [["Merged", <span className="mono">{subtask.merge_commit.slice(0, 10)}</span>] as [string, React.ReactNode]] : []),
           ]}
         />
-        <Md className="text-[13px]">{subtask.instructions || "_No instructions._"}</Md>
+        <Md className="text-sm">{subtask.instructions || "_No instructions._"}</Md>
         {subtask.error && <p className="text-xs text-st-fail">{subtask.error}</p>}
         {editable && (
           <div className="flex gap-2">
@@ -229,7 +229,7 @@ function SubtaskDetail({ node, run }: { node: GraphNode; run: Run }) {
       </Section>
       {subtask.report && (
         <Section title="Report">
-          <Md className="text-[13px]">{subtask.report}</Md>
+          <Md className="text-sm">{subtask.report}</Md>
         </Section>
       )}
     </>
@@ -241,12 +241,12 @@ export function Inspector({ node, model, run, onClose, onFocus }: { node: GraphN
   const calls = (node.kind === "toolgroup" ? (node.data.calls as ToolCall[]) : node.kind === "tool" ? [node.data.call as ToolCall] : []) ?? [];
 
   return (
-    <aside aria-label="Inspector" className="flex h-full w-[380px] shrink-0 flex-col border-l border-line-soft bg-panel">
-      <header className="flex items-start gap-2 px-4 pt-3 pb-3">
+    <aside aria-label="Inspector" className="flex h-full w-[420px] shrink-0 flex-col border-l border-line-soft bg-panel">
+      <header className="flex items-start gap-3 px-6 pt-5 pb-4">
         <div className="min-w-0 flex-1">
-          <p className="text-2xs text-text-3 capitalize">{node.kind === "toolgroup" ? "Tool calls" : node.kind}</p>
-          <h2 className="truncate text-base font-semibold">{node.label}</h2>
-          {node.sublabel && <p className="truncate text-xs text-text-2">{node.sublabel}</p>}
+          <p className="text-xs text-text-3 capitalize">{node.kind === "toolgroup" ? "Tool calls" : node.kind}</p>
+          <h2 className="mt-0.5 truncate text-md font-semibold">{node.label}</h2>
+          {node.sublabel && <p className="mt-0.5 truncate text-sm text-text-2">{node.sublabel}</p>}
         </div>
         <StatusPill state={node.state} />
         <button onClick={onClose} className="rounded-control p-1 text-text-3 hover:bg-raised hover:text-text" aria-label="Close inspector">
@@ -268,7 +268,7 @@ export function Inspector({ node, model, run, onClose, onFocus }: { node: GraphN
           </Section>
         )}
         {approval && (
-          <div className="px-4">
+          <div className="px-6">
             <ApprovalCard approval={approval} />
           </div>
         )}
@@ -294,7 +294,7 @@ export function Inspector({ node, model, run, onClose, onFocus }: { node: GraphN
             {node.data.plan && (
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-text-2">Coordinator's plan</p>
-                <Md className="text-[13px]">{`${node.data.plan.summary ?? ""}\n\n${node.data.plan.rationale ?? ""}`}</Md>
+                <Md className="text-sm">{`${node.data.plan.summary ?? ""}\n\n${node.data.plan.rationale ?? ""}`}</Md>
               </div>
             )}
           </Section>
@@ -302,7 +302,7 @@ export function Inspector({ node, model, run, onClose, onFocus }: { node: GraphN
         {node.kind === "outcome" && (
           <Section title="Outcome">
             {node.data.error && <p className="text-sm text-st-fail">{String(node.data.error)}</p>}
-            {node.data.summary ? <Md className="text-[13px]">{String(node.data.summary)}</Md> : <p className="text-sm text-text-3">No summary.</p>}
+            {node.data.summary ? <Md className="text-sm">{String(node.data.summary)}</Md> : <p className="text-sm text-text-3">No summary.</p>}
           </Section>
         )}
         {node.kind === "operator" && (
@@ -311,8 +311,8 @@ export function Inspector({ node, model, run, onClose, onFocus }: { node: GraphN
           </Section>
         )}
         {run.active && (node.kind === "agent" || node.kind === "coordinator") && node.state === "running" && (
-          <div className="px-4 pt-2">
-            <p className="flex items-center gap-1.5 text-2xs text-text-3">
+          <div className="px-6 pt-3">
+            <p className="flex items-center gap-1.5 text-xs text-text-3">
               <Square className="size-3" /> Use Pause or Cancel in the header to stop the run.
             </p>
           </div>

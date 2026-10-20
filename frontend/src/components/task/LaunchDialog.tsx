@@ -15,18 +15,18 @@ const MODEL_OPTIONS = ["", "claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku
 
 function ScopeTable({ scope }: { scope: Record<string, { name: string; profile: string; description: string; tools: string[]; auto_allowed: string[]; model?: string | null }> }) {
   return (
-    <div className="divide-y divide-line-soft rounded-[8px] border border-line-soft">
+    <div className="divide-y divide-line-soft overflow-hidden rounded-[14px] bg-sunken">
       {Object.entries(scope).map(([key, role]) => {
         const autoTools = role.auto_allowed.filter((t) => !t.startsWith("Bash("));
         const autoBash = role.auto_allowed.filter((t) => t.startsWith("Bash(")).map((t) => t.slice(5, -1).replace(/:\*$/, " …"));
         const gated = role.tools.filter((t) => !role.auto_allowed.includes(t));
         return (
-          <div key={key} className="grid gap-1 px-3 py-2.5 sm:grid-cols-[150px_1fr]">
+          <div key={key} className="grid gap-2 px-4 py-3.5 sm:grid-cols-[160px_1fr]">
             <div>
               <RoleTag name={role.name} color={roleColor(key)} />
-              {role.model && <p className="mono mt-1 text-2xs text-text-3">{role.model}</p>}
+              {role.model && <p className="mono mt-1 text-xs text-text-3">{role.model}</p>}
             </div>
-            <div className="space-y-1 text-xs">
+            <div className="space-y-1.5 text-sm">
               <p className="text-text-2">{role.description}</p>
               <p>
                 <span className="text-text-3">Runs without asking: </span>
@@ -147,9 +147,9 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
         </>
       }
     >
-      <div className="grid gap-5">
+      <div className="grid gap-7">
         <Field label="Strategy">
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-3">
             {(
               [
                 { value: "single", icon: Bot, title: "Single agent", text: "One agent does the whole task. Best for focused changes." },
@@ -170,7 +170,7 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
                 <span className="flex items-center gap-2 text-sm font-semibold">
                   <opt.icon className="size-4 text-text-2" /> {opt.title}
                 </span>
-                <span className="text-xs text-text-2">{opt.text}</span>
+                <span className="text-sm text-text-2">{opt.text}</span>
               </button>
             ))}
           </div>
@@ -188,7 +188,7 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
               </NativeSelect>
             </Field>
             <Field label="Claude subagents" hint="Let the agent delegate to role subagents through the Agent tool.">
-              <div className="flex h-8 items-center">
+              <div className="flex h-10 items-center">
                 <Switch checked={subagents} onCheckedChange={setSubagents} label="Allow subagents" />
               </div>
             </Field>
@@ -210,7 +210,7 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
                         on ? "border-text-3 bg-raised text-text" : "border-line text-text-3 line-through",
                       )}
                     >
-                      <span className="h-3 w-[3px] rounded-full" style={{ background: roleColor(w.key, w.color) }} />
+                      <span className="size-2 rounded-full" style={{ background: roleColor(w.key, w.color) }} />
                       {w.name}
                       {on && <Check className="size-3 text-text-2" />}
                     </button>
@@ -262,8 +262,8 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
         </Field>
 
         <section className="grid gap-3">
-          <h3 className="flex items-center gap-2 text-sm font-semibold">
-            <ShieldCheck className="size-4 text-text-2" /> Plan and scope
+          <h3 className="flex items-center gap-2 text-base font-semibold">
+            <ShieldCheck className="size-[18px] text-text-2" /> Plan and scope
           </h3>
           {result?.errors.map((e) => (
             <ErrorNote key={e} title={e} />
@@ -274,9 +274,9 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
             </Notice>
           ))}
           {workspace?.path && (
-            <div className="grid gap-1.5 rounded-[8px] border border-line-soft px-3 py-2.5 text-sm">
+            <div className="grid gap-2.5 rounded-[14px] bg-sunken px-5 py-4 text-sm">
               <p className="flex items-center gap-2">
-                <GitBranch className="size-3.5 text-text-3" />
+                <GitBranch className="size-4 text-text-3" />
                 {workspace.isolation === "worktree" ? (
                   <span>
                     Isolated git worktree from <span className="mono">{workspace.base_branch ?? "HEAD"}</span>; your checkout is not touched.
@@ -286,7 +286,7 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
                 )}
               </p>
               <p className="flex items-center gap-2 text-text-2">
-                <Lock className="size-3.5 text-text-3" />
+                <Lock className="size-4 text-text-3" />
                 <span>
                   File tools are limited to {workspace.isolation === "worktree" ? "the run's worktree" : "this folder"}; shell commands that reach into your home directory or other projects are blocked
                   {settings?.execution.sandbox_bash ? " and run inside Claude Code's OS sandbox" : ""}. Nothing is pushed, opened as a pull request or deployed.

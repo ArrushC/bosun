@@ -158,12 +158,12 @@ function Canvas(props: AgentGraphProps) {
     const grew = nodes.length !== lastCount.current;
     lastCount.current = nodes.length;
     if (grew && follow) {
-      const t = setTimeout(() => void flow.fitView({ padding: 0.18, duration: 280, maxZoom: 1.1 }), 60);
+      const t = setTimeout(() => void flow.fitView({ padding: 0.08, duration: 280, maxZoom: 1.1 }), 60);
       return () => clearTimeout(t);
     }
   }, [nodes.length, follow, flow]);
   useEffect(() => {
-    if (fitSignal) void flow.fitView({ padding: 0.18, duration: 280, maxZoom: 1.2 });
+    if (fitSignal) void flow.fitView({ padding: 0.08, duration: 280, maxZoom: 1.2 });
   }, [fitSignal, flow]);
 
   return (
@@ -175,7 +175,7 @@ function Canvas(props: AgentGraphProps) {
       onNodeClick={(_, n) => onSelect(n.id)}
       onPaneClick={() => onSelect(null)}
       fitView
-      fitViewOptions={{ padding: 0.18, maxZoom: 1.1 }}
+      fitViewOptions={{ padding: 0.08, maxZoom: 1.1 }}
       minZoom={0.15}
       maxZoom={2}
       proOptions={{ hideAttribution: true }}

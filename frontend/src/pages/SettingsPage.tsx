@@ -31,10 +31,10 @@ const PROFILE_LABEL: Record<string, string> = {
 
 function Section({ id, title, description, children }: { id: string; title: string; description?: string; children: ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-4 space-y-4 border-b border-line-soft pb-8">
+    <section id={id} className="scroll-mt-6 space-y-6">
       <header>
-        <h2 className="text-base font-semibold">{title}</h2>
-        {description && <p className="text-xs text-text-2">{description}</p>}
+        <h2 className="text-md font-semibold">{title}</h2>
+        {description && <p className="mt-1 text-sm leading-6 text-text-2">{description}</p>}
       </header>
       {children}
     </section>
@@ -43,13 +43,13 @@ function Section({ id, title, description, children }: { id: string; title: stri
 
 function Toggle({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="flex items-start gap-3">
+    <label className="flex items-start gap-4">
       <span className="pt-0.5">
         <Switch checked={checked} onCheckedChange={onChange} label={label} />
       </span>
       <span className="text-sm">
         {label}
-        {hint && <span className="block text-xs text-text-3">{hint}</span>}
+        {hint && <span className="mt-0.5 block text-sm leading-6 text-text-3">{hint}</span>}
       </span>
     </label>
   );
@@ -67,14 +67,14 @@ function ProviderCard({ status, selected, onSelect }: { status: ProviderStatus; 
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={cn("flex flex-col gap-1.5 rounded-[10px] border p-3 text-left transition-colors", selected ? "border-accent bg-accent-soft" : "border-line hover:border-text-3")}
+      className={cn("flex flex-col gap-2 rounded-[14px] border p-5 text-left transition-colors", selected ? "border-accent bg-accent-soft" : "border-line-soft bg-panel hover:border-line")}
     >
-      <span className="flex items-center gap-2 text-sm font-semibold">
+      <span className="flex items-center gap-2 text-base font-semibold">
         <span className="size-2 rounded-full" style={{ background: status.ready ? "var(--st-ok)" : "var(--st-fail)" }} />
         {titles[status.provider]}
       </span>
-      <span className="text-xs text-text-2">{billing[status.provider]}</span>
-      <span className={cn("text-xs", status.ready ? "text-text" : "text-st-fail")}>{status.summary}</span>
+      <span className="text-sm text-text-2">{billing[status.provider]}</span>
+      <span className={cn("text-sm", status.ready ? "text-text" : "text-st-fail")}>{status.summary}</span>
     </button>
   );
 }
@@ -164,7 +164,7 @@ function RoleEditor({ role, onClose }: { role: Role | null; onClose: () => void 
           <Textarea rows={6} value={draft.system_prompt} onChange={(e) => setDraft({ ...draft, system_prompt: e.target.value })} />
         </Field>
         <Field label="Additional auto-allowed tool rules" hint='One per line, e.g. Bash(npm run lint:*). Leave empty for the profile defaults.'>
-          <Textarea rows={3} value={draft.extra_allowed_tools} onChange={(e) => setDraft({ ...draft, extra_allowed_tools: e.target.value })} className="font-mono text-xs" />
+          <Textarea rows={3} value={draft.extra_allowed_tools} onChange={(e) => setDraft({ ...draft, extra_allowed_tools: e.target.value })} className="font-mono text-xs leading-6" />
         </Field>
         {!role?.is_coordinator && <Toggle label="Enabled" checked={draft.enabled} onChange={(enabled) => setDraft({ ...draft, enabled })} />}
       </div>
@@ -189,7 +189,7 @@ export function SettingsPage() {
   }, [saved, draft]);
 
   if (isLoading || !draft) return <div className="flex h-full items-center justify-center"><Spinner /></div>;
-  if (error) return <div className="p-6"><ErrorNote title="Settings could not be loaded">{(error as Error).message}</ErrorNote></div>;
+  if (error) return <div className="px-8 py-6"><ErrorNote title="Settings could not be loaded">{(error as Error).message}</ErrorNote></div>;
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
   const ex = draft.execution;
@@ -203,36 +203,36 @@ export function SettingsPage() {
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         title="Settings"
-        subtitle="Provider, execution limits, permissions and agent roles. Changes apply to new runs."
+        subtitle="Changes apply to new runs."
         actions={
-          <Button variant="primary" size="sm" disabled={!dirty || save.isPending} onClick={() => save.mutate(draft)}>
+          <Button variant="primary" disabled={!dirty || save.isPending} onClick={() => save.mutate(draft)}>
             <Save /> {dirty ? "Save changes" : "Saved"}
           </Button>
         }
       />
       <div className="flex min-h-0 flex-1">
-        <nav aria-label="Settings sections" className="hidden w-48 shrink-0 flex-col gap-0.5 border-r border-line-soft p-3 md:flex">
+        <nav aria-label="Settings sections" className="hidden w-56 shrink-0 flex-col gap-1 px-5 pt-2 md:flex">
           {SECTIONS.map(([id, label]) => (
-            <a key={id} href={`#${id}`} className="rounded-control px-2 py-1.5 text-sm text-text-2 hover:bg-raised hover:text-text">
+            <a key={id} href={`#${id}`} className="rounded-control px-3 py-2 text-sm text-text-2 hover:bg-raised hover:text-text">
               {label}
             </a>
           ))}
         </nav>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-3xl space-y-8 px-6 py-6">
+          <div className="mx-auto max-w-3xl space-y-16 px-8 pt-2 pb-16">
             <Section id="provider" title="Provider" description="Which Claude account runs agents. Bosun never switches providers on its own, and stops any session that authenticates differently.">
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3">
                 {providers.map((p) => (
                   <ProviderCard key={p.provider} status={p} selected={draft.provider.provider === p.provider} onSelect={() => setProvider({ provider: p.provider as never })} />
                 ))}
                 {providers.length === 0 && <Spinner />}
               </div>
-              <div className="flex items-center gap-2">
-                <Button size="xs" variant="ghost" onClick={() => void refetch()} disabled={isFetching}>
+              <div className="flex items-center gap-3">
+                <Button size="sm" variant="ghost" onClick={() => void refetch()} disabled={isFetching}>
                   <RefreshCw className={cn(isFetching && "animate-spin")} /> Re-check
                 </Button>
                 {selectedStatus?.details?.subscription_type ? (
-                  <span className="text-xs text-text-3">
+                  <span className="text-sm text-text-3">
                     {String(selectedStatus.details.email ?? "")} {selectedStatus.details.subscription_type ? `(${String(selectedStatus.details.subscription_type)} plan)` : ""}
                   </span>
                 ) : null}
@@ -240,7 +240,7 @@ export function SettingsPage() {
               {draft.provider.provider === "subscription" && <Notice>{providers[0]?.policy_note}</Notice>}
               {draft.provider.provider === "api_key" && <Notice tone="warn">API usage is billed per token. Set BOSUN_ANTHROPIC_API_KEY in Bosun's .env file.</Notice>}
               {draft.provider.provider === "vertex" && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-5">
                   <Field label="GCP project">
                     <Input value={draft.provider.vertex_project_id ?? ""} onChange={(e) => setProvider({ vertex_project_id: e.target.value || null })} />
                   </Field>
@@ -249,7 +249,7 @@ export function SettingsPage() {
                   </Field>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-5">
                 <Field label="Default model" hint="Empty uses Claude Code's default for the provider.">
                   <NativeSelect value={draft.provider.model ?? ""} onChange={(e) => setProvider({ model: e.target.value || null })}>
                     <option value="">Provider default</option>
@@ -273,7 +273,7 @@ export function SettingsPage() {
             </Section>
 
             <Section id="execution" title="Execution" description="Defaults for new runs and the limits Bosun enforces.">
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+              <div className="grid grid-cols-2 gap-x-5 gap-y-6 md:grid-cols-3">
                 <Field label="Default backend">
                   <Segmented value={ex.backend} onChange={(backend) => setEx({ backend })} options={[{ value: "claude", label: "Claude Code" }, { value: "demo", label: "Demo" }]} />
                 </Field>
@@ -306,7 +306,7 @@ export function SettingsPage() {
                   <Input type="number" min={1} max={5} value={ex.subtask_max_attempts} onChange={(e) => setEx({ subtask_max_attempts: num(e.target.value, 2) })} />
                 </Field>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-5">
                 <Toggle label="Approve team plans before agents start" checked={ex.require_plan_approval} onChange={(require_plan_approval) => setEx({ require_plan_approval })} />
                 <Toggle label="Allow Claude subagents in single-agent runs" hint="The agent may delegate to role subagents through the Agent tool; delegation appears in the graph." checked={ex.allow_sdk_subagents} onChange={(allow_sdk_subagents) => setEx({ allow_sdk_subagents })} />
                 <Toggle label="Allow web search and fetch" hint="Off by default: agents cannot reach the network through Claude's web tools." checked={ex.allow_web_tools} onChange={(allow_web_tools) => setEx({ allow_web_tools })} />
@@ -318,12 +318,12 @@ export function SettingsPage() {
                   onChange={(sandbox_bash) => setEx({ sandbox_bash })}
                 />
                 {meta?.sandbox.container && (
-                  <Notice tone={ex.sandbox_bash ? "warn" : undefined} className="ml-12">
+                  <Notice tone={ex.sandbox_bash ? "warn" : undefined} className="ml-14">
                     Bosun is running in a container, so agents' shell commands can only reach the container and the folders mounted into it. Claude Code's sandbox can't start inside a container{ex.sandbox_bash ? ": runs will stop before doing anything while this is on." : ", so leave this off."}
                   </Notice>
                 )}
                 {ex.sandbox_bash && meta && !meta.sandbox.supported && !meta.sandbox.container && (
-                  <Notice tone="warn" className="ml-12">
+                  <Notice tone="warn" className="ml-14">
                     {meta.sandbox.missing.length
                       ? `This machine is missing ${meta.sandbox.missing.join(" and ")}. Runs will stop before doing anything until ${meta.sandbox.missing.length > 1 ? "they are" : "it is"} installed.`
                       : `Claude Code's sandbox does not support ${meta.sandbox.platform}. Runs will stop before doing anything while this is on.`}
@@ -334,25 +334,25 @@ export function SettingsPage() {
 
             <Section id="permissions" title="Permissions" description="Shell commands that run without asking. Everything else that needs permission comes to you as an approval.">
               <Field label="Safe commands for every editing role" hint="Claude Code permission rules, one per line, e.g. Bash(git diff:*).">
-                <Textarea rows={6} className="font-mono text-xs" value={ex.auto_allow_bash.join("\n")} onChange={(e) => setEx({ auto_allow_bash: e.target.value.split("\n").map((l) => l.trim()).filter(Boolean) })} />
+                <Textarea rows={6} className="font-mono text-xs leading-6" value={ex.auto_allow_bash.join("\n")} onChange={(e) => setEx({ auto_allow_bash: e.target.value.split("\n").map((l) => l.trim()).filter(Boolean) })} />
               </Field>
               <Field label="Test commands for roles that may run tests">
-                <Textarea rows={6} className="font-mono text-xs" value={ex.test_commands.join("\n")} onChange={(e) => setEx({ test_commands: e.target.value.split("\n").map((l) => l.trim()).filter(Boolean) })} />
+                <Textarea rows={6} className="font-mono text-xs leading-6" value={ex.test_commands.join("\n")} onChange={(e) => setEx({ test_commands: e.target.value.split("\n").map((l) => l.trim()).filter(Boolean) })} />
               </Field>
               <Notice>File tools are always confined to the run's worktree, and bypass permission modes are never used.</Notice>
             </Section>
 
             <Section id="roles" title="Agent roles" description="The coordinator assigns subtasks to these roles. Single-agent runs use one of them.">
-              <ul className="divide-y divide-line-soft rounded-[10px] border border-line-soft">
+              <ul className="divide-y divide-line-soft overflow-hidden rounded-panel bg-panel">
                 {roles.map((r) => (
-                  <li key={r.id} className="flex items-center gap-3 px-4 py-2.5">
-                    <span className="h-6 w-[3px] rounded-full" style={{ background: roleColor(r.key, r.color) }} />
+                  <li key={r.id} className="flex items-center gap-4 px-5 py-4">
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: roleColor(r.key, r.color) }} />
                     <div className="min-w-0 flex-1">
-                      <p className={cn("text-sm font-medium", !r.enabled && "text-text-3 line-through")}>
+                      <p className={cn("text-base font-medium", !r.enabled && "text-text-3 line-through")}>
                         {r.name}
-                        <span className="ml-2 text-xs font-normal text-text-3">{PROFILE_LABEL[r.permission_profile]}</span>
+                        <span className="ml-2 text-sm font-normal text-text-3">{PROFILE_LABEL[r.permission_profile]}</span>
                       </p>
-                      <p className="truncate text-xs text-text-2">{r.description}</p>
+                      <p className="mt-0.5 truncate text-sm text-text-2">{r.description}</p>
                     </div>
                     {!r.is_coordinator && (
                       <Switch checked={r.enabled} onCheckedChange={() => setEditingRole(r)} label={`${r.name} enabled`} />
@@ -373,9 +373,9 @@ export function SettingsPage() {
                 <Input value={draft.scan.tags.join(", ")} onChange={(e) => setScan({ tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) })} />
               </Field>
               <Field label="Excluded paths" hint="gitignore-style patterns, applied in addition to .gitignore.">
-                <Textarea rows={8} className="font-mono text-xs" value={draft.scan.exclude_globs.join("\n")} onChange={(e) => setScan({ exclude_globs: e.target.value.split("\n").map((t) => t.trim()).filter(Boolean) })} />
+                <Textarea rows={8} className="font-mono text-xs leading-6" value={draft.scan.exclude_globs.join("\n")} onChange={(e) => setScan({ exclude_globs: e.target.value.split("\n").map((t) => t.trim()).filter(Boolean) })} />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-5">
                 <Field label="Max file size (KB)">
                   <Input type="number" value={draft.scan.max_file_kb} onChange={(e) => setScan({ max_file_kb: num(e.target.value, 512) })} />
                 </Field>
@@ -386,7 +386,7 @@ export function SettingsPage() {
             </Section>
 
             <Section id="graph" title="Graph" description="Stored in this browser.">
-              <div className="flex flex-wrap items-center gap-6">
+              <div className="flex flex-wrap items-center gap-8">
                 <Field label="Layout">
                   <Segmented value={graph.direction} onChange={(direction) => setGraph({ direction })} options={[{ value: "LR", label: "Left to right" }, { value: "TB", label: "Top down" }]} />
                 </Field>
@@ -396,7 +396,7 @@ export function SettingsPage() {
             </Section>
 
             <Section id="demo" title="Demo data" description="A small project with real TODOs whose agents run on the demo backend. No Claude calls are made.">
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <Button variant="secondary" onClick={() => demo.seed.mutate()} disabled={demo.seed.isPending}>
                   <Sparkles /> Load demo
                 </Button>

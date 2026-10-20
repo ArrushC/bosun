@@ -33,14 +33,14 @@ export function BoardToolbar({ total, shown }: { total: number; shown: number })
   const toggle = (list: string[], value: string) => (list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 px-5 pb-2.5">
+    <div className="flex flex-wrap items-center gap-3 px-8 pb-5">
       <SearchInput
         ref={search}
         value={board.q}
         onChange={(e) => setBoard({ q: e.target.value })}
-        placeholder="Filter tasks  /"
+        placeholder="Filter tasks"
         aria-label="Filter tasks"
-        className="w-64"
+        className="w-72"
       />
       <Segmented
         value={board.agentState}
@@ -53,7 +53,7 @@ export function BoardToolbar({ total, shown }: { total: number; shown: number })
       />
       <DropdownMenu>
         <DropdownTrigger asChild>
-          <Button size="sm" variant="outline" className={cn(activeFilters > 0 && "border-accent text-text")}>
+          <Button size="sm" variant="ghost" className={cn(activeFilters > 0 && "bg-accent-soft text-text")}>
             <ListFilter /> Filters{activeFilters > 0 && ` (${activeFilters})`}
           </Button>
         </DropdownTrigger>
@@ -104,7 +104,7 @@ export function BoardToolbar({ total, shown }: { total: number; shown: number })
 
       <DropdownMenu>
         <DropdownTrigger asChild>
-          <Button size="sm" variant="outline" aria-label="Group and sort">
+          <Button size="sm" variant="ghost" aria-label="Group and sort">
             <Rows3 /> {board.groupBy === "none" ? "No grouping" : `By ${board.groupBy}`}
           </Button>
         </DropdownTrigger>
@@ -134,7 +134,7 @@ export function BoardToolbar({ total, shown }: { total: number; shown: number })
           <RotateCcw /> Clear
         </Button>
       )}
-      <span className="ml-auto text-xs text-text-3">{shown === total ? `${total} tasks` : `${shown} of ${total} tasks`}</span>
+      <span className="ml-auto text-sm text-text-3">{shown === total ? `${total} tasks` : `${shown} of ${total} tasks`}</span>
     </div>
   );
 }

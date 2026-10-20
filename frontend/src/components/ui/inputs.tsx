@@ -5,17 +5,17 @@ import { forwardRef, type InputHTMLAttributes, type ReactNode, type TextareaHTML
 import { cn } from "@/lib/utils";
 
 const FIELD =
-  "w-full rounded-control border border-line bg-sunken px-2.5 text-sm text-text placeholder:text-text-3 transition-colors hover:border-text-3 focus:border-accent focus:outline-none disabled:opacity-50";
+  "w-full rounded-control border border-line-soft bg-sunken px-3.5 text-sm text-text placeholder:text-text-3 transition-colors hover:border-text-3 focus:border-accent focus:outline-none disabled:opacity-50";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...props }, ref) {
-  return <input ref={ref} className={cn(FIELD, "h-8", className)} {...props} />;
+  return <input ref={ref} className={cn(FIELD, "h-10", className)} {...props} />;
 });
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea(
   { className, ...props },
   ref,
 ) {
-  return <textarea ref={ref} className={cn(FIELD, "min-h-24 py-2 leading-5", className)} {...props} />;
+  return <textarea ref={ref} className={cn(FIELD, "min-h-28 py-2.5 leading-6", className)} {...props} />;
 });
 
 export const SearchInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function SearchInput(
@@ -24,18 +24,18 @@ export const SearchInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTML
 ) {
   return (
     <div className={cn("relative", className)}>
-      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-text-3" />
-      <input ref={ref} type="search" className={cn(FIELD, "h-8 pl-8")} {...props} />
+      <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-text-3" />
+      <input ref={ref} type="search" className={cn(FIELD, "h-10 pl-10")} {...props} />
     </div>
   );
 });
 
 export function Field({ label, hint, children, className }: { label: ReactNode; hint?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <label className={cn("flex flex-col gap-1.5", className)}>
-      <span className="text-xs font-medium text-text-2">{label}</span>
+    <label className={cn("flex flex-col gap-2", className)}>
+      <span className="text-sm font-medium text-text">{label}</span>
       {children}
-      {hint && <span className="text-2xs text-text-3">{hint}</span>}
+      {hint && <span className="text-xs text-text-3">{hint}</span>}
     </label>
   );
 }
@@ -71,16 +71,16 @@ export function Switch({ checked, onCheckedChange, label, disabled }: { checked:
       onCheckedChange={onCheckedChange}
       aria-label={label}
       disabled={disabled}
-      className="relative h-[18px] w-8 shrink-0 rounded-full border border-line bg-sunken transition-colors data-[state=checked]:border-accent data-[state=checked]:bg-accent disabled:opacity-50"
+      className="relative h-[22px] w-10 shrink-0 rounded-full border border-line bg-sunken transition-colors data-[state=checked]:border-accent data-[state=checked]:bg-accent disabled:opacity-50"
     >
-      <SwitchPrimitive.Thumb className="block size-3 translate-x-0.5 rounded-full bg-text-2 transition-transform data-[state=checked]:translate-x-[15px] data-[state=checked]:bg-accent-fg" />
+      <SwitchPrimitive.Thumb className="block size-4 translate-x-0.5 rounded-full bg-text-2 transition-transform data-[state=checked]:translate-x-[20px] data-[state=checked]:bg-accent-fg" />
     </SwitchPrimitive.Root>
   );
 }
 
 export function NativeSelect({ className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cn(FIELD, "h-8 appearance-none bg-[length:12px] bg-[right_8px_center] bg-no-repeat pr-7", className)}
+    <select className={cn(FIELD, "h-10 appearance-none bg-[length:14px] bg-[right_12px_center] bg-no-repeat pr-9", className)}
       style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238d99af' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")" }}
       {...props}
     >
@@ -97,7 +97,7 @@ export function Segmented<T extends string>({ value, onChange, options, size = "
   className?: string;
 }) {
   return (
-    <div role="radiogroup" className={cn("inline-flex rounded-control border border-line bg-sunken p-0.5", className)}>
+    <div role="radiogroup" className={cn("inline-flex gap-0.5 rounded-control bg-sunken p-1", className)}>
       {options.map((o) => (
         <button
           key={o.value}
@@ -107,9 +107,9 @@ export function Segmented<T extends string>({ value, onChange, options, size = "
           title={o.title}
           onClick={() => onChange(o.value)}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-[4px] px-2 font-medium text-text-2 transition-colors hover:text-text [&_svg]:size-3.5",
-            size === "xs" ? "h-5 text-2xs" : "h-6 text-xs",
-            value === o.value && "bg-raised text-text shadow-[0_0_0_1px_var(--line)]",
+            "inline-flex items-center gap-1.5 rounded-[7px] font-medium text-text-2 transition-colors hover:text-text [&_svg]:size-4",
+            size === "xs" ? "h-7 px-2.5 text-xs" : "h-8 px-3 text-sm",
+            value === o.value && "bg-raised text-text shadow-[0_1px_2px_rgb(0_0_0/0.12)]",
           )}
         >
           {o.label}

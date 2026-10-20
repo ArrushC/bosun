@@ -118,13 +118,13 @@ function RunGraph({ runId }: { runId: string }) {
   if (!run) return <div className="flex h-full items-center justify-center"><Spinner /></div>;
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center gap-3 border-b border-line-soft px-4 py-2">
+      <div className="flex shrink-0 items-center gap-3 border-b border-line-soft px-6 py-3">
         <StatusPill state={runState(run.status)} label={RUN_LABEL[run.status]} />
-        <p className="min-w-0 truncate text-sm">
-          <span className="mono mr-2 text-xs text-text-3">{run.task_key}</span>
+        <p className="min-w-0 truncate text-base">
+          <span className="mono mr-2 text-sm text-text-3">{run.task_key}</span>
           Run {run.number}: {run.task_title}
         </p>
-        <Button size="sm" variant="outline" className="ml-auto" asChild>
+        <Button size="sm" variant="secondary" className="ml-auto" asChild>
           <Link to={`/runs/${run.id}`}>Open run</Link>
         </Button>
       </div>
@@ -147,23 +147,23 @@ export function GraphPage() {
 
   return (
     <div className="flex h-full min-h-0">
-      <aside aria-label="Runs" className="flex w-64 shrink-0 flex-col border-r border-line-soft bg-panel">
-        <div className="flex h-12 items-center gap-2 border-b border-line-soft px-4">
-          <Waypoints className="size-4 text-text-2" />
-          <h1 className="text-sm font-semibold">Agent graph</h1>
+      <aside aria-label="Runs" className="flex w-72 shrink-0 flex-col border-r border-line-soft">
+        <div className="flex h-16 items-center gap-2.5 px-5">
+          <Waypoints className="size-5 text-text-2" />
+          <h1 className="text-md font-semibold">Agent graph</h1>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
           <button
             onClick={() => setParams({ overview: "1" })}
-            className={cn("mb-2 flex w-full items-center gap-2 rounded-control px-2 py-2 text-left text-sm hover:bg-raised", !runId && "bg-raised")}
+            className={cn("mb-3 flex w-full items-center gap-3 rounded-control px-3 py-2.5 text-left text-sm hover:bg-raised", !runId && "bg-raised")}
           >
             <Globe2 className="size-4 text-text-2" /> All tasks and agents
           </button>
-          {active.length > 0 && <p className="px-2 pt-2 pb-1 text-2xs text-text-3">Live</p>}
+          {active.length > 0 && <p className="px-3 pt-3 pb-1.5 text-xs text-text-3">Live</p>}
           {active.map((r) => (
             <RunItem key={r.id} run={r} selected={runId === r.id} onClick={() => setParams({ run: r.id })} />
           ))}
-          {recent.length > 0 && <p className="px-2 pt-3 pb-1 text-2xs text-text-3">Recent</p>}
+          {recent.length > 0 && <p className="px-3 pt-5 pb-1.5 text-xs text-text-3">Recent</p>}
           {recent.map((r) => (
             <RunItem key={r.id} run={r} selected={runId === r.id} onClick={() => setParams({ run: r.id })} />
           ))}
@@ -176,11 +176,11 @@ export function GraphPage() {
 
 function RunItem({ run, selected, onClick }: { run: ReturnType<typeof useRuns>["data"] extends (infer T)[] | undefined ? T : never; selected: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={cn("flex w-full items-start gap-2 rounded-control px-2 py-1.5 text-left hover:bg-raised", selected && "bg-raised")}>
+    <button onClick={onClick} className={cn("flex w-full items-start gap-3 rounded-control px-3 py-2.5 text-left hover:bg-raised", selected && "bg-raised")}>
       <StatusPill state={runState(run.status)} compact className="mt-0.5" />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm">{run.task_title}</span>
-        <span className="block text-2xs text-text-3">
+        <span className="mt-0.5 block text-xs text-text-3">
           <span className="mono">{run.task_key}</span> run {run.number}, {relativeTime(run.started_at ?? run.created_at)}
         </span>
       </span>

@@ -75,7 +75,7 @@ export function RunGraphView({ run, events, loading }: { run: Run; events: Execu
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1">
         <div className="relative min-w-0 flex-1">
-          <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-2">
+          <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
             <Segmented
               size="xs"
               value={graphPrefs.direction}
@@ -112,26 +112,26 @@ export function RunGraphView({ run, events, loading }: { run: Run; events: Execu
               </DropdownContent>
             </DropdownMenu>
             {focus && (
-              <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-accent/50 bg-panel pr-1 pl-2 text-2xs text-text">
-                <Crosshair className="size-3 text-accent" /> Focused on {model.nodes.get(focus)?.label ?? "node"}
+              <span className="inline-flex h-8 items-center gap-2 rounded-full border border-accent/50 bg-panel pr-1.5 pl-3 text-xs text-text">
+                <Crosshair className="size-3.5 text-accent" /> Focused on {model.nodes.get(focus)?.label ?? "node"}
                 <button onClick={() => setFocus(null)} aria-label="Clear focus" className="rounded-full p-0.5 hover:bg-raised">
-                  <X className="size-3" />
+                  <X className="size-3.5" />
                 </button>
               </span>
             )}
             {cursor !== null && (
-              <span className="inline-flex h-6 items-center gap-1 rounded-full border border-line bg-panel px-2 text-2xs text-text-2">
-                <Eye className="size-3" /> Replaying history
+              <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-line bg-panel px-3 text-xs text-text-2">
+                <Eye className="size-3.5" /> Replaying history
               </span>
             )}
           </div>
-          <div className="absolute top-3 right-3 z-10 flex items-center gap-2 rounded-control border border-line-soft bg-panel/90 px-2 py-1">
-            <label className="flex items-center gap-1.5 text-2xs text-text-2">
+          <div className="absolute top-4 right-4 z-10 flex items-center gap-3 rounded-control border border-line-soft bg-panel/90 px-3 py-1.5">
+            <label className="flex items-center gap-2 text-xs text-text-2">
               <Switch checked={follow} onCheckedChange={setFollow} label="Follow new activity" /> Follow
             </label>
             <Tip label="Fit to view">
               <button className="rounded p-0.5 text-text-2 hover:text-text" onClick={() => setFitSignal((n) => n + 1)} aria-label="Fit to view">
-                <Maximize2 className="size-3.5" />
+                <Maximize2 className="size-4" />
               </button>
             </Tip>
           </div>

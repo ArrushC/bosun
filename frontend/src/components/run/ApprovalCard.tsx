@@ -13,7 +13,7 @@ function ToolInput({ approval }: { approval: Approval }) {
   const input = approval.tool_input ?? {};
   if (approval.tool_name === "Bash" && typeof input.command === "string") {
     return (
-      <pre className="mt-2 overflow-x-auto rounded-[6px] border border-line-soft bg-sunken px-2.5 py-2 font-mono text-xs whitespace-pre-wrap text-text">
+      <pre className="mt-3 overflow-x-auto rounded-[10px] bg-sunken px-4 py-3 font-mono text-xs leading-5 whitespace-pre-wrap text-text">
         <span className="text-text-3 select-none">$ </span>
         {input.command}
       </pre>
@@ -21,7 +21,7 @@ function ToolInput({ approval }: { approval: Approval }) {
   }
   if (Object.keys(input).length === 0) return null;
   return (
-    <pre className="mt-2 max-h-40 overflow-auto rounded-[6px] border border-line-soft bg-sunken px-2.5 py-2 font-mono text-xs text-text-2">
+    <pre className="mt-3 max-h-40 overflow-auto rounded-[10px] bg-sunken px-4 py-3 font-mono text-xs leading-5 text-text-2">
       {JSON.stringify(input, null, 2)}
     </pre>
   );
@@ -31,15 +31,15 @@ function PlanPreview({ approval }: { approval: Approval }) {
   const plan = (approval.data as { plan?: { summary?: string; rationale?: string; subtasks?: Array<{ key: string; title: string; role: string; depends_on: string[]; modifies_code: boolean }> } }).plan;
   if (!plan) return null;
   return (
-    <div className="mt-2 space-y-2">
-      {plan.rationale && <p className="text-xs text-text-2">{plan.rationale}</p>}
-      <ol className="space-y-1">
+    <div className="mt-3 space-y-3">
+      {plan.rationale && <p className="text-sm text-text-2">{plan.rationale}</p>}
+      <ol className="space-y-2">
         {plan.subtasks?.map((s) => (
-          <li key={s.key} className="flex items-baseline gap-2 text-sm">
+          <li key={s.key} className="flex items-baseline gap-3 text-sm">
             <span className="mono shrink-0 text-text-3">{s.key}</span>
             <span className="min-w-0 flex-1">
               {s.title}
-              <span className="ml-1.5 text-xs text-text-3">
+              <span className="ml-2 text-xs text-text-3">
                 {s.role}
                 {s.depends_on.length ? `, after ${s.depends_on.join(", ")}` : ""}
                 {s.modifies_code ? ", edits code" : ""}
@@ -62,12 +62,12 @@ export function ApprovalCard({ approval, compact }: { approval: Approval; compac
   const busy = resolve.isPending;
 
   return (
-    <article className={cn("rounded-[8px] border bg-panel p-3", pending ? "border-st-approval/45" : "border-line-soft opacity-75")}>
-      <header className="flex items-start gap-2">
-        <ShieldAlert className="mt-0.5 size-4 shrink-0 text-st-approval" />
+    <article className={cn("rounded-panel border bg-panel p-5", pending ? "border-st-approval/40" : "border-line-soft opacity-75")}>
+      <header className="flex items-start gap-3">
+        <ShieldAlert className="mt-0.5 size-5 shrink-0 text-st-approval" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium break-words">{approval.title}</p>
-          <p className="text-2xs text-text-3">
+          <p className="text-base font-medium break-words">{approval.title}</p>
+          <p className="mt-0.5 text-xs text-text-3">
             {approval.task_key && (
               <Link to={`/runs/${approval.run_id}`} className="mono hover:text-text-2">
                 {approval.task_key}
@@ -78,7 +78,7 @@ export function ApprovalCard({ approval, compact }: { approval: Approval; compac
         </div>
       </header>
       {approval.description && !compact && (
-        <div className="mt-1.5 text-sm text-text-2">
+        <div className="mt-3 text-sm text-text-2">
           {approval.kind === "plan" ? <Md>{approval.description}</Md> : approval.description}
         </div>
       )}
@@ -86,7 +86,7 @@ export function ApprovalCard({ approval, compact }: { approval: Approval; compac
       {approval.kind === "plan" && !compact && <PlanPreview approval={approval} />}
 
       {pending ? (
-        <div className="mt-3 space-y-2">
+        <div className="mt-4 space-y-3">
           {denyOpen && (
             <Input
               autoFocus
@@ -116,7 +116,7 @@ export function ApprovalCard({ approval, compact }: { approval: Approval; compac
               <X /> {approval.kind === "plan" ? "Reject" : approval.kind === "integration" ? "Skip subtask" : "Deny"}
             </Button>
             {isTool && (
-              <label className="ml-auto flex items-center gap-1.5 text-xs text-text-2">
+              <label className="ml-auto flex items-center gap-2 text-sm text-text-2">
                 <Checkbox checked={remember} onCheckedChange={setRemember} aria-label="Always allow this for the rest of the run" />
                 Always allow in this run
               </label>
@@ -124,7 +124,7 @@ export function ApprovalCard({ approval, compact }: { approval: Approval; compac
           </div>
         </div>
       ) : (
-        <p className="mt-2 text-xs text-text-3">
+        <p className="mt-3 text-sm text-text-3">
           {approval.status === "approved" ? "Approved" : approval.status === "denied" ? "Denied" : approval.status === "expired" ? "Expired" : "Cancelled"}
           {approval.resolution?.message ? `: ${String(approval.resolution.message)}` : ""}
         </p>
@@ -136,7 +136,7 @@ export function ApprovalCard({ approval, compact }: { approval: Approval; compac
 export function ApprovalList({ approvals, empty }: { approvals: Approval[]; empty: string }) {
   if (!approvals.length) return <p className="px-2 py-6 text-center text-sm text-text-3">{empty}</p>;
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       {approvals.map((a) => (
         <ApprovalCard key={a.id} approval={a} />
       ))}

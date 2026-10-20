@@ -48,7 +48,10 @@ checks. Runs used the `haiku` model to keep usage small.
 
 The pages below were checked in headless Chromium at 1440×900 in the dark
 theme, with no console errors. The dashboard was also checked in the light
-theme.
+theme. After the redesign (Atkinson Hyperlegible Next, roomier layout),
+every page, the task sheet, both task dialogs and the collapsed sidebar
+were checked again at 1440×900 in both themes against demo-backend runs,
+again with no console errors. The screenshot below predates the redesign.
 
 - Dashboard, Board, Inbox, Agent graph, Runs
 - A real team run and a real single run (graph, transcripts, changes)
