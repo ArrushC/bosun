@@ -28,15 +28,58 @@ approvals.
 
 - Linux or macOS (Windows through WSL2)
 - A Claude subscription, or an Anthropic API key, or Google Vertex AI
-- To self-host: Docker with Compose 2.24 or later. Nothing else.
-- To run from source:
+- To run directly on your machine (as a service or from source):
   - Python 3.11+ and [uv](https://docs.astral.sh/uv/), Node.js 20+ and npm,
     git
   - Optional: the GitHub CLI (`gh`) for GitHub import
   - Optional: `bubblewrap` and `socat` (Linux) for OS-level shell sandboxing
+  - For the service: systemd (on WSL, with systemd enabled)
+- To self-host in a container: Docker with Compose 2.24 or later. Nothing else.
 
 The Claude Code CLI ships inside the `claude-agent-sdk` Python package (and the
 Docker image), so a separate install is only needed to sign in (see below).
+
+Run Bosun directly when it should reach projects anywhere on your machine and
+use your own logins and toolchains. Run it in Docker to keep agents inside a
+container that sees only the folders you mount.
+
+## Run as a service (Linux)
+
+```bash
+git clone https://github.com/ArrushC/bosun.git
+cd bosun
+scripts/start.sh    # installs and starts a systemd user service on 127.0.0.1:8787
+claude auth login   # only if Claude Code isn't signed in yet
+gh auth login       # optional, for GitHub import
+```
+
+Open <http://127.0.0.1:8787>. The first run installs the service and builds the
+web UI. Later runs start it if it isn't running, and leave it alone if it is.
+Bosun runs as you:
+
+- **Projects anywhere**: a workspace can be any folder you can write to.
+  Agents still work in their own git worktree, inside the boundary described
+  under Safety model.
+- **Your logins**: Bosun uses your Claude Code login and your GitHub CLI login.
+  Agents can run `gh` too, once you approve the command, with whatever access
+  that login has.
+- **Your tools**: the service starts Bosun through your login shell, so agents
+  get the `PATH` it sets up, with your toolchains on it.
+- **Data**: the database and run worktrees live in `~/.local/share/bosun`
+  (`BOSUN_DATA_DIR` changes it), apart from `scripts/dev.sh`'s `.data/`.
+- **Always on**: the script enables lingering for your user, so Bosun keeps
+  running after you log out (on WSL, after the last terminal closes) and starts
+  with the machine (on WSL, when WSL starts).
+- **Shell sandbox**: with `bubblewrap` and `socat` installed, you can turn on
+  Claude Code's OS sandbox in Settings.
+
+To update, run `git pull && systemctl --user restart bosun`; the web UI is
+rebuilt when it changed, and database migrations run at start-up.
+`journalctl --user-unit bosun -f` follows the log. To remove the service, run
+`systemctl --user disable --now bosun` and delete
+`~/.config/systemd/user/bosun.service`. Without systemd (on macOS, for
+example), the script runs Bosun in the terminal instead; `--foreground` does
+that anywhere.
 
 ## Run with Docker (self-hosting)
 
@@ -97,7 +140,7 @@ To update, run `git pull && docker compose up -d --build`; database
 migrations run at start-up. `docker compose logs -f` follows the log and
 `docker compose down` stops Bosun.
 
-## Run from source
+## Run from source (development)
 
 ```bash
 git clone https://github.com/ArrushC/bosun.git
@@ -105,13 +148,14 @@ cd bosun
 scripts/dev.sh    # backend :8787 + Vite :5173 with hot reload; installs dependencies on first run
 ```
 
-Open <http://127.0.0.1:5173>. If the Docker instance already holds port 8787,
-run `BOSUN_PORT=8788 scripts/dev.sh`.
+Open <http://127.0.0.1:5173>. If the service or the Docker instance already
+holds port 8787, run `BOSUN_PORT=8788 scripts/dev.sh`.
 
 ## First steps
 
-On first start Bosun creates its SQLite database (in `.data/` when run from
-source). Add your first workspace under **Integrations → Workspaces**, or set
+On first start Bosun creates its SQLite database: in `~/.local/share/bosun`
+for the service and Docker, in `.data/` for `scripts/dev.sh`. Add your first
+workspace under **Integrations → Workspaces**, or set
 `BOSUN_INITIAL_WORKSPACE=/path/to/project` when you start Bosun to register
 one automatically.
 
@@ -123,7 +167,7 @@ backend. The demo backend makes no Claude calls.
 ## 1. Connect Claude with your subscription
 
 Bosun runs agents through your own Claude Code login. With Docker, run
-`docker compose exec bosun claude auth login`. From source:
+`docker compose exec bosun claude auth login`. As a service or from source:
 
 ```bash
 # Use any Claude Code CLI; the bundled one is fine:
@@ -159,7 +203,7 @@ choose that provider explicitly in Settings.
 
 Bosun only reads from GitHub; every request it makes is a `GET`.
 
-- Easiest when running from source: `gh auth login`. Bosun borrows the CLI's
+- As a service or from source: `gh auth login`. Bosun borrows the CLI's
   token at request time and never stores it.
 - Or (always, with Docker) create a fine-grained token with read-only access
   to Issues, Pull requests, Metadata and Contents for the repositories you

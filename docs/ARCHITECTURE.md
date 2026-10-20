@@ -163,8 +163,8 @@ the app's.
 
 `WorktreeManager.prepare_run` creates `bosun/<task>-<slug>-<id>` from the current
 HEAD. A pull-request task starts from the PR head instead, fetched read-only
-into `refs/bosun/pr-N`. The worktree lives under
-`.data/worktrees/<run_id>`. Non-git folders run in place, one writer at a time.
+into `refs/bosun/pr-N`. The worktree lives under `worktrees/<run_id>` in the
+data folder. Non-git folders run in place, one writer at a time.
 
 Team subtasks that modify code get a child worktree branched from the run
 branch. When a child finishes, its changes are committed (caches excluded) and
@@ -379,6 +379,19 @@ reducer over event logs recorded from real backend runs
     files or process. Keep tokens read-only.
 - **No external writes.** The GitHub client only issues `GET`. Nothing is
   pushed. Merging into your branch is explicit and confirmed.
+
+### Running as a service
+
+`scripts/start.sh` writes a systemd user unit, unless an identical one is
+installed, and starts it. The unit runs `scripts/start.sh --foreground` from
+the checkout through the user's login shell, so Bosun and its agents get the
+user's `PATH` rather than systemd's bare one. In the foreground the script
+rebuilds the web UI when its sources are newer than the last build, syncs the
+backend's environment, then `exec`s the server. Systemd's `SIGTERM`
+therefore reaches Bosun itself (`KillMode=mixed`), as tini forwards it in the
+container. There is no container boundary: agents run as the user, with the
+user's Claude Code and `gh` logins. The boundary above, approvals and the
+optional sandbox keep them to their worktree.
 
 ### Running in a container
 

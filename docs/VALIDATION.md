@@ -60,6 +60,20 @@ again with no console errors. The screenshot below predates the redesign.
 
 ![Team run](images/team-run.png)
 
+## Running as a service
+
+Checked on WSL2 (AlmaLinux 9.8, systemd 252), replacing the Docker instance
+on port 8787.
+
+| Check | Result |
+|---|---|
+| Install | `scripts/start.sh` wrote and enabled the user unit, turned on lingering (`Linger=yes`) and started Bosun on `127.0.0.1:8787`, serving the built UI. Over an older unit it rewrote the unit and restarted Bosun. With an identical unit already running, it said so and changed nothing. With the service stopped, it started it. shellcheck is clean. |
+| Foreground | `--foreground` with a separate data folder and port ran Bosun in the terminal and served the UI. |
+| Process | The unit's main process was Bosun's own Python, so `SIGTERM` reaches it directly. Its `PATH`, from the login shell, had the mise shims and `~/.local/bin`. The data folder defaulted to `~/.local/share/bosun`, and the Docker instance's database there was picked up. |
+| UI rebuild | With unchanged sources, Bosun was up in about 2 seconds. After a UI file changed, a restart ran `tsc` and `vite build` first and was up in about 9 seconds. |
+| Logins | GitHub was connected through the GitHub CLI (`source: gh`). Claude used the host's Claude Code login. |
+| Projects anywhere | A checkout outside the projects folder (`~/.config/mise`, `ArrushC/workstation`) was added as a workspace and scanned (10 TODOs found). Its GitHub repository synced read-only: 1 open pull request imported. |
+
 ## Docker image and compose setup
 
 Checked on Docker Desktop 29.8 (WSL2) with Docker Compose 5.5, and before
@@ -108,5 +122,9 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
 - macOS (Seatbelt) sandboxing.
 - A real Claude run inside the Docker container (it needs the container's own
   Claude sign-in).
+- A real Claude run under the systemd service. Earlier real runs used
+  `uv run bosun` directly.
+- The service starting with WSL, or staying up after the last WSL terminal
+  closes. Lingering is on, but WSL was not restarted to check.
 - Very long runs (hours), and runs near the subscription usage limit. The
   `usage_limit` path is tested with scripted CLI output only.
