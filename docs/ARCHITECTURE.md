@@ -261,6 +261,27 @@ Bosun's client environment variable. Nothing is assumed to still be
 running. **Resume** re-creates the run context, continues interrupted sessions
 with the SDK's `resume`, and re-asks any plan approval that was pending.
 
+A subtask whose agent had already finished when Bosun stopped (before its
+changes were committed, between the commit and the merge into the run branch,
+or after the merge) is not run again. Resume records it from the finished
+session: anything left uncommitted in its worktree is committed, and its branch
+is merged unless the run branch already contains it (`subtask.recovered`).
+Retries started by the operator reset the attempt count and always start a
+fresh session.
+
+What recovery does not cover:
+
+- An agent interrupted mid-turn is continued, so the tool call it was making may
+  run again. Bosun cannot make an agent's shell commands idempotent.
+- A single-agent run whose session had finished is continued with "continue
+  from where you left off", which costs a turn.
+- If Bosun stops after merging a run into your branch but before recording it,
+  the run still reads "pending", and **Merge** then reports that the branch has
+  no new commits. Check `git log` and use **Discard** to close it.
+- Creating a run and moving its task to In progress are two commits; a crash
+  between them leaves the task where it was and the run interrupted.
+- Nothing resumes on its own; resuming is always the operator's action.
+
 ## Events, live updates and the graph
 
 Every observable fact is an `ExecutionEvent`:

@@ -489,6 +489,24 @@ class TeamExecutor:
             s = await session.get(Subtask, subtask_id)
             assert s is not None
             prior = await session.get(AgentSession, s.session_id) if s.session_id else None
+        if _finished_but_unrecorded(s, prior):
+            # The agent finished, but Bosun stopped before the subtask was recorded as
+            # done (possibly mid-merge). Record it from the session instead of running it
+            # again on top of its own work.
+            assert prior is not None
+            await self._emit(
+                "subtask.recovered",
+                {"subtask_id": s.id, "key": s.key, "session_id": prior.id},
+                session_id=prior.id,
+                agent_id=f"subtask:{s.id}",
+            )
+            outcome = SessionOutcome(
+                status=SessionStatus.COMPLETED,
+                sdk_session_id=prior.sdk_session_id,
+                result=prior.result,
+            )
+            await self._after_subtask(s.id, prior.id, outcome, s.attempts, recovered=True)
+            return
         attempt = s.attempts + 1
         role = self.config.roles.get(s.role) or next(iter(self.config.roles.values()))
         coordinator = await self._coordinator_session()
@@ -598,14 +616,20 @@ class TeamExecutor:
         return await manager.sessions.run(request, self.provider)
 
     async def _after_subtask(
-        self, subtask_id: str, session_id: str, outcome: SessionOutcome, attempt: int
+        self,
+        subtask_id: str,
+        session_id: str,
+        outcome: SessionOutcome,
+        attempt: int,
+        *,
+        recovered: bool = False,
     ) -> None:
         async with self.services.db.session() as session:
             s = await session.get(Subtask, subtask_id)
             assert s is not None
         if outcome.status == SessionStatus.COMPLETED:
             if s.modifies_code and s.worktree_path and s.branch and self.info.branch:
-                merged = await self._merge_child(s, outcome)
+                merged = await self._merge_child(s, outcome, recovered=recovered)
                 if not merged:
                     return
             await self._set_subtask(
@@ -632,18 +656,23 @@ class TeamExecutor:
             return
         await self._set_subtask(s.id, SubtaskStatus.FAILED, error=outcome.error or "Agent failed")
 
-    async def _merge_child(self, s: Subtask, outcome: SessionOutcome) -> bool:
+    async def _merge_child(
+        self, s: Subtask, outcome: SessionOutcome, *, recovered: bool = False
+    ) -> bool:
         worktrees = self.services.worktrees
         child_cwd = Path(s.worktree_path or "")
         message = f"{self.info.task_key} {s.key}: {s.title}"
         async with self.ctx.merge_lock:
-            commit = await worktrees.commit_all(child_cwd, message)
-            if commit is None:
-                await self._emit(
-                    "subtask.no_changes",
-                    {"subtask_id": s.id, "key": s.key},
-                    agent_id=f"subtask:{s.id}",
-                )
+            commit = await worktrees.commit_all(child_cwd, message) if child_cwd.is_dir() else None
+            # Nothing new to commit and nothing unmerged: the subtask made no changes, or
+            # (when recovering) its changes were merged before Bosun stopped.
+            if commit is None and await worktrees.contains(self.info.cwd, s.branch or ""):
+                if not recovered:
+                    await self._emit(
+                        "subtask.no_changes",
+                        {"subtask_id": s.id, "key": s.key},
+                        agent_id=f"subtask:{s.id}",
+                    )
                 return True
             ok, conflicts, merge_commit = await worktrees.merge_into(
                 self.info.cwd, s.branch or "", f"Merge {message}"
@@ -773,6 +802,22 @@ class TeamExecutor:
             "completed",
             summary=_fallback_summary(results) + "\n\n_(Coordinator summary unavailable.)_",
         )
+
+
+def _finished_but_unrecorded(s: Subtask, prior: AgentSession | None) -> bool:
+    """True when a subtask's session completed but the subtask was never recorded.
+
+    That happens only when Bosun stops between the session ending and the subtask
+    being marked done; startup recovery then puts the subtask back to pending with
+    its attempt count unchanged. Operator and run retries reset the attempt count
+    to 0 and always start a fresh session.
+    """
+    return (
+        prior is not None
+        and prior.status == SessionStatus.COMPLETED
+        and s.status in (SubtaskStatus.PENDING, SubtaskStatus.WAITING_DEPENDENCY)
+        and s.attempts > 0
+    )
 
 
 def _fallback_summary(results: list[dict[str, str]]) -> str:

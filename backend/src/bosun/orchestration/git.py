@@ -221,6 +221,11 @@ class WorktreeManager:
         await git(root, "commit", "--no-verify", "-q", "-m", message)
         return await self.head(root)
 
+    async def contains(self, path: Path, ref: str) -> bool:
+        """Whether `ref` is already part of the branch checked out at `path`."""
+        result = await git(path, "merge-base", "--is-ancestor", ref, "HEAD", check=False)
+        return result.code == 0
+
     async def merge_into(
         self, target: Path, branch: str, message: str
     ) -> tuple[bool, list[str], str | None]:
