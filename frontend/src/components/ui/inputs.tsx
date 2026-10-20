@@ -80,7 +80,7 @@ export function Switch({ checked, onCheckedChange, label, disabled }: { checked:
 
 export function NativeSelect({ className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cn(FIELD, "h-10 appearance-none bg-[length:14px] bg-[right_12px_center] bg-no-repeat pr-9", className)}
+    <select className={cn(FIELD, "h-10 appearance-none bg-[length:14px] bg-[position:right_12px_center] bg-no-repeat pr-9", className)}
       style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238d99af' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")" }}
       {...props}
     >
