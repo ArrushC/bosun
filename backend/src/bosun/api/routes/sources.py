@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import func, or_, select
+from sqlalchemy import Select, func, or_, select
 
 from bosun.api.deps import ServicesDep, SessionDep
 from bosun.api.schemas import (
@@ -32,19 +34,21 @@ async def list_records(
     limit: int = Query(default=200, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
 ) -> SourceRecordPage:
+    """`workspace_id` also matches records from GitHub connections linked to it."""
+    # A record's project: the workspace it was found in, or the one its GitHub
+    # connection is linked to. A connection linked to none is its own project.
+    project = func.coalesce(
+        SourceRecord.workspace_id, SourceConnection.workspace_id, SourceRecord.connection_id
+    )
     linked = select(TaskSourceLink.source_record_id)
-    stmt = select(SourceRecord)
+    filters = []
     if state != "all":
-        stmt = stmt.where(SourceRecord.state == state)
+        filters.append(SourceRecord.state == state)
     if kind:
-        stmt = stmt.where(SourceRecord.kind.in_(kind.split(",")))
-    if workspace_id:
-        stmt = stmt.where(SourceRecord.workspace_id == workspace_id)
-    if connection_id:
-        stmt = stmt.where(SourceRecord.connection_id == connection_id)
+        filters.append(SourceRecord.kind.in_(kind.split(",")))
     if q:
         like = f"%{q}%"
-        stmt = stmt.where(
+        filters.append(
             or_(
                 SourceRecord.title.ilike(like),
                 SourceRecord.path.ilike(like),
@@ -52,14 +56,26 @@ async def list_records(
                 SourceRecord.repo.ilike(like),
             )
         )
-    base = stmt
-    if triage == "untriaged":
-        stmt = stmt.where(SourceRecord.dismissed.is_(False), SourceRecord.id.not_in(linked))
-    elif triage == "imported":
-        stmt = stmt.where(SourceRecord.id.in_(linked))
-    elif triage == "dismissed":
-        stmt = stmt.where(SourceRecord.dismissed.is_(True))
+    scope = []
+    if workspace_id:
+        scope.append(project == workspace_id)
+    if connection_id:
+        scope.append(SourceRecord.connection_id == connection_id)
+    triages = {
+        "untriaged": (SourceRecord.dismissed.is_(False)) & (SourceRecord.id.not_in(linked)),
+        "imported": SourceRecord.id.in_(linked),
+        "dismissed": SourceRecord.dismissed.is_(True),
+    }
+    chosen = [triages[triage]] if triage in triages else []
 
+    def records(*where: Any) -> Select[SourceRecord]:
+        return (
+            select(SourceRecord)
+            .outerjoin(SourceConnection, SourceConnection.id == SourceRecord.connection_id)
+            .where(*filters, *where)
+        )
+
+    stmt = records(*scope, *chosen)
     total = await session.scalar(select(func.count()).select_from(stmt.subquery())) or 0
     rows = (
         await session.scalars(
@@ -82,22 +98,28 @@ async def list_records(
             links.setdefault(record_id, []).append(task_id)
 
     counts = {}
-    for label, clause in {
-        "untriaged": (SourceRecord.dismissed.is_(False)) & (SourceRecord.id.not_in(linked)),
-        "imported": SourceRecord.id.in_(linked),
-        "dismissed": SourceRecord.dismissed.is_(True),
-    }.items():
+    for label, clause in triages.items():
         counts[label] = (
-            await session.scalar(select(func.count()).select_from(base.where(clause).subquery()))
+            await session.scalar(
+                select(func.count()).select_from(records(*scope, clause).subquery())
+            )
             or 0
         )
+    by_project = await session.execute(
+        select(project, func.count())
+        .select_from(SourceRecord)
+        .outerjoin(SourceConnection, SourceConnection.id == SourceRecord.connection_id)
+        .where(*filters, *chosen)
+        .group_by(project)
+    )
+    projects = {key: n for key, n in by_project.tuples() if key}
 
     items = []
     for row in rows:
         item = SourceRecordOut.model_validate(row)
         item.task_ids = links.get(row.id, [])
         items.append(item)
-    return SourceRecordPage(items=items, total=total, counts=counts)
+    return SourceRecordPage(items=items, total=total, counts=counts, projects=projects)
 
 
 @router.post("/records/import", response_model=list[TaskOut])

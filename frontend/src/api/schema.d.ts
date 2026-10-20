@@ -118,7 +118,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Records */
+        /**
+         * List Records
+         * @description `workspace_id` also matches records from GitHub connections linked to it.
+         */
         get: operations["list_records_api_v1_sources_records_get"];
         put?: never;
         post?: never;
@@ -2118,6 +2121,10 @@ export interface components {
             total: number;
             /** Counts */
             counts: {
+                [key: string]: number;
+            };
+            /** Projects */
+            projects: {
                 [key: string]: number;
             };
         };

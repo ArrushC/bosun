@@ -59,6 +59,11 @@ export function dirname(path: string): string {
   return parts.slice(0, -1).join("/");
 }
 
+/** Shortens a path in a home folder (/home/<user>, /Users/<user>) to start with ~. */
+export function tildePath(path: string): string {
+  return path.replace(/^\/(?:home|Users)\/[^/]+(?=\/|$)/, "~");
+}
+
 export function truncate(text: string, max: number): string {
   return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
 }

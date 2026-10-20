@@ -227,11 +227,16 @@ them inside `<untrusted_task_data>` blocks, marked as not instructions.
   workspace, and excludes Bosun's own files. It finds
   `TODO`/`FIXME`/`HACK`/`XXX`/`BUG` comments, unchecked `- [ ]` items in
   markdown, and `TODO.md`-style files.
-- **From GitHub**: connected repositories feed the same Inbox.
+- **From GitHub**: connected repositories feed the same Inbox. Link a
+  repository to its local checkout (**Local checkout for agents**) so its
+  issues and pull requests sit with that project.
 - **By hand**: **New task** (or press `c`). Descriptions are markdown.
 
-Open the **Inbox**, select what you want to work on and press **Create
-tasks**, or **Dismiss** it. New tasks land in Backlog. Drag them to Ready or set the
+Open the **Inbox**. It has a tab per project: a workspace together with the
+repositories linked to it, or a repository linked to none. Within a project,
+GitHub issues and pull requests are listed apart from what the code scan
+found. Select what you want to work on and press **Create tasks**, or
+**Dismiss** it. New tasks land in Backlog. Drag them to Ready or set the
 status in the task sheet.
 
 ## 4. Run your first agent (and agent team)

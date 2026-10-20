@@ -3,17 +3,22 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any
 
 import httpx
 from sqlalchemy import select
 
+from bosun.api.routes.sources import list_records
+from bosun.api.schemas import SourceRecordPage
 from bosun.db.models import SourceConnection, SourceRecord, Task
 from bosun.domain.enums import ConnectionStatus, SourceKind, SourceRecordState, TaskKind
 from bosun.ingestion.github.client import GitHubClient, GitHubRateLimited
 from bosun.ingestion.github.connector import GitHubConnectionConfig
 from bosun.services import Services
 from bosun.tasks.service import import_records
+
+from .conftest import add_workspace
 
 BASE = "https://api.github.test"
 
@@ -279,6 +284,51 @@ async def test_connectivity_failure_is_reported(services: Services) -> None:
         GitHubClient.__init__ = original  # type: ignore[method-assign]
     assert result["status"] == ConnectionStatus.ERROR
     assert "network" in result["error"].lower()
+
+
+async def test_inbox_groups_a_linked_repository_with_its_workspace(
+    services: Services, repo: Path
+) -> None:
+    gh = FakeGitHub()
+    services.ingestion.github_transport = httpx.MockTransport(gh.handler)
+    ws = await add_workspace(services, repo)
+    await services.ingestion.scan_workspace(ws)
+    conn = await _connection(services)
+    await services.ingestion.sync_connection(conn)
+
+    async def page(**scope: str | None) -> SourceRecordPage:
+        async with services.db.session() as session:
+            return await list_records(
+                session,
+                state="open",
+                kind=None,
+                workspace_id=scope.get("workspace_id"),
+                connection_id=scope.get("connection_id"),
+                q=None,
+                triage="untriaged",
+                limit=200,
+                offset=0,
+            )
+
+    # Unlinked, the repository is a project of its own.
+    assert (await page()).projects == {ws: 1, conn: 4}
+    assert (await page(workspace_id=ws)).total == 1
+
+    async with services.db.session() as session:
+        connection = await session.get(SourceConnection, conn)
+        assert connection is not None
+        connection.workspace_id = ws
+        await session.commit()
+
+    assert (await page()).projects == {ws: 5}
+    linked = await page(workspace_id=ws)
+    assert linked.total == 5 and linked.counts["untriaged"] == 5
+    assert {r.kind for r in linked.items} == {
+        SourceKind.CODE_TODO,
+        SourceKind.GITHUB_ISSUE,
+        SourceKind.GITHUB_PR,
+    }
+    assert (await page(connection_id=conn)).total == 4
 
 
 async def test_secondary_rate_limit_uses_retry_after() -> None:

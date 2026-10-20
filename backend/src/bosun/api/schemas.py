@@ -116,6 +116,9 @@ class SourceRecordPage(Schema):
     items: list[SourceRecordOut]
     total: int
     counts: dict[str, int]
+    # Matching records per project (workspace ID, or connection ID for a GitHub
+    # connection linked to no workspace), ignoring the workspace and connection filters.
+    projects: dict[str, int] = Field(default_factory=dict)
 
 
 class ImportRequest(Schema):

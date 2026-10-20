@@ -7,6 +7,7 @@ import { TaskCardView } from "@/components/board/TaskCard";
 import { ApprovalCard } from "@/components/run/ApprovalCard";
 import { LaunchDialog } from "@/components/task/LaunchDialog";
 import { TaskFormDialog } from "@/components/task/TaskFormDialog";
+import { InboxPage } from "@/pages/InboxPage";
 import { useEvents } from "@/stores/events";
 
 import { baseTask, mockApi, renderWithProviders } from "./utils";
@@ -146,6 +147,66 @@ describe("task cards", () => {
     expect(screen.getByText("1/3")).toBeInTheDocument();
     expect(screen.getByText("Needs approval")).toBeInTheDocument();
     expect(screen.getByTitle("Waiting on dependencies")).toBeInTheDocument();
+  });
+});
+
+describe("inbox", () => {
+  const record = (fields: object) => ({
+    kind: "code_todo",
+    workspace_id: null,
+    connection_id: null,
+    title: "",
+    body: null,
+    url: null,
+    path: null,
+    line: null,
+    context: null,
+    tag: null,
+    repo: null,
+    number: null,
+    author: null,
+    labels: [],
+    meta: {},
+    state: "open",
+    dismissed: false,
+    first_seen_at: "2026-10-19T09:00:00Z",
+    last_seen_at: "2026-10-19T09:00:00Z",
+    external_updated_at: null,
+    is_demo: false,
+    task_ids: [],
+    ...fields,
+  });
+
+  it("groups a linked repository with its workspace, one tab per project", async () => {
+    const { calls } = mockApi({
+      "GET /workspaces": () => [{ id: "ws_1", name: "shop", path: "/home/me/code/shop" }],
+      "GET /connections": () => [
+        { id: "conn_1", name: "acme/shop", workspace_id: "ws_1" },
+        { id: "conn_2", name: "acme/docs", workspace_id: null },
+      ],
+      "GET /sources/records": () => ({
+        items: [
+          record({ id: "src_1", workspace_id: "ws_1", title: "Handle retries", path: "src/api.ts", line: 3, tag: "TODO" }),
+          record({ id: "src_2", kind: "github_issue", connection_id: "conn_1", title: "Crash on empty cart", repo: "acme/shop", number: 7 }),
+          record({ id: "src_3", kind: "github_issue", connection_id: "conn_2", title: "Typo in guide", repo: "acme/docs", number: 2 }),
+        ],
+        total: 3,
+        counts: { untriaged: 3, imported: 0, dismissed: 0 },
+        projects: { ws_1: 2, conn_2: 1 },
+      }),
+    });
+    renderWithProviders(<InboxPage />, { route: "/inbox" });
+    expect(await screen.findByRole("tab", { name: /All projects\s*3/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: /shop\s*2/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /acme\/docs\s*1/ })).toBeInTheDocument();
+    // The repository linked to shop is listed under shop, beside its code.
+    expect(screen.getByRole("heading", { name: "shop" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Select all from GitHub acme/shop")).toBeInTheDocument();
+    expect(screen.getByLabelText("Select all from Code ~/code/shop")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "acme/docs" })).toBeInTheDocument();
+
+    await userEvent.setup().click(screen.getByRole("tab", { name: /shop\s*2/ }));
+    await waitFor(() => expect(calls.some((c) => c.url.includes("/sources/records") && c.url.includes("workspace_id=ws_1"))).toBe(true));
   });
 });
 
