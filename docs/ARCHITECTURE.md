@@ -32,6 +32,7 @@ WebSocket.
 | `domain/` | Enums and the state-machine tables (below). |
 | `ingestion/` | `SourceConnector` interface, workspace scanner (git-aware file walker, comment/markdown/TODO-file parsers), read-only GitHub client and connector, record upsert/missing/update handling, periodic sync. |
 | `tasks/` | Task creation, numbering (`BOS-n`), activity log. |
+| `workflows/` | The workflow spec (`spec.py`), its validation rules (`validation.py`) and the glue that checks a draft and freezes it into a run (`service.py`). |
 | `agents/` | Adapter contract (`contracts.py`), Claude Agent SDK adapter, fake adapter, permission profiles and the workspace boundary, provider runtimes and the billing guard, prompts, built-in roles. |
 | `orchestration/` | `RunManager` (lifecycle, controls, recovery), `SessionRunner` (one agent session), `TeamExecutor` (plan → schedule → aggregate), `ApprovalBroker`, `Limiter`, `WorktreeManager`. |
 | `events/` | `EventBus`: redact → persist → publish; history paging; entity notifications. |
@@ -50,14 +51,18 @@ WebSocket.
   tasks. Scanner IDs are stable: path + tag + normalised text + occurrence.
   Edits to the surrounding code don't create duplicates.
 - **Task** (+ dependencies, activity): the board item.
+- **Workflow**: an authored plan of agent steps (`spec` JSON), with a
+  `revision` that every save must name, and an `archived` flag instead of
+  deletion so old runs still link to it.
 - **AgentRun**: one execution attempt for a task. It holds a frozen
-  `RunConfig` snapshot (roles, tools, limits, provider), worktree and branch,
-  base commit and integration status. A partial unique index allows at most
-  one *active* run per task.
+  `RunConfig` snapshot (roles, tools, limits, provider, and for a workflow run
+  the workflow's steps at that revision), worktree and branch, base commit and
+  integration status. `workflow_id` links a workflow run to its workflow. A
+  partial unique index allows at most one *active* run per task.
 - **AgentSession**: one Claude Code session (coordinator, agent or follow-up),
   with its SDK session ID for resume, usage, and the auth source it reported.
-- **Subtask**: a node of the team plan with dependencies, role, attempts,
-  child worktree and report.
+- **Subtask**: a node of the team plan, or a workflow step, with
+  dependencies, role, attempts, child worktree and report.
 - **ExecutionEvent**: the append-only event log (global autoincrement `seq`).
 - **ApprovalRequest**, **Artifact**, **SettingEntry**.
 
@@ -222,6 +227,45 @@ SDK subagents:
 Application-managed teams give each role its own session, worktree,
 permissions, retry policy and transcript. Every hand-off is a real, recorded
 event, not an invented conversation.
+
+### Workflows (authored plans)
+
+A workflow run is a team run whose plan comes from the person instead of the
+coordinator (`RunMode.WORKFLOW`; `ExecutionMode`, the task's own setting, is
+unchanged). It reuses `TeamExecutor` through an explicit path rather than a
+fake coordinator:
+
+1. **Start.** `POST /workflows/{id}/runs` names the revision the person saw
+   (409 if the draft moved on) and an existing task or a new one (created
+   ready, and deleted again if the run doesn't start). `resolve_config`
+   loads the workflow, validates it against the current agents, and freezes
+   the steps into `RunConfig.workflow`. An invalid workflow is refused with
+   the same messages the editor shows; nothing is substituted, so a step's
+   agent is used as written or the run doesn't start.
+2. **Plan.** `plan_workflow` writes one `Subtask` per step (attempts are the
+   step's retries + 1, or `subtask_max_attempts`) and emits `plan.created`
+   with `source: "workflow"`. There is no coordinator session and no plan
+   approval: the person authored the plan and pressed Run.
+3. **Schedule.** The team scheduler runs the steps. A step's prompt
+   (`workflow_step_prompt`) holds its instructions and the reports of the
+   steps it runs after, marked as untrusted data rather than instructions. A
+   step can override the model, turn limit and time limit. Its agent must
+   still be in the run's frozen role set; if not, the step fails rather than
+   falling back to another agent.
+4. **Finish.** `finish_workflow` marks steps that can no longer run as
+   `skipped` with a reason ("Not run: it waits for X, which did not
+   finish."), and the run's error names the failed step and the skipped
+   ones. The summary is the step reports in order. Independent branches
+   still finish after a failure; the run then fails.
+
+Editing a workflow never touches runs already started: they read the frozen
+copy, and retrying a run keeps the limits it started with. A resumed or
+retried run puts its skipped steps back to pending.
+
+The editor keeps a local draft and saves it about 300 ms after each change,
+naming the revision it started from; every save returns the validation
+issues, so problems appear on the steps without a separate validate call. A
+save that loses to another tab becomes a conflict for the person to resolve.
 
 ### Approvals
 
@@ -446,3 +490,9 @@ forwards `SIGTERM`, so a stop marks active runs interrupted as usual.
   by design.
 - **Merges.** Merge conflicts in team runs are resolved by re-running a
   subtask, not by automated conflict resolution.
+- **Workflows.** No versions, templates or approval steps yet, and every run
+  needs a board task; nothing runs unattended or on a schedule. Agents are
+  read when a run starts, so later changes to an agent in Settings only
+  affect later runs. Two code-changing steps that can run at the same time
+  get a warning, not a refusal; if their changes conflict, the merge
+  conflict is handled like a team's.

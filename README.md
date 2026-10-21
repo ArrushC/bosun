@@ -19,6 +19,8 @@ approvals.
   coordinator choose. Watch the agent graph, read transcripts, approve tool
   use, send follow-ups, pause, resume and retry, review the diff, then merge
   into your branch or discard.
+- **Workflows**: draw your own plan of agent steps once and run it on any
+  board task. Each step's agent builds on the reports of the steps before it.
 - **Agent graph**: built only from events Bosun recorded. You can
   zoom, focus, collapse, filter and replay a run with the flight recorder.
 
@@ -270,6 +272,42 @@ conflict becomes an approval: re-run the subtask on the latest branch, or skip
 it. Agents do not talk to each other directly. Bosun routes each
 dependency's report into the next agent's prompt, and those hand-offs appear
 in the graph as message edges.
+
+## 5. Build a workflow
+
+A workflow is a plan you draw instead of one the coordinator writes. Each
+step is one agent with its own instructions. Steps connected one after the
+other run in that order; steps with nothing between them run side by side,
+and a step that runs after several waits for all of them.
+
+1. Open **Workflows** and press **New workflow**. Name it.
+2. Press **Add an agent step** (or **A**) and choose an agent. Give the step
+   a name and instructions. Use the **+** under a selected step, or **Add a
+   step after this one** in its settings, to add the next one. To connect
+   two existing steps, drag from a step's bottom edge to the other step, or
+   use **Wait for another step** in the later step's settings.
+3. Problems show on the step and in the header as you edit: a step without
+   a name or an agent, or a code-changing step on a read-only agent. **Run**
+   stays off, with the reason, until they are fixed. A connection that would
+   make two steps wait for each other is refused when you draw it. Warnings,
+   such as two code-changing steps that can run at once, don't block a run.
+4. **Advanced** in a step's settings sets its model, turn limit, time limit
+   and retries; otherwise the agent's and Settings' defaults apply.
+5. Press **Run** and pick an existing task, or describe a new one. The run
+   uses its own worktree and shows on the run page like any other run. Steps
+   that never ran because an earlier step failed are marked **Skipped**, with
+   the reason.
+
+Edits save as you go. Each run keeps a copy of the workflow as it was when it
+started, so editing the workflow later doesn't change a run that is under
+way. If the same workflow is changed in two tabs at once, the second save
+stops with a conflict and asks which version to keep. **Ctrl+Z** and
+**Ctrl+Shift+Z** undo and redo; on the canvas, **Tab** moves between steps,
+**Enter** selects one, the arrow keys move it and **Delete** removes it.
+
+Workflows don't have versions, templates or approval steps yet, and they
+always run on a board task. See
+[docs/design/workflows.md](docs/design/workflows.md) for the plan.
 
 ## Safety model
 

@@ -60,6 +60,63 @@ again with no console errors. The screenshot below predates the redesign.
 
 ![Team run](images/team-run.png)
 
+## Workflows (milestone 1)
+
+Checked on 2026-10-21 against a throwaway instance (its own data folder and
+port) running the `workflows-m1` branch, with the demo workspace. The SDK and
+CLI were the same versions as above; the account was on a Claude Pro
+subscription. Browser checks used Playwright 1.64 with headless Chromium.
+
+**Real Claude runs** (subscription, every step on `haiku`):
+
+| Run | Result |
+|---|---|
+| *Map, document, review* on a new task (BOS-6) | Three steps in a row: Researcher maps two modules, Implementer adds a module docstring, Reviewer checks it. Completed in 41 s, 3 sessions of 3 turns each, all reporting `claude-haiku-5-5`, so the per-step model override was used. Each step's report built on the one before. The run branch changed exactly one line, the docstring the implementer reported. |
+| *Turn limit check* on an existing task (BOS-5) | A step limited to 1 turn that needs several, a step after it, and an independent step. The first failed twice ("Reached the maximum of 1 turns"; the default of two attempts); the second was marked skipped ("Not run: it waits for Read every module, which did not finish."); the independent step completed. The run failed with "Read every module failed: Reached the maximum of 1 turns. Not run: Summarise for users." and the run page advised raising the step's turn limit. |
+| Agent deleted during a run | A custom agent used by a later step was deleted while the run was going. The step still ran with the agent as it was when the run started, because runs freeze their agents. |
+
+**Acceptance checks in the browser** (demo backend):
+
+| Check | Result |
+|---|---|
+| Build a workflow | From the empty Workflows page: a new workflow, four steps added from the empty canvas, a step's **+** and the settings panel, names and instructions typed in, a parallel pair after one step, **Tidy up**. Each new step was selected with its name ready to type over. |
+| Run on a new task, review, merge | Run on a new task (BOS-7, BOS-8) from the Run dialog: the task was created, the run completed, **Changes** showed the merged result of all steps, and **Merge into main** merged it. Starting on an existing task (BOS-2) worked the same way. |
+| Validation as you edit | Clearing a step's name showed a problem on the step in under 0.6 s; **Run** was disabled with the reason and came back once fixed. The server refused an invalid workflow with the same message ("Translate strings: There is no agent called 'translator'…"). |
+| Two tabs | A tab with no unsaved edits picked up the other tab's save. With unsaved edits in both, the second save became a conflict: the first tab's save was kept, the second kept its text, and **Load theirs** showed the other version. |
+| Editing during a run | Renaming a step while its run was going changed neither the run's steps nor its page; the run kept the revision it started from. |
+| Failure and skips | Shown by the real run above. |
+| Existing run modes | A team run and a single-agent run on the demo backend completed and looked as before: coordinator, **Plan**, subtask keys, "Agent team" and "Single agent". |
+
+**Keyboard only:** from the Workflows list, **New workflow**, the name, the
+first step from the empty canvas, its instructions, **Run**, a title and
+**Enter** started one run, all without the mouse. On the canvas, **Tab**
+reaches each step and connection, **Enter** selects a step, the arrow keys
+move it (the move is saved), **A** opens the add menu, **Delete** removes a
+step with an **Undo** toast, **Ctrl+Z** and **Ctrl+Shift+Z** undo and redo,
+and typing in a field is never taken as a shortcut. **Wait for another step**
+connected two existing steps, offering only the step that neither waited for
+the other already nor would have made a loop. Closing the Run dialog
+returns focus to **Run**; closing a menu with **Escape** returns focus to its
+button.
+
+**Visual review:** the list (empty, loading, error and full), the editor
+(empty, a selected step, workflow details, problems, warnings, the add
+menu, a deleted step with **Undo**, a save conflict), the Run dialog (new and
+existing task, a refusal, unsaved changes), the workflow's **Runs** tab and
+the run page (live, completed, failed with skips) were checked in both themes
+at 1440×900, and the main screens at 1280×800 and 1024×768, where the step
+settings open over the canvas. There were no console errors other than the
+409 the browser logs during the conflict check. Screenshots are in
+[docs/design/workflows](design/workflows/) (`m1-*.png`).
+
+**Accessibility:** axe-core 4.10 (WCAG 2.1 A and AA rules) on ten workflow
+screens in both themes. It found light-theme status colours and muted text
+below 4.5:1 and a run-header link told apart by colour alone; both are
+fixed. What remains is `aria-hidden-focus` while a menu is open: Radix's
+menus hide the rest of the page from screen readers and keep focus inside
+the menu. Every menu in the app does this (the Board's **Filters** menu
+too).
+
 ## Running as a service
 
 Checked on WSL2 (AlmaLinux 9.8, systemd 252), replacing the Docker instance
@@ -98,7 +155,7 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
 ## Automated tests
 
 - Tests (commands in the README's Development section)
-  - Backend: 108 tests. They cover:
+  - Backend: 135 tests. They cover:
     - the scanner, GitHub client and connector (mock transport);
     - single, team and auto runs with the demo backend;
     - worktrees and integration;
@@ -108,10 +165,20 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
     - the Claude adapter against a scripted SDK client (event mapping, billing
       guard, timeouts during approvals, background tasks, sandbox fail-closed);
     - the HTTP API and WebSocket;
-    - redaction and the workspace boundary.
-  - Frontend: 23 tests. They cover the graph reducer over recorded event logs,
-    the event-log merge, and UI workflows (create a task, launch with
-    idempotency, approvals, board moves, live updates).
+    - redaction and the workspace boundary;
+    - recovery of a subtask whose agent finished just before a restart;
+    - workflows: every validation rule, the step order, parallel steps and
+      joins, prompts and overrides, failure with skips and retry, pause and
+      resume, refusals, editing during a run, old run configs, the migration
+      from a database with data, and the API (including conflicts, the
+      idempotency key and cleaning up a new task when the run can't start).
+  - Frontend: 48 tests. They cover the graph reducer over recorded event logs
+    (team and workflow runs), the event-log merge, UI flows (create a task,
+    launch with idempotency, approvals, board moves, live updates), and
+    workflows: the editing helpers, the list, problems and a disabled
+    **Run**, saving against a revision and conflicts, adding and selecting
+    steps, focus after adding, undo, connecting steps from the settings panel,
+    and the Run dialog's request, idempotency key and refusals.
 - Lint: ruff, basedpyright (standard) and `tsc` are clean.
 
 ## Not validated against real services
@@ -123,7 +190,7 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
 - A real Claude run inside the Docker container (it needs the container's own
   Claude sign-in).
 - A real Claude run under the systemd service. Earlier real runs used
-  `uv run bosun` directly.
+  `uv run bosun` directly, and the workflow runs used a separate instance.
 - The service starting with WSL, or staying up after the last WSL terminal
   closes. Lingering is on, but WSL was not restarted to check.
 - Very long runs (hours), and runs near the subscription usage limit. The

@@ -184,7 +184,8 @@ and reviews the run in the run page that exists today.
   parallel and several incoming edges wait for all of them. No Start, End,
   approval or condition steps; the run starts with the steps that depend on
   nothing and ends when no step can run.
-- A Workflows list, a blank workflow, and one template (Fix with review).
+- A Workflows list and a blank workflow. (The Fix with review template moved
+  to milestone 2.)
 - The editor: canvas, add, connect, select, configure, delete, undo and redo,
   tidy layout, autosave with conflict detection, and inline validation.
 - A Run dialog: a new task (title, description, workspace) or an existing
@@ -195,7 +196,7 @@ and reviews the run in the run page that exists today.
   variant, skip marking, `ExecutionMode.WORKFLOW`, and the merge-crash fix
   (D7).
 
-**Out of scope:** versions, templates beyond one, approval steps, launching a
+**Out of scope:** versions, templates, approval steps, launching a
 workflow from the task's existing Run dialog, runs without a task,
 deployments, schedules, inputs other than the task.
 
@@ -205,14 +206,15 @@ deployments, schedules, inputs other than the task.
 - `RunRequest.workflow_id`. `RunConfig.workflow` (optional; old runs load
   unchanged) holds `{id, name, revision, spec}`.
 - `GET/POST /workflows`, `GET/PATCH/DELETE /workflows/{id}` (`PATCH` must
-  carry the current `revision`, else 409). `POST /workflows/{id}/validate`.
+  carry the current `revision`, else 409). Every create and save returns
+  the validation issues, so no separate validate call was needed.
   `POST /workflows/{id}/runs` (`task_id`, or `new_task: {title,
   description, workspace_id}`; `Idempotency-Key`). It creates the task if
   asked, then calls the existing `RunManager.start`.
 
 **Acceptance criteria**
-1. From an empty Workflows page, create a workflow from the template, change
-   a step's agent and instructions, add a parallel step, and run it on a new
+1. From an empty Workflows page, create a blank workflow, add steps with
+   their agents and instructions, add a parallel step, and run it on a new
    task. The run completes in the demo backend; Changes shows the merged
    result; Merge into main works.
 2. A validation error (no agent, a cycle, a code-changing read-only step)
@@ -229,8 +231,8 @@ deployments, schedules, inputs other than the task.
    plan keeps agents attached.
 7. Killing the backend right after a step's merge and resuming the run does
    **not** run that step again (the spike test, inverted).
-8. Every existing test passes unchanged (109 backend, 24 frontend) plus the
-   new ones below; the recorded team-run fixtures produce the same graph.
+8. Every existing test passes unchanged plus the new ones below; the recorded
+   team-run fixtures produce the same graph.
 9. Visual review passed (section 8), including a keyboard-only walk through
    create → validate → run.
 10. One real Claude run of a three-step workflow on the subscription, started
@@ -252,11 +254,62 @@ deployments, schedules, inputs other than the task.
   - a run header test for workflow runs.
 - **Regression:** listed in section 6.
 
+### Milestone 1 status (2026-10-21): done
+
+All ten acceptance criteria pass; the evidence is in
+[VALIDATION.md](../VALIDATION.md#workflows-milestone-1), with two real Claude
+runs (one completed, one failing on a step's turn limit so the skipped steps
+show), browser checks for criteria 1–4 and 9, and axe-core in both themes.
+Tests: 135 backend and 48 frontend, all passing; the team fixtures render as
+before.
+
+What changed from the plan:
+- **Templates moved to milestone 2.** The empty Workflows page offers **New
+  workflow** only.
+- **No `/validate` endpoint.** Saves return the issues (see above).
+- **Keyboard model:** React Flow's. `Tab` reaches steps and connections,
+  `Enter` selects, the arrow keys move the selected step, `Delete` removes
+  it, and `Escape` clears the selection. `A` opens the add menu, and focus
+  then goes to the new step's name. **Wait for another step** in the step's
+  settings connects existing steps without a mouse. Arrow keys don't jump
+  between connected steps, as section 8 suggested.
+- **Not built:** dragging from a step onto empty canvas to create one.
+  Loops are refused with a toast rather than a tooltip. The conflict
+  choices are **Load theirs** and **Keep mine**.
+- **Found and fixed on the way** (beyond workflows):
+  - the shared dropdown's background;
+  - focus returning to whatever opened a dialog;
+  - light-theme status colours and muted text, which were below WCAG AA;
+  - the run-header link, which was told apart by colour alone.
+- **Left as is:** while any menu is open, axe reports `aria-hidden-focus`.
+  This comes from Radix's modal menus and applies to every menu in the app.
+  axe-core and Playwright ran from a scratch folder, not as project
+  dependencies.
+
+Implemented screens:
+
+| Screen | Image |
+|---|---|
+| Workflows list | ![](workflows/m1-list.png) |
+| A new, empty workflow | ![](workflows/m1-empty.png) |
+| Editor, step selected | ![](workflows/m1-editor.png) |
+| Editor, light theme | ![](workflows/m1-editor-light.png) |
+| Problems and warnings | ![](workflows/m1-problems.png) |
+| Add a step | ![](workflows/m1-add-menu.png) |
+| Deleted step with Undo | ![](workflows/m1-undo.png) |
+| Save conflict | ![](workflows/m1-conflict.png) |
+| Keyboard focus on a step | ![](workflows/m1-keyboard-focus.png) |
+| 1024×768, settings over the canvas | ![](workflows/m1-narrow.png) |
+| Run dialog | ![](workflows/m1-run-dialog.png) |
+| Run refused | ![](workflows/m1-run-refused.png) |
+| A real run, graph | ![](workflows/m1-run-graph.png) |
+| A failed run with skipped steps | ![](workflows/m1-run-failed.png) |
+
 ### Milestone 2: versions, templates, launching from a task
 
 - Publish a draft as an immutable version (agents frozen in). View old
   versions, restore one to the draft, and see what changed.
-- More templates.
+- Templates, starting with Fix with review (moved from milestone 1).
 - A **Workflow** option in the task's Run dialog.
 - An **approval step**: a human gate, using `ApprovalBroker` with a new
   approval kind, re-asked on resume like plan approvals.
@@ -527,13 +580,16 @@ Two small fixes found while building the mockups, in shared components:
 - **Creating a step:**
   - **Add a step** opens a menu of agents, each with its access level;
   - the **+** under a selected or hovered step adds one after it;
-  - dragging from a step's bottom edge onto empty canvas creates a step;
+  - dragging from a step's bottom edge onto empty canvas creates a step (not
+    built in milestone 1);
   - the keyboard shortcut is `A`.
 - **Connecting:** drag from a step's bottom handle to another step. The
-  **Runs after** list in the inspector does the same without a mouse.
-  Creating a cycle is refused at once, with a tooltip saying why.
-- **Selecting:** click, or `Tab` through steps in reading order. Arrow keys
-  move between connected steps. `Esc` clears the selection.
+  **Runs after** list in the inspector does the same without a mouse
+  (**Wait for another step**). Creating a cycle is refused at once, with a
+  message saying why.
+- **Selecting:** click, or `Tab` to a step and press `Enter`. `Esc` clears
+  the selection. (As built, the arrow keys move the selected step, as in
+  React Flow, rather than jumping between connected steps.)
 - **Configuring:** the inspector shows the name, agent (with its permission
   summary from `tool_policy`), instructions, and "Changes code". **Advanced**
   is collapsed, showing a one-line summary such as "Agent defaults, 1 retry",
@@ -548,7 +604,7 @@ Two small fixes found while building the mockups, in shared components:
   - Run is disabled, with the reason in a tooltip and beside it;
   - inspector fields with a problem show it under the field.
 - **Save status:** next to the title. Not saved retries automatically and
-  offers Retry now. A conflict offers Reload or Overwrite.
+  offers Retry now. A conflict offers Load theirs or Keep mine.
 - **Execution status:**
   - on the run page, every step shows its status icon and its label (Done,
     Running, Needs approval, Waiting on dependency, Skipped);
@@ -556,18 +612,18 @@ Two small fixes found while building the mockups, in shared components:
     milestone 2);
   - starting a run confirms with a toast that links to it.
 - **Accessibility:**
-  - text uses the existing tokens, which meet WCAG AA (*assumption*:
-    checked visually; an automated contrast check is in the review
-    procedure);
+  - text uses the existing tokens, which meet WCAG AA (checked with axe-core
+    in milestone 1, which found the light theme's status colours and muted
+    text short of it; both were darkened);
   - focus is visible on every control, including steps;
   - every status and issue pairs an icon with a word;
   - steps have accessible names ("Step Review, no agent, has a problem");
   - the inspector is a labelled region;
   - motion follows the existing reduced-motion handling.
 - **Smaller windows and larger graphs:**
-  - **Narrow windows:** at 1024px the sidebar collapses (existing
-    behaviour), the inspector becomes an overlay that can be dismissed, and
-    the canvas pans to keep the selected step visible.
+  - **Narrow windows:** at 1024px the inspector becomes an overlay that can
+    be dismissed, and the canvas pans to keep the selected step clear of it.
+    The sidebar stays as you left it (it doesn't collapse on its own).
   - **Size limit:** a workflow is limited to 20 steps.
   - **Navigation aids:** above 12 steps, the minimap appears, and Tidy up
     re-lays the graph out with dagre.
@@ -606,9 +662,9 @@ Known issues in the mockups, to fix during implementation:
 
 | Screen | Empty | Loading | Error | Disabled | Success |
 |---|---|---|---|---|---|
-| Workflows | Templates and Blank | Row skeletons | `ErrorNote` with Try again | — | New workflow opens the editor |
+| Workflows | New workflow | Row skeletons | `ErrorNote` with Try again | — | New workflow opens the editor |
 | Editor | "Add the first step"; Run disabled with "Add a step to run" | Canvas and inspector skeletons | `ErrorNote`; draft is safe on the server | Run disabled with the reason | Saved; run-started toast |
-| Run dialog | No tasks: New task is selected | Preview spinner | Provider or workspace errors (existing preview) | Start disabled until the task has a title | Dialog closes; toast with Open run |
+| Run dialog | No tasks: New task is selected | Tasks loading; billing "Checking…" | The server's refusal, scrolled into view | Start disabled until the task has a title, and while changes are saving | Dialog closes; toast with Open run |
 | Run page | — | Existing | Plain-language failure naming the step | Merge disabled while active (existing) | Ready for review (existing) |
 | Deployment | "Run now or add a schedule" | Existing patterns | Paused banner with reason and fix | Run now disabled while a run is active | History row |
 
@@ -622,9 +678,8 @@ For each new or changed screen:
    action per screen.
 3. **Keyboard-only walk-through** of the milestone's main journey, with the
    focus visible throughout.
-4. **Automated check:** an accessibility check (axe-core through Playwright,
-   a new dev dependency, *assumption* that it fits the existing tooling) with
-   no serious violations.
+4. **Automated check:** an accessibility check (axe-core through Playwright)
+   with no serious violations other than known, recorded ones.
 5. **Console:** no console errors.
 6. **Sign-off:** your review.
 
@@ -697,9 +752,9 @@ or behaviour.
 
 | ID | Decision | Recommendation | Needed by |
 |---|---|---|---|
-| D7 | Fix the merge-crash re-run in milestone 1 (it affects team runs today) | Yes | M1 |
-| D8 | Failure semantics: keep "independent branches finish, then the run fails" | Keep, and show it clearly; a "stop everything on first failure" option later | M1 |
-| D9 | Names: "Workflows" in the sidebar after Board; "steps" for nodes | Yes | M1 |
+| D7 | Fix the merge-crash re-run in milestone 1 (it affects team runs today) | Yes (done) | M1 |
+| D8 | Failure semantics: keep "independent branches finish, then the run fails" | Keep, and show it clearly; a "stop everything on first failure" option later (done: kept) | M1 |
+| D9 | Names: "Workflows" in the sidebar after Board; "steps" for nodes | Yes (done) | M1 |
 | D1 ⚠ | Unattended runs on the Claude subscription | **No by default**: unattended runs require an API key or Vertex. If you choose to allow the subscription, it should be an explicit, per-deployment acknowledgement citing the terms above | M3 |
 | D2 ⚠ | Where unattended runs live: B (no task) or A (a new task per run) | B | M3 |
 | D3 ⚠ | Require the OS sandbox (bubblewrap and socat on Linux, Seatbelt on macOS) for unattended runs | Yes where available. In Docker, where it can't run, allow only read-only agents unattended | M3 |
@@ -714,4 +769,5 @@ or behaviour.
 - The demo adapter is a faithful stand-in for orchestration behaviour (it
   was for the existing team tests). Real Claude runs are part of milestone 1
   acceptance.
-- axe-core can be added as a dev dependency for the visual review.
+- axe-core can run against the app for the visual review (in milestone 1 it
+  ran from a scratch folder rather than as a dependency).
