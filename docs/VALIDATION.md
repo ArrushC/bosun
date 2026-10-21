@@ -218,8 +218,13 @@ Result: one `aria-hidden-focus` violation. Radix's modal menu calls
 `hideOthers` from the `aria-hidden` package, which sets `aria-hidden="true"`
 on the app shell's container (`div.flex.h-full.min-h-0` in `AppShell.tsx`).
 That container still holds focusable controls: the rail links and the page's
-buttons and fields. The workflow editor's **Add a step** menu gives the same
-result.
+buttons and fields.
+
+The workflow editor's **Add a step** menu fails the same rule on eight
+elements. `hideOthers` leaves live regions readable, and the editor has two
+inside the page: the save status and React Flow's announcer. So instead of
+hiding one container it hides the content around them piece by piece: the
+rail, parts of the header, the canvas and the step settings panel.
 
 Expected: no violations while a menu is open.
 
