@@ -28,6 +28,7 @@ export function RunSummary({ run }: { run: Run }) {
   const usage = run.usage as Record<string, number | undefined>;
   const workflow = runWorkflow(run);
   const titles = new Map(run.subtasks.map((s) => [s.key, s.title]));
+  const agentName = (key: string) => (workflow && config.scope?.[key]?.name) || key;
 
   return (
     <div className="mx-auto grid max-w-[1180px] gap-12 px-8 py-8 lg:grid-cols-[1fr_320px]">
@@ -61,7 +62,7 @@ export function RunSummary({ run }: { run: Run }) {
                   <div className="min-w-0 flex-1">
                     <p className="text-base font-medium">{s.title}</p>
                     <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-text-3">
-                      <RoleTag name={s.role} color={roleColor(s.role)} />
+                      <RoleTag name={agentName(s.role)} color={roleColor(s.role)} />
                       {s.depends_on.length > 0 && (
                         <span>after {(workflow ? s.depends_on.map((k) => titles.get(k) ?? k) : s.depends_on).join(", ")}</span>
                       )}
@@ -107,14 +108,15 @@ export function RunSummary({ run }: { run: Run }) {
                 ? ([
                     ["Workflow", <Link to={`/workflows/${workflow.id}`} className="hover:text-accent-strong">{workflow.name}</Link>],
                     ["Steps", `${plural(workflow.steps.length, "step")}, up to ${config.max_parallel ?? "?"} at a time`],
-                    ["Agents", (config.team_roles ?? []).join(", ")],
+                    ["Agents", (config.team_roles ?? []).map(agentName).join(", ")],
                   ] as [string, ReactNode][])
                 : ([
                     ["Mode", strategyLabel(run)],
                     config.mode === "single" ? ["Role", String(config.single_role)] : ["Roles", (config.team_roles ?? []).join(", ")],
                   ] as [string, ReactNode][])),
-              ["Max turns", String(config.max_turns ?? "")],
-              ["Time limit", `${config.timeout_minutes ?? "?"} min per session`],
+              // A workflow step can set its own limits; these apply to the steps that don't.
+              [workflow ? "Default max turns" : "Max turns", String(config.max_turns ?? "")],
+              [workflow ? "Default time limit" : "Time limit", `${config.timeout_minutes ?? "?"} min per session`],
               ...(config.mode === "team" || config.mode === "auto" ? [["Plan approval", config.require_plan_approval ? "Required" : "Off"] as [string, string]] : []),
               ["Isolation", run.isolation === "worktree" ? "Git worktree" : "In place"],
               ["Created", relativeTime(run.created_at)],

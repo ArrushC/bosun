@@ -28,6 +28,18 @@ export const ERROR_ADVICE: Record<string, { title: string; fix: string }> = {
   unknown: { title: "The run failed", fix: "Review the agent transcripts for details, then retry." },
 };
 
-export function adviceFor(kind: string | null | undefined) {
-  return ERROR_ADVICE[kind ?? "unknown"] ?? ERROR_ADVICE.unknown;
+/** Workflow steps carry their own limits, set in the editor rather than at launch. */
+const WORKFLOW_ADVICE: Record<string, { title: string; fix: string }> = {
+  timeout: {
+    title: "A step ran out of time",
+    fix: "Raise the step's time limit in the workflow, then run the workflow again. Retrying this run keeps the limits it started with.",
+  },
+  max_turns: {
+    title: "A step reached its turn limit",
+    fix: "Raise the step's max turns in the workflow, then run the workflow again. Retrying this run keeps the limits it started with.",
+  },
+};
+
+export function adviceFor(kind: string | null | undefined, { workflow = false } = {}) {
+  return (workflow && kind ? WORKFLOW_ADVICE[kind] : undefined) ?? ERROR_ADVICE[kind ?? "unknown"] ?? ERROR_ADVICE.unknown;
 }

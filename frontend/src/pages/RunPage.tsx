@@ -90,8 +90,8 @@ export function RunPage() {
   }
 
   const pending = run.approvals.filter((a) => a.status === "pending");
-  const advice = run.status === "failed" ? adviceFor(run.error_kind) : null;
   const workflow = runWorkflow(run);
+  const advice = run.status === "failed" ? adviceFor(run.error_kind, { workflow: !!workflow }) : null;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -114,7 +114,7 @@ export function RunPage() {
             {run.task_key}
           </button>
           {workflow && (
-            <Link to={`/workflows/${workflow.id}`} className="mr-1 text-text-2 hover:text-text">
+            <Link to={`/workflows/${workflow.id}`} className="text-text-2 underline decoration-text-3/60 underline-offset-[3px] hover:text-text hover:decoration-text-2">
               Workflow {workflow.name}
             </Link>
           )}
