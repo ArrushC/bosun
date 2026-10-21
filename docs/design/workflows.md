@@ -281,10 +281,11 @@ What changed from the plan:
   - focus returning to whatever opened a dialog;
   - light-theme status colours and muted text, which were below WCAG AA;
   - the run-header link, which was told apart by colour alone.
-- **Left as is:** while any menu is open, axe reports `aria-hidden-focus`.
-  This comes from Radix's modal menus and applies to every menu in the app.
-  axe-core and Playwright ran from a scratch folder, not as project
-  dependencies.
+- **Still open:** while any menu is open, axe reports `aria-hidden-focus`.
+  It comes from Radix's modal menus and affects every menu in the app. It is
+  tracked, with steps to reproduce, in
+  [VALIDATION.md](../VALIDATION.md#open-follow-ups). axe-core and Playwright
+  ran from a scratch folder, not as project dependencies.
 
 Implemented screens:
 

@@ -112,10 +112,9 @@ settings open over the canvas. There were no console errors other than the
 **Accessibility:** axe-core 4.10 (WCAG 2.1 A and AA rules) on ten workflow
 screens in both themes. It found light-theme status colours and muted text
 below 4.5:1 and a run-header link told apart by colour alone; both are
-fixed. What remains is `aria-hidden-focus` while a menu is open: Radix's
-menus hide the rest of the page from screen readers and keep focus inside
-the menu. Every menu in the app does this (the Board's **Filters** menu
-too).
+fixed. Still open: `aria-hidden-focus` whenever a menu is open, in every
+menu in the app (the Board's **Filters** menu too). See
+[Open follow-ups](#open-follow-ups).
 
 ## Running as a service
 
@@ -195,3 +194,48 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
   closes. Lingering is on, but WSL was not restarted to check.
 - Very long runs (hours), and runs near the subscription usage limit. The
   `usage_limit` path is tested with scripted CLI output only.
+
+## Open follow-ups
+
+### Open menus leave focusable controls inside hidden content
+
+While any dropdown menu is open, axe-core reports `aria-hidden-focus`
+(impact "serious"; WCAG 2.0 level A, 4.1.2 Name, Role, Value). It was found
+in the workflows milestone 1 review and reproduced on the running service on
+2026-10-21. It is not fixed. It affects every menu in the app, not only
+workflows, but that doesn't make it acceptable.
+
+To reproduce:
+
+1. Open **Board** and run axe with the `wcag2a`, `wcag2aa`, `wcag21a` and
+   `wcag21aa` tags (axe-core 4.10, or the axe DevTools extension). There are
+   no violations.
+2. Tab to **Filters** and press `Enter`.
+3. Run axe again.
+
+Result: one `aria-hidden-focus` violation. Radix's modal menu calls
+`hideOthers` from the `aria-hidden` package, which sets `aria-hidden="true"`
+on the app shell's container (`div.flex.h-full.min-h-0` in `AppShell.tsx`).
+That container still holds focusable controls: the rail links and the page's
+buttons and fields. The workflow editor's **Add a step** menu gives the same
+result.
+
+Expected: no violations while a menu is open.
+
+What already works: focus moves into the menu, `Tab` doesn't leave it, and
+`Escape` closes it and returns focus to **Filters**. The failure is that
+controls hidden from assistive technology can still take focus.
+
+Versions: `radix-ui` 1.8.1 (`@radix-ui/react-dropdown-menu` 2.2.1),
+`aria-hidden` 1.2.6, axe-core 4.10.3, headless Chromium.
+
+Options to try (none tested yet):
+
+- Make the hidden content inert as well; the `aria-hidden` package also
+  exports `inertOthers`.
+- Make the menus non-modal (`modal={false}`) and check that focus still
+  behaves.
+- Use a newer Radix release, if one changes this.
+
+Then rerun axe with a menu open in both themes, along with the keyboard
+walk-through in [Workflows](#workflows-milestone-1).
