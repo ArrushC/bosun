@@ -1,6 +1,6 @@
 import { Command } from "cmdk";
 import { Dialog as DialogPrimitive } from "radix-ui";
-import { Gauge, History, Inbox, KanbanSquare, Plug, Plus, Settings2, Waypoints } from "lucide-react";
+import { Gauge, History, Inbox, KanbanSquare, Plug, Plus, Settings2, Waypoints, Workflow } from "lucide-react";
 import { useNavigate } from "react-router";
 
 import { useRuns, useTasks } from "@/api/hooks";
@@ -46,6 +46,7 @@ export function CommandPalette() {
               <Command.Group heading="Pages" className="text-xs text-text-3 [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1.5">
                 <Command.Item className={ITEM} onSelect={() => go("/")}><Gauge /> Overview</Command.Item>
                 <Command.Item className={ITEM} onSelect={() => go("/board")}><KanbanSquare /> Board</Command.Item>
+                <Command.Item className={ITEM} onSelect={() => go("/workflows")}><Workflow /> Workflows</Command.Item>
                 <Command.Item className={ITEM} onSelect={() => go("/inbox")}><Inbox /> Inbox</Command.Item>
                 <Command.Item className={ITEM} onSelect={() => go("/graph")}><Waypoints /> Agent graph</Command.Item>
                 <Command.Item className={ITEM} onSelect={() => go("/runs")}><History /> Runs</Command.Item>

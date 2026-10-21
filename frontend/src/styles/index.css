@@ -333,6 +333,17 @@
 [data-theme="light"] .react-flow {
   --xy-minimap-mask-background-color: rgb(243 245 249 / 0.6);
 }
+/* React Flow removes the focus outline from steps and connections; the workflow editor is used
+   from the keyboard, so put one back. */
+.workflow-canvas .react-flow__node.selectable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 14px;
+}
+.workflow-canvas .react-flow__edge.selectable:focus-visible .react-flow__edge-path {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
 .react-flow__controls {
   border: 1px solid var(--line);
   border-radius: 8px;

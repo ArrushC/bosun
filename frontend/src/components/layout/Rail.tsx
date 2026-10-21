@@ -12,6 +12,7 @@ import {
   Settings2,
   Sun,
   Waypoints,
+  Workflow,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router";
@@ -115,6 +116,7 @@ export function Rail() {
       <nav className="flex flex-col gap-1" aria-label="Main">
         <NavItem to="/" end icon={<Gauge />} label="Overview" collapsed={collapsed} />
         <NavItem to="/board" icon={<KanbanSquare />} label="Board" collapsed={collapsed} />
+        <NavItem to="/workflows" icon={<Workflow />} label="Workflows" collapsed={collapsed} />
         <NavItem to="/inbox" icon={<Inbox />} label="Inbox" badge={dashboard?.counts.untriaged} collapsed={collapsed} />
         <NavItem to="/graph" icon={<Waypoints />} label="Agent graph" badge={dashboard?.counts.active_runs} collapsed={collapsed} />
         <NavItem to="/runs" icon={<History />} label="Runs" collapsed={collapsed} />

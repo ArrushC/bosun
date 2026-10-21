@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router";
 
 import { AppShell } from "@/components/layout/AppShell";
@@ -10,6 +11,10 @@ import { NotFoundPage } from "@/pages/NotFoundPage";
 import { RunPage } from "@/pages/RunPage";
 import { RunsPage } from "@/pages/RunsPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { WorkflowsPage } from "@/pages/WorkflowsPage";
+
+// The editor and its canvas tools are only needed when a workflow is open.
+const WorkflowEditorPage = lazy(() => import("@/pages/WorkflowEditorPage").then((m) => ({ default: m.WorkflowEditorPage })));
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +23,15 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "board", element: <BoardPage /> },
+      { path: "workflows", element: <WorkflowsPage /> },
+      {
+        path: "workflows/:workflowId",
+        element: (
+          <Suspense>
+            <WorkflowEditorPage />
+          </Suspense>
+        ),
+      },
       { path: "inbox", element: <InboxPage /> },
       { path: "graph", element: <GraphPage /> },
       { path: "runs", element: <RunsPage /> },

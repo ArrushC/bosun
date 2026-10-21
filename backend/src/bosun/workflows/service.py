@@ -55,7 +55,7 @@ def describe_errors(issues: list[Issue], spec: WorkflowSpec) -> str:
     found = errors(issues)
     if not found:
         return "The workflow has no problems."
-    titles = {s.key: s.title.strip() or s.key for s in spec.steps}
+    titles = {s.key: s.title.strip() or "Untitled step" for s in spec.steps}
     first = found[0]
     where = ", ".join(titles.get(k, k) for k in first.steps)
     text = f"{where}: {first.message}" if where else first.message

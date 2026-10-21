@@ -36,6 +36,7 @@ const ENTITY_KEYS: Record<string, (id: string | null) => Key[]> = {
   connection: () => [keys.connections],
   roles: () => [keys.roles],
   settings: () => [keys.settings, keys.provider],
+  workflow: (id) => [keys.workflows, ...(id ? [keys.workflow(id)] : [])],
 };
 
 /**

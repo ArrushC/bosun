@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorNote, Notice, Spinner } from "@/components/ui/display";
 import { Field, Input, NativeSelect, Segmented, Switch, Textarea } from "@/components/ui/inputs";
 import { Dialog } from "@/components/ui/overlays";
-import { roleColor } from "@/lib/status";
+import { PROFILE_LABEL, roleColor } from "@/lib/status";
 import { cn } from "@/lib/utils";
 import { useUi } from "@/stores/ui";
 
@@ -21,13 +21,6 @@ const SECTIONS = [
   ["graph", "Graph"],
   ["demo", "Demo data"],
 ] as const;
-
-const PROFILE_LABEL: Record<string, string> = {
-  read_only: "Read only",
-  edit: "Edit files, ask before shell",
-  edit_and_test: "Edit files and run tests",
-  trusted_shell: "Edit files and run any command",
-};
 
 function Section({ id, title, description, children }: { id: string; title: string; description?: string; children: ReactNode }) {
   return (

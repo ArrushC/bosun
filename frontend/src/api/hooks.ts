@@ -27,6 +27,10 @@ import type {
   TaskDetail,
   TaskStatus,
   TaskUpdate,
+  Workflow,
+  WorkflowListItem,
+  WorkflowRunCreate,
+  WorkflowUpdate,
   Workspace,
 } from "./types";
 
@@ -50,6 +54,8 @@ export const keys = {
   github: ["github-status"] as const,
   repos: (q: string) => ["github-repos", q] as const,
   overview: ["overview-graph"] as const,
+  workflows: ["workflows"] as const,
+  workflow: (id: string) => ["workflow", id] as const,
 };
 
 export function notifyError(error: unknown, fallback = "Something went wrong") {
@@ -71,7 +77,7 @@ export const useRecords = (params: { triage: string; workspace_id?: string; conn
     queryFn: () => api.get<SourceRecordPage>(`/sources/records${qs({ ...params, limit: 500 })}`),
     placeholderData: (prev) => prev,
   });
-export const useRuns = (params: { status?: string; task_id?: string } = {}) =>
+export const useRuns = (params: { status?: string; task_id?: string; workflow_id?: string } = {}) =>
   useQuery({ queryKey: keys.runs(params), queryFn: () => api.get<RunListItem[]>(`/runs${qs(params)}`) });
 export const useRun = (id: string | null) =>
   useQuery({ queryKey: keys.run(id ?? ""), queryFn: () => api.get<Run>(`/runs/${id}`), enabled: !!id });
@@ -364,4 +370,53 @@ export function useDemo() {
       onError: (e) => notifyError(e),
     }),
   };
+}
+
+// -- workflows -----------------------------------------------------------------------------
+export const useWorkflows = () => useQuery({ queryKey: keys.workflows, queryFn: () => api.get<WorkflowListItem[]>("/workflows") });
+export const useWorkflow = (id: string) =>
+  useQuery({ queryKey: keys.workflow(id), queryFn: () => api.get<Workflow>(`/workflows/${id}`), retry: (n, e) => !(e instanceof ApiError && e.status === 404) && n < 2 });
+
+export function useCreateWorkflow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { name: string; description?: string }) => api.post<Workflow>("/workflows", body),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: keys.workflows }),
+    onError: (e) => notifyError(e),
+  });
+}
+
+/** Saves a draft. Errors are left to the caller, which shows them in the editor. */
+export function useSaveWorkflow(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: WorkflowUpdate) => api.patch<Workflow>(`/workflows/${id}`, body),
+    onSuccess: (saved) => {
+      qc.setQueryData(keys.workflow(id), saved);
+      void qc.invalidateQueries({ queryKey: keys.workflows });
+    },
+  });
+}
+
+export function useDeleteWorkflow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<void>(`/workflows/${id}`),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: keys.workflows }),
+    onError: (e) => notifyError(e),
+  });
+}
+
+/** Starts a run; errors are shown in the run dialog. */
+export function useRunWorkflow(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { body: WorkflowRunCreate; idempotencyKey: string }) =>
+      api.post<Run>(`/workflows/${id}/runs`, v.body, { "Idempotency-Key": v.idempotencyKey }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.tasks });
+      void qc.invalidateQueries({ queryKey: ["runs"] });
+      void qc.invalidateQueries({ queryKey: keys.workflows });
+    },
+  });
 }

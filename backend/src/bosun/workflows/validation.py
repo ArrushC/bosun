@@ -51,7 +51,7 @@ def validate_workflow(spec: WorkflowSpec, agents: Mapping[str, AgentRef]) -> lis
                 message=f"A workflow can have up to {MAX_STEPS} steps; this one has {len(steps)}.",
             )
         )
-    title = {s.key: s.title.strip() or s.key for s in steps}
+    title = {s.key: s.title.strip() or "Untitled step" for s in steps}
     seen: set[str] = set()
     for s in steps:
         if s.key in seen:

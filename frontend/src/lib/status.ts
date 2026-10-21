@@ -183,3 +183,19 @@ export function strategyLabel(run: { mode: string; strategy?: string | null }): 
   if (run.mode === "auto") return run.strategy === "single" ? "Auto: single agent" : "Auto: planning";
   return "Single agent";
 }
+
+/** Short names for agents' permission profiles. */
+export const PROFILE_LABEL: Record<string, string> = {
+  read_only: "Read only",
+  edit: "Edit files, ask before shell",
+  edit_and_test: "Edit files and run tests",
+  trusted_shell: "Edit files and run any command",
+};
+
+/** What each profile lets an agent do (the wording the backend's tool policy uses). */
+export const PROFILE_DESCRIPTION: Record<string, string> = {
+  read_only: "Read-only: can read and search files in its worktree.",
+  edit: "Can edit files in its worktree. Shell commands outside the safe list need your approval.",
+  edit_and_test: "Can edit files and run configured test commands. Other shell commands need approval.",
+  trusted_shell: "Can edit files and run any shell command in its worktree without asking.",
+};
