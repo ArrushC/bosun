@@ -129,6 +129,7 @@ on port 8787.
 | UI rebuild | With unchanged sources, Bosun was up in about 2 seconds. After a UI file changed, a restart ran `tsc` and `vite build` first and was up in about 9 seconds. |
 | Logins | GitHub was connected through the GitHub CLI (`source: gh`). Claude used the host's Claude Code login. |
 | Projects anywhere | A checkout outside the projects folder (`~/.config/mise`, `ArrushC/workstation`) was added as a workspace and scanned (10 TODOs found). Its GitHub repository synced read-only: 1 open pull request imported. |
+| WSL restart | After WSL restarted (2026-10-21) the unit started on its own about two minutes after boot, rebuilt the UI from the checkout and applied a pending database migration before serving. So whatever the checkout holds is deployed at the next start, including one after a reboot; back up the data folder before updating the checkout, not just before a restart. |
 
 ## Docker image and compose setup
 
@@ -190,8 +191,8 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
   Claude sign-in).
 - A real Claude run under the systemd service. Earlier real runs used
   `uv run bosun` directly, and the workflow runs used a separate instance.
-- The service starting with WSL, or staying up after the last WSL terminal
-  closes. Lingering is on, but WSL was not restarted to check.
+- The service staying up after the last WSL terminal closes. Lingering is on,
+  but this wasn't checked.
 - Very long runs (hours), and runs near the subscription usage limit. The
   `usage_limit` path is tested with scripted CLI output only.
 
