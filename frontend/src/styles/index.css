@@ -56,19 +56,19 @@
   --line-soft: #e3e8f0;
   --text: #182032;
   --text-2: #4c5770;
-  --text-3: #626c83;
+  --text-3: #5a6479;
   --accent: #4a5bd8;
   --accent-strong: #3445c4;
   --accent-soft: rgb(74 91 216 / 0.1);
   --accent-fg: #ffffff;
 
-  --st-run: #0b8fb3;
-  --st-approval: #b97806;
-  --st-dep: #5f7090;
-  --st-ok: #1d9a5c;
-  --st-fail: #d33a55;
-  --st-idle: #9aa3b5;
-  --st-cancel: #7d879a;
+  --st-run: #086e8a;
+  --st-approval: #8d5b05;
+  --st-dep: #576784;
+  --st-ok: #167345;
+  --st-fail: #bd2a44;
+  --st-idle: #5b667c;
+  --st-cancel: #5d6677;
 
   --role-amber: #b97806;
   --role-sky: #1f78d1;
