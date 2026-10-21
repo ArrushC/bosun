@@ -1,6 +1,6 @@
 import { Dialog as DialogPrimitive, DropdownMenu as Menu, Popover as PopoverPrimitive, Tooltip as TooltipPrimitive } from "radix-ui";
 import { X } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -15,11 +15,26 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
   size?: "sm" | "md" | "lg" | "xl";
 }) {
   const width = { sm: "max-w-md", md: "max-w-xl", lg: "max-w-3xl", xl: "max-w-5xl" }[size];
+  // Radix returns focus to a Dialog.Trigger; these dialogs are opened from state, so give it back
+  // to whatever opened them instead of dropping it on the page. Read it while rendering: by the
+  // time effects run, an autofocused field inside the dialog already has focus.
+  const opener = useRef<HTMLElement | null>(null);
+  const wasOpen = useRef(false);
+  if (open !== wasOpen.current) {
+    if (open) opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    wasOpen.current = open;
+  }
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-[rgb(6_9_15/0.62)] backdrop-blur-[2px]" />
         <DialogPrimitive.Content
+          onCloseAutoFocus={(e) => {
+            if (opener.current?.isConnected) {
+              e.preventDefault();
+              opener.current.focus();
+            }
+          }}
           className={cn(
             "fixed top-[7vh] left-1/2 z-50 flex max-h-[86vh] w-[calc(100vw-32px)] -translate-x-1/2 flex-col rounded-[20px] border border-line-soft bg-panel shadow-pop focus:outline-none",
             width,
@@ -95,11 +110,12 @@ export const TooltipProvider = TooltipPrimitive.Provider;
 export const DropdownMenu = Menu.Root;
 export const DropdownTrigger = Menu.Trigger;
 
-export function DropdownContent({ children, align = "end" }: { children: ReactNode; align?: "start" | "end" | "center" }) {
+export function DropdownContent({ children, align = "end", onCloseAutoFocus }: { children: ReactNode; align?: "start" | "end" | "center"; onCloseAutoFocus?: (event: Event) => void }) {
   return (
     <Menu.Portal>
       <Menu.Content
         align={align}
+        onCloseAutoFocus={onCloseAutoFocus}
         sideOffset={6}
         className="z-50 min-w-52 rounded-[14px] border border-line-soft bg-panel p-1.5 shadow-pop"
       >
