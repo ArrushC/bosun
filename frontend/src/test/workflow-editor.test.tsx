@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router";
 
@@ -114,7 +114,8 @@ describe("workflow editor", () => {
     const user = userEvent.setup();
     // React Flow hides nodes until it has measured them, which jsdom never does, so they have no
     // accessible name to query by role; their labels still work.
-    await user.click(await screen.findByLabelText(/^Step Build it/));
+    // A plain click: pressing a step also starts React Flow's drag handling, which jsdom can't run.
+    fireEvent.click(await screen.findByLabelText(/^Step Build it/));
     expect(await screen.findByRole("complementary", { name: "Build it settings" })).toBeInTheDocument();
     await user.click(screen.getByLabelText("Add a step after Build it"));
     await user.click(await screen.findByRole("menuitem", { name: /^Reviewer/ }));
@@ -147,7 +148,8 @@ describe("workflow editor", () => {
     });
     renderEditor();
     const user = userEvent.setup();
-    await user.click(await screen.findByLabelText(/^Step Plan/));
+    // A plain click: pressing a step also starts React Flow's drag handling, which jsdom can't run.
+    fireEvent.click(await screen.findByLabelText(/^Step Plan/));
     await user.click(await screen.findByRole("button", { name: "Wait for another step" }));
     const options = (await screen.findAllByRole("menuitem")).map((i) => i.textContent);
     expect(options).toEqual(["Check"]);
