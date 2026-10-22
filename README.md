@@ -19,8 +19,10 @@ approvals.
   coordinator choose. Watch the agent graph, read transcripts, approve tool
   use, send follow-ups, pause, resume and retry, review the diff, then merge
   into your branch or discard.
-- **Workflows**: draw your own plan of agent steps once and run it on any
-  board task. Each step's agent builds on the reports of the steps before it.
+- **Workflows**: draw your own plan of agent steps once, or start from a
+  template, and run it on any board task. Each step's agent builds on the
+  reports of the steps before it; approval steps wait for your decision.
+  Publish versions to run the same steps and agents again and again.
 - **Agent graph**: built only from events Bosun recorded. You can
   zoom, focus, collapse, filter and replay a run with the flight recorder.
 
@@ -276,14 +278,19 @@ in the graph as message edges.
 ## 5. Build a workflow
 
 A workflow is a plan you draw instead of one the coordinator writes. Each
-step is one agent with its own instructions. Steps connected one after the
-other run in that order; steps with nothing between them run side by side,
-and a step that runs after several waits for all of them.
+agent step is one agent with its own instructions; an approval step waits
+for you to approve or reject the work before it. Steps connected one after
+the other run in that order; steps with nothing between them run side by
+side, and a step that runs after several waits for all of them.
 
-1. Open **Workflows** and press **New workflow**. Name it.
-2. Press **Add an agent step** (or **A**) and choose an agent. Give the step
-   a name and instructions. Use the **+** under a selected step, or **Add a
-   step after this one** in its settings, to add the next one. To connect
+1. Open **Workflows** and press **New workflow**. Start from a template
+   (Fix with review, Research report, or Implement and test), which lists
+   what to set up before running it, or from a blank canvas. A template is
+   copied: change it as you like.
+2. Press **Add a step** (or **A**) and choose an agent, or **Approval**.
+   Give the step a name and instructions (for an approval, what to check).
+   Use the **+** under a selected step, or **Add a step after this one** in
+   its settings, to add the next one. To connect
    two existing steps, drag from a step's bottom edge to the other step, or
    use **Wait for another step** in the later step's settings.
 3. Problems show on the step and in the header as you edit: a step without
@@ -293,20 +300,31 @@ and a step that runs after several waits for all of them.
    such as two code-changing steps that can run at once, don't block a run.
 4. **Advanced** in a step's settings sets its model, turn limit, time limit
    and retries; otherwise the agent's and Settings' defaults apply.
-5. Press **Run** and pick an existing task, or describe a new one. The run
-   uses its own worktree and shows on the run page like any other run. Steps
-   that never ran because an earlier step failed are marked **Skipped**, with
-   the reason.
+5. Press **Publish** to save the draft as a numbered version, with its
+   agents as they are now. Versions never change; keep editing the draft and
+   publish again when it's ready. The **Versions** tab lists them; a version
+   can be run, or restored to the draft.
+6. Press **Run**, choose a version (the latest by default) or the draft, and
+   pick an existing task or describe a new one. You can also run a workflow
+   from a task's own Run dialog. The run uses its own worktree. Its **Steps**
+   tab shows each step's status and why, its report and transcripts. Steps
+   that can't run because an earlier step failed or was rejected are marked
+   **Skipped**, with the reason.
+7. When the run reaches an approval step, it waits. Approve or reject it in
+   the **Steps** tab or from **waiting for you** in the sidebar, with an
+   optional note for the steps after it. A waiting approval survives a pause
+   or a restart of Bosun: decide, then resume the run. Rejecting skips the
+   steps after it; other branches finish.
 
-Edits save as you go. Each run keeps a copy of the workflow as it was when it
-started, so editing the workflow later doesn't change a run that is under
-way. If the same workflow is changed in two tabs at once, the second save
-stops with a conflict and asks which version to keep. **Ctrl+Z** and
+Edits save as you go. Each run keeps a copy of the workflow (and its agents)
+as it was when it started, so editing or publishing later doesn't change a
+run that is under way. If the same workflow is changed in two tabs at once,
+the second save stops with a conflict and asks which version to keep. **Ctrl+Z** and
 **Ctrl+Shift+Z** undo and redo; on the canvas, **Tab** moves between steps,
 **Enter** selects one, the arrow keys move it and **Delete** removes it.
 
-Workflows don't have versions, templates or approval steps yet, and they
-always run on a board task. See
+Workflows always run on a board task, started by you; unattended runs and
+schedules are later milestones. See
 [docs/design/workflows.md](docs/design/workflows.md) for the plan.
 
 ## Safety model

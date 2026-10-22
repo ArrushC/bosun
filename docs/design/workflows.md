@@ -1,7 +1,9 @@
 # Workflows: authored agent graphs
 
 Status: proposal, revision 2 (2026-10-20), against `main` at `e29f98f`.
-Nothing here is implemented. A spike tested the central assumption; its code
+Milestone 1 is done and deployed. Milestone 2 is implemented on the
+`workflows-m2` branch and awaits review ([status](#milestone-2-status-2026-10-22-implemented-awaiting-review)).
+Milestones 3 and 4 are proposals. A spike tested the central assumption; its code
 is on the local branch `spike/workflow-engine` (worktree `../bosun-spike`),
 in three reviewable commits:
 
@@ -319,6 +321,122 @@ Implemented screens:
 
 Acceptance follows milestone 1's pattern: functional tests, a visual review,
 and one real run.
+
+### Milestone 2 status (2026-10-22): implemented, awaiting review
+
+Built on the `workflows-m2` branch. It is not merged, pushed or deployed. The
+evidence is in [VALIDATION.md](../VALIDATION.md#workflows-milestone-2): one
+real Claude run through an approval step, browser checks of every flow
+including a crash while an approval waited, a keyboard-only walk-through,
+axe-core on thirteen screens in both themes at two sizes, and the migration
+tested on copies of milestone 1's data. Tests: 161 backend and 70 frontend,
+all passing.
+
+**What it does**
+
+- **Versions.** **Publish** freezes the draft and the definitions of the
+  agents its steps use into a numbered, immutable version (the database
+  refuses changes to it). The editor says whether the draft is not published,
+  the same as version N, or changed since. The **Versions** tab lists the
+  draft and every version; a version's page shows its steps and agents, what
+  changed from the version before, and offers **Run** and **Restore to
+  draft**. Every run records the version it ran, or the draft and its
+  revision, in its header, summary and the workflow's run list.
+- **Templates.** Fix with review, Research report and Implement and test
+  (the three from the mockup), offered on the empty Workflows page and in the
+  **New workflow** dialog. A template's preview lists its steps and what to
+  set up before running (its agents turned on, a workspace, and, recommended,
+  test commands). Creating from one copies its steps into an independent
+  draft.
+- **Launching from a task.** The task's Run dialog has a **Workflow**
+  strategy with a workflow and a version.
+- **Approval steps.** A step that waits for you, added from any **Add a step**
+  menu. Behaviour is below.
+- **Steps tab.** Workflow runs open on it: the steps as the run froze them,
+  in their layout or as a list in execution order, each with its status,
+  attempts and the reason for it, and a panel with the step's agent,
+  instructions, the prompt it was given, its report, every attempt's
+  transcript, and an approval step's request and decision.
+
+**Decisions taken with you (2026-10-22)**
+
+| ID | Decision | Taken |
+|---|---|---|
+| D10 | Launch a workflow from the task's Run dialog in this milestone | Yes |
+| D11 | Can the draft still run once versions exist? | Yes, labelled Draft everywhere. The Run dialog defaults to the latest version. |
+| D12 | What a version runs with when an agent changes after publishing | The agent as it was published. A run is refused if the agent has since been turned off or deleted, and the Run dialog, the run preview and the version's page say which agents changed and how. |
+
+**How approval steps behave**
+
+| Situation | Behaviour |
+|---|---|
+| Asked | When every step it waits for has completed. The run shows **Needs approval**; other branches keep running, and an approval doesn't take one of the run's agent slots. |
+| What you see | What to check (the step's instructions), the reports of the steps it waits for (looking through earlier approvals), the files changed so far with a link to **Changes**, and what approving or rejecting will do. |
+| Approve | The step is done and the steps after it run. An optional note reaches them with the reports the approval checked. |
+| Reject | The steps after it are marked skipped at once, with the reason. Independent branches finish. The run then ends *cancelled* ("Approve the plan was rejected: your note. Not run: …"), and the task goes back to Ready. If a step also failed, the run fails, naming both. |
+| Cancel the run | Pending requests are cancelled; the step shows Cancelled. |
+| Pause, shutdown, crash | The request stays pending and the step keeps waiting. A decision made meanwhile is recorded and starts nothing; **Resume** waits on the same request, or carries on with the decision. Nothing is asked twice. |
+| Duplicates and stale pages | One transaction resolves the request and moves the step, and only from pending and waiting. A second click, another tab or a stale page is told the request was already decided. |
+| Time limit | None: a request waits until someone decides or the run is cancelled. Plan approvals keep their 24 hours. |
+| Retry and skip | Retrying a run doesn't re-ask a rejected approval; retrying that step does, when the run is failed, paused or interrupted. Approval steps can't be skipped. |
+| Rules | A workflow needs at least one agent step. Warnings: an approval that waits for nothing, and one with nothing to check. |
+
+**What changed from the plan**
+
+- **"See what changed"** is a list of added, removed and changed steps and
+  fields (in the publish dialog and on a version's page), not a drawn diff.
+- **Approval steps persist** instead of being re-asked on resume like plan
+  approvals; plan and tool approvals behave as before.
+- **Skipped as soon as known.** In workflow runs, steps that can no longer run
+  are marked skipped as soon as a step they wait for fails or is rejected,
+  and the reason names the cause ("which failed", "which was rejected")
+  rather than milestone 1's "which did not finish". Runs recorded before
+  keep their wording.
+- **Restart recovery** now emits an event for every step it puts back (team
+  runs too), so the live graph matches the run after a restart.
+- **Found on the way:** tab panels had no visible focus, the sidebar's
+  approvals button had a different name from its words, and the editor's
+  tests ended with uncaught errors. All three predate this milestone and are
+  fixed.
+
+**Limits**
+
+- Versions can't be renamed or deleted. Publishing needs a change to the
+  steps, name, description or agents.
+- **Restore to draft** replaces the draft after a confirmation; the draft's
+  unpublished changes are lost unless published first.
+- The Steps view draws the layout the run froze, so a workflow published
+  without **Tidy up** can look tangled there.
+- Decisions are recorded as "you": Bosun has one user.
+- In narrow windows the Steps view's panel opens over the canvas.
+- Still open: `aria-hidden-focus` while a menu is open (see VALIDATION's
+  follow-ups); now eleven elements in the editor.
+
+Implemented screens:
+
+| Screen | Image |
+|---|---|
+| No workflows yet, with templates | ![](workflows/m2-templates.png) |
+| A template's preview | ![](workflows/m2-template-preview.png) |
+| An approval step in the editor | ![](workflows/m2-editor-approval.png) |
+| The same, light theme | ![](workflows/m2-editor-approval-light.png) |
+| Publishing a version | ![](workflows/m2-publish.png) |
+| The Versions tab | ![](workflows/m2-versions.png) |
+| A version, light theme | ![](workflows/m2-version-page-light.png) |
+| A version that can't run now | ![](workflows/m2-version-blocked.png) |
+| Restoring a version | ![](workflows/m2-restore.png) |
+| Choosing what to run | ![](workflows/m2-run-dialog.png) |
+| A workflow from the task's Run dialog | ![](workflows/m2-task-run-dialog.png) |
+| A real run waiting at an approval | ![](workflows/m2-steps-approval-real.png) |
+| The real run, finished | ![](workflows/m2-steps-done-real.png) |
+| The Steps list, light theme | ![](workflows/m2-steps-list-light.png) |
+| A rejected approval | ![](workflows/m2-steps-rejected.png) |
+| After a crash, the approval still waiting | ![](workflows/m2-after-crash.png) |
+| Approvals waiting for you | ![](workflows/m2-approvals-list.png) |
+| 1024×768: the Steps view | ![](workflows/m2-steps-narrow-light.png) |
+| 1024×768: the Workflows list | ![](workflows/m2-list-narrow-light.png) |
+| A milestone 1 run in the Steps view | ![](workflows/m2-m1-run-steps.png) |
+| Keyboard focus on Approve | ![](workflows/m2-keyboard-approve.png) |
 
 ### Milestone 3: unattended runs and their safeguards
 

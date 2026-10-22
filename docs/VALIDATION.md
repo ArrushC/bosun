@@ -116,6 +116,109 @@ fixed. Still open: `aria-hidden-focus` whenever a menu is open, in every
 menu in the app (the Board's **Filters** menu too). See
 [Open follow-ups](#open-follow-ups).
 
+## Workflows (milestone 2)
+
+Checked on 2026-10-22 on the `workflows-m2` branch, against throwaway
+instances (each with its own data folder and port; a fresh folder for each
+check) using a scratch git repository as the workspace. Browser checks used
+Playwright 1.64 with headless Chromium, and axe-core 4.10.3. None of this
+touched the running service or its data.
+
+**Real Claude run** (subscription, Claude Pro, both agent steps on `haiku`):
+
+| Run | Result |
+|---|---|
+| *Explain the pricing code*, version 1, on a new task | Map the code (Researcher, read-only) → Check the map (approval) → Explain the pricing rule (Reviewer, read-only). The run waited at the approval with the first step's report as the work to check; approving with the note "Mention the double multiplication" let the last step run, and its prompt carried both the map and the note. Completed: 2 sessions of 5 and 3 turns, both reporting `claude-haiku-5-5`, 2,700 output tokens, no files changed. The run header and summary named version 1. |
+
+**The journey in the browser** (demo backend): from the empty Workflows
+page, **Fix with review** from its template under a new name; an approval
+step added after Research with the step's **+**, named and given what to
+check; Implement rewired to wait for it; **Tidy up**; published as version 1
+with a note; the draft then edited ("Changed since version 1"); version 1 run
+on a new task from the Run dialog, which chose it by default. While the run
+waited at the approval, version 2 was published: the run's frozen workflow
+and steps were unchanged. Approving with a note from the Steps view let
+Implement run with the note in its prompt, and its prompt held version 1's
+instructions, not the later draft's. Both run views and the version page were
+then checked. No console or page errors.
+
+**Approval steps and recovery** (demo backend):
+
+| Check | Result |
+|---|---|
+| Reject | From the sidebar's **1 waiting for you** list, with a note: the step after the approval was skipped ("Not run: it waits for Approve the plan, which was rejected."), the independent branch finished, the run ended *cancelled* with "Approve the plan was rejected: Wrong cause: look at the discount code. Not run: Implement.", and the task went back to Ready. |
+| Decide while paused | Paused at the approval: the request stayed pending and the card said the decision would apply on resume. Approving recorded it and started nothing; **Resume** carried on without asking again. A double click on **Approve** sent one request. |
+| A crash while waiting | The instance was killed with `SIGKILL` and started again on the same data: the run was *interrupted*, the same request still pending and the step still waiting, and the graph's events agreed with the steps. **Resume** waited on the same request; approving completed the run. |
+| Launch from a task | The task's own Run dialog, **Workflow** strategy: version 1 chosen by default, the approval warned about, the run started on that task. |
+| Restore | Restoring version 1 over an edited draft, after the confirmation, brought back its name and steps. |
+| Refusals and errors | A missing version says so. With the Reviewer agent turned off, version 1 says it can't run and why, and **Run version 1** is disabled. |
+| Existing run modes | A team run with plan approval (approved through its card) and a single-agent run with a tool approval (allowed) completed; both open on the agent graph, with no Steps tab. |
+
+**Keyboard only:** a template card and **Enter**, the name, **A** and the
+arrow keys to add an approval step, its name and what to check, **Publish**
+with a note, **Run** with a task title, the approval's note and **Approve**
+in the Steps view, the **List** view, a step's details with **Enter**, and
+its transcript with **Enter**. Focus was visible at every stop: fields take
+the accent border, connections the accent stroke, everything else the focus
+ring. The approval panel comes after the canvas's steps and connections in
+the tab order (over a hundred stops in a six-step workflow); the compact card
+at the top of the run page, with **Approve** and **Reject**, comes early.
+
+**Visual review:** thirteen screens (the empty list with templates, a
+template's preview, the list, the editor with an approval step selected, the
+publish dialog, the Versions tab, a version, the Run dialog, the Steps view
+waiting and as a list and finished, the task's Run dialog with a workflow,
+and the approvals list) in both themes at 1440×900 and 1024×768, with
+axe-core on each: 52 checks, no violations. Also checked: a version that
+can't run, the restore confirmation, a rejected run, a run after a crash, and
+milestone 1's runs in the new Steps view. Screenshots are in
+[docs/design/workflows](design/workflows/) (`m2-*.png`).
+
+Found and fixed during the review:
+
+- **New in this milestone:** the Steps list marked the selected step with a
+  background that took muted text (dark) and the Needs approval pill (light)
+  below 4.5:1; and at 1024 px the Steps view's panel covered the step it
+  described.
+- **Older than this milestone:**
+  - tab panels took keyboard focus with no visible focus (WCAG 2.4.7), on the
+    run page, the editor and every other tabbed page;
+  - the sidebar's approvals button was named "1 approvals waiting" while it
+    read "1 waiting for you" (WCAG 2.5.3);
+  - the editor's frontend tests threw two uncaught errors from React Flow's
+    drag handling in jsdom, so the suite exited non-zero although every test
+    passed.
+
+Still open: the menu finding below. With any menu open, the editor's
+**Add a step** menu now fails it on eleven elements rather than eight,
+because the header has more controls (the draft's state, **Publish**, the
+Versions tab); the cause is the same.
+
+### Migration 0003 and rolling back
+
+Migration 0003 adds the `workflow_versions` table (with triggers that refuse
+updates and deletes), and the columns `workflows.template`,
+`agent_runs.workflow_version` and `subtasks.kind` (default `agent`). It is
+additive: no existing value changes. Checked on copies, never on the live
+data folder:
+
+| Check | Result |
+|---|---|
+| Milestone 1 data | A copy of milestone 1's validation data (20 workflows; 10 runs: single, team, demo workflows and the two real Claude workflow runs; 30 steps, 32 sessions, 662 events) was upgraded by starting milestone 2 on it. Every existing row was kept as it was. Its workflows read as not published; its workflow runs open on the Steps tab as "draft (revision N)", with their steps, statuses and reasons; its team and single runs look as before. |
+| Downgrade | Downgrading that copy to 0002 restored every row exactly. The schema matched a fresh 0002 database except for formatting: the three rebuilt tables quote their names and list constraints, and `agent_runs`' two foreign keys, in a different order. Milestone 1's code started on it and served all 10 runs, the workflows, tasks and settings. Upgrading again worked. |
+| The deployed data | A copy of the backup taken before the milestone 1 deploy (2026-10-21, sha256 `fa950d54…`) upgraded to 0003 and downgraded to 0002 with `integrity_check` ok and every row kept. The backup's hash was unchanged afterwards. |
+| Old code on new data | Milestone 1's code refuses a 0003 database: `Can't locate revision identified by '0003'`. Downgrade with milestone 2's code first, as for 0002. |
+| Runs with approval steps, rolled back | Finished runs (approved or rejected) still load under milestone 1's code. A request still pending is expired when that code starts, and resuming its run fails the approval step ("The  agent was not available when this run started."), because the downgrade forgets which steps were approval steps. |
+
+What a downgrade loses: every published version; which template a workflow
+came from; the version column on runs (each run's stored configuration still
+records the version it ran); and which steps were approval steps. Before
+rolling back, decide or cancel every run waiting at an approval step, and
+expect versions to be gone. The existing backup and rollback runbook in
+`~/.local/share/bosun-backups/2026-10-21T1450-post-0002/` is unchanged and
+still describes the milestone 1 deploy; a milestone 2 deploy needs its own
+backup taken before the checkout is updated.
+
 ## Running as a service
 
 Checked on WSL2 (AlmaLinux 9.8, systemd 252), replacing the Docker instance
@@ -155,7 +258,7 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
 ## Automated tests
 
 - Tests (commands in the README's Development section)
-  - Backend: 135 tests. They cover:
+  - Backend: 161 tests. They cover:
     - the scanner, GitHub client and connector (mock transport);
     - single, team and auto runs with the demo backend;
     - worktrees and integration;
@@ -171,14 +274,35 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
       joins, prompts and overrides, failure with skips and retry, pause and
       resume, refusals, editing during a run, old run configs, the migration
       from a database with data, and the API (including conflicts, the
-      idempotency key and cleaning up a new task when the run can't start).
-  - Frontend: 48 tests. They cover the graph reducer over recorded event logs
+      idempotency key and cleaning up a new task when the run can't start);
+    - workflow versions: publishing (and refusing a draft with problems, a
+      stale revision or nothing new), the database refusing changes to a
+      version, restoring, a version running with the agents it froze while
+      the draft uses today's, refusing a version whose agent is off, and an
+      existing run unchanged by later edits and publishes;
+    - templates: independent copies, setup checks, and every template running
+      to completion;
+    - approval steps: approving with a note that reaches the next step,
+      rejecting beside an independent branch, a failure and a rejection
+      together, simultaneous decisions advancing the run once, pause, decide
+      while paused, a crash with the request pending (deciding before or after
+      resuming), cancelling while waiting or paused, the approver's view of
+      the changes so far, and concurrent resumes; each checks that the
+      latest event for every step and approval matches the database;
+    - launching a workflow version from a task, and milestone 1 data upgrading
+      to 0003 and back without loss.
+  - Frontend: 70 tests. They cover the graph reducer over recorded event logs
     (team and workflow runs), the event-log merge, UI flows (create a task,
     launch with idempotency, approvals, board moves, live updates), and
     workflows: the editing helpers, the list, problems and a disabled
     **Run**, saving against a revision and conflicts, adding and selecting
     steps, focus after adding, undo, connecting steps from the settings panel,
-    and the Run dialog's request, idempotency key and refusals.
+    and the Run dialog's request, idempotency key and refusals; and for
+    milestone 2, the Steps view and the live graph agreeing on recorded runs
+    (approved, rejected, paused at an approval), the reasons each step gives,
+    the change summary between versions, execution order, publishing,
+    choosing a version to run, approving from the Steps view, and a
+    template's preview.
 - Lint: ruff, basedpyright (standard) and `tsc` are clean.
 
 ## Not validated against real services
@@ -191,6 +315,10 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
   Claude sign-in).
 - A real Claude run under the systemd service. Earlier real runs used
   `uv run bosun` directly, and the workflow runs used a separate instance.
+- Milestone 2 on the running service: it is not deployed.
+- An approval step left waiting for days, or across many restarts. Requests
+  have no time limit; the longest wait checked was a few minutes and one
+  restart.
 - The service staying up after the last WSL terminal closes. Lingering is on,
   but this wasn't checked.
 - Very long runs (hours), and runs near the subscription usage limit. The
@@ -221,7 +349,7 @@ That container still holds focusable controls: the rail links and the page's
 buttons and fields.
 
 The workflow editor's **Add a step** menu fails the same rule on eight
-elements. `hideOthers` leaves live regions readable, and the editor has two
+elements (eleven since milestone 2 added controls to the editor's header). `hideOthers` leaves live regions readable, and the editor has two
 inside the page: the save status and React Flow's announcer. So instead of
 hiding one container it hides the content around them piece by piece: the
 rail, parts of the header, the canvas and the step settings panel.
