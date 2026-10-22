@@ -79,7 +79,7 @@ export function WorkflowsPage() {
                     <span className="block truncate text-base">{w.name}</span>
                     <span className="mt-0.5 block truncate text-sm text-text-2">{w.description || "No description"}</span>
                   </span>
-                  <span className="hidden w-20 shrink-0 text-sm text-text-2 lg:block">{plural(w.steps, "step")}</span>
+                  <span className="hidden w-20 shrink-0 text-sm text-text-2 xl:block">{plural(w.steps, "step")}</span>
                   <span className="hidden w-44 shrink-0 text-sm lg:block">
                     {w.latest_version ? <span className="text-text-2">Version {w.latest_version.number}</span> : <span className="text-text-3">Not published</span>}
                     {w.latest_version && w.unpublished_changes && <span className="block text-xs text-text-3">Draft has changes</span>}

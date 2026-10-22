@@ -100,7 +100,8 @@ function StepList({ rows, agents, selected, onSelect }: { rows: StepRow[]; agent
               <button
                 onClick={() => onSelect(r.step.key)}
                 aria-current={selected === r.step.key ? "true" : undefined}
-                className={cn("flex w-full items-start gap-4 px-5 py-4 text-left", selected === r.step.key ? "bg-accent-soft" : "hover:bg-raised")}
+                // The raised background keeps muted text and status colours at their tested contrast.
+                className={cn("flex w-full items-start gap-4 px-5 py-4 text-left", selected === r.step.key ? "bg-raised shadow-[inset_3px_0_0_var(--accent)]" : "hover:bg-raised")}
               >
                 <span className="w-6 shrink-0 pt-0.5 text-sm text-text-3 tabular-nums">{i + 1}</span>
                 {approval ? <ApprovalIcon className="mt-0.5 size-4 shrink-0" style={{ color: APPROVAL_COLOR }} /> : <Bot className="mt-0.5 size-4 shrink-0" style={{ color: agentColor(agent) }} />}

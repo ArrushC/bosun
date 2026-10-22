@@ -195,11 +195,14 @@ function Canvas({
   const paneWidth = useStore((s) => s.width);
   const paneHeight = useStore((s) => s.height);
   const revealed = useRef<string | null>(null);
+  // Bumped after the first fit, which moves the view: the selected step is checked again then.
+  const [fitCount, setFitCount] = useState(0);
   useEffect(() => {
     if (selected === revealed.current) return;
-    revealed.current = selected;
     const step = steps.find((s) => s.key === selected);
+    // Not measured yet (a step selected as the page opens): try again once the canvas has a size.
     if (!step || !paneWidth) return;
+    revealed.current = selected;
     const { x, y, zoom } = flow.getViewport();
     const left = step.position.x * zoom + x;
     const top = step.position.y * zoom + y;
@@ -208,7 +211,7 @@ function Canvas({
     // Centre it in the part of the canvas the panel leaves visible.
     const shift = coveredRight / 2 / zoom;
     if (!inView) void flow.setCenter(step.position.x + STEP_SIZE.width / 2 + shift, step.position.y + STEP_SIZE.height / 2, { zoom, duration: 200 });
-  }, [selected, steps, flow, paneWidth, paneHeight, coveredRight]);
+  }, [selected, steps, flow, paneWidth, paneHeight, coveredRight, fitCount]);
 
   const levels = useMemo(() => {
     const map = new Map<string, WorkflowIssue["level"]>();
@@ -288,7 +291,10 @@ function Canvas({
     if (!steps.length) fitted.current = false;
     if (fitted.current || !measured) return;
     fitted.current = true;
-    void flow.fitView({ padding: 0.2, maxZoom: 1, minZoom: 0.9 });
+    void flow.fitView({ padding: 0.2, maxZoom: 1, minZoom: 0.9 }).then(() => {
+      revealed.current = null;
+      setFitCount((n) => n + 1);
+    });
   }, [measured, steps.length, flow]);
 
   const onConnect = (c: Connection) => {

@@ -86,7 +86,8 @@ export function WorkflowVersionPage() {
           <Link to={`/workflows/${workflowId}?tab=versions`} className="-ml-2 rounded-control p-2 text-text-3 hover:bg-raised hover:text-text" aria-label="All versions">
             <ArrowLeft className="size-5" />
           </Link>
-          <div className="min-w-0 flex-1">
+          {/* Wide enough for the name and its badges; the actions wrap below it in a narrow window. */}
+          <div className="min-w-0 flex-1 basis-[26rem]">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <h1 className="truncate text-lg font-semibold tracking-tight">{v.name}</h1>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-raised px-2.5 py-0.5 text-xs font-medium text-text-2">
@@ -99,21 +100,23 @@ export function WorkflowVersionPage() {
               {v.note ? `: ${v.note}` : ""}
             </p>
           </div>
-          <Button variant="ghost" asChild>
-            <Link to={`/workflows/${workflowId}`}>
-              <PencilLine /> Edit the draft
-            </Link>
-          </Button>
-          <Button variant="secondary" onClick={() => setRestoreOpen(true)}>
-            <RotateCcw /> Restore to draft
-          </Button>
-          <Tip label={blocked ?? `Run version ${v.number} on a task`}>
-            <span tabIndex={blocked ? 0 : -1}>
-              <Button variant="primary" disabled={!!blocked} onClick={() => setRunOpen(true)}>
-                <Play /> Run version {v.number}
-              </Button>
-            </span>
-          </Tip>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" asChild>
+              <Link to={`/workflows/${workflowId}`}>
+                <PencilLine /> Edit the draft
+              </Link>
+            </Button>
+            <Button variant="secondary" onClick={() => setRestoreOpen(true)}>
+              <RotateCcw /> Restore to draft
+            </Button>
+            <Tip label={blocked ?? `Run version ${v.number} on a task`}>
+              <span tabIndex={blocked ? 0 : -1}>
+                <Button variant="primary" disabled={!!blocked} onClick={() => setRunOpen(true)}>
+                  <Play /> Run version {v.number}
+                </Button>
+              </span>
+            </Tip>
+          </div>
         </div>
         {(v.issues.length > 0 || v.agent_changes.some((c) => c.state === "changed")) && (
           <div className="mt-4 space-y-3">
