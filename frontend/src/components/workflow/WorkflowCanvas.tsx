@@ -25,27 +25,40 @@ import { toast } from "sonner";
 import type { Role, WorkflowIssue } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { DropdownSeparator, Tip } from "@/components/ui/overlays";
+import { STATE, type VisualState } from "@/lib/status";
 import { cn } from "@/lib/utils";
 import { connect, disconnect, removeSteps, type Step, STEP_SIZE, stepTitle, tidy } from "@/lib/workflow";
 
-import { AgentMenu, agentColor, IssueIcon } from "./parts";
+import { AgentMenu, type AgentInfo, agentColor, APPROVAL_COLOR, ApprovalIcon, IssueIcon } from "./parts";
+
+/** A step's state in a run, shown on its node with an icon and a word. */
+export interface StepStatus {
+  state: VisualState;
+  label: string;
+}
 
 interface StepNodeData extends Record<string, unknown> {
   step: Step;
-  agent: Role | undefined;
+  agent: AgentInfo | undefined;
   issue?: WorkflowIssue["level"];
   agents: Role[];
   /** The only selected step, so it offers to add a step after it. */
   solo: boolean;
+  readOnly: boolean;
+  status?: StepStatus;
   onAddAfter: (after: string, agent: Role) => void;
+  onAddApprovalAfter?: (after: string) => void;
 }
 
 const HANDLE =
   "!size-3 !border-2 !border-accent !bg-panel opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 group-[.selected]:opacity-100";
 
 const StepNode = memo(function StepNode({ data, selected }: NodeProps) {
-  const { step, agent, issue, agents, solo, onAddAfter } = data as StepNodeData;
-  const color = agentColor(agent);
+  const { step, agent, issue, agents, solo, readOnly, status, onAddAfter, onAddApprovalAfter } = data as StepNodeData;
+  const approval = step.kind === "approval";
+  const color = approval ? APPROVAL_COLOR : agentColor(agent);
+  const Icon = approval ? ApprovalIcon : Bot;
+  const meta = status ? STATE[status.state] : null;
   return (
     <div
       className={cn(
@@ -53,19 +66,27 @@ const StepNode = memo(function StepNode({ data, selected }: NodeProps) {
         selected ? "selected border-accent ring-2 ring-accent/35" : issue === "error" ? "border-st-fail/70" : issue === "warning" ? "border-st-approval/70" : "border-line-soft hover:border-line",
       )}
     >
-      <Handle type="target" position={Position.Top} className={HANDLE} />
+      <Handle type="target" position={Position.Top} className={HANDLE} isConnectable={!readOnly} />
       <span className="w-1 shrink-0 rounded-l-[11px]" style={{ background: color }} />
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 px-3.5 py-2.5">
         <div className="flex items-center gap-2">
-          <Bot className="size-4 shrink-0" style={{ color }} />
+          <Icon className="size-4 shrink-0" style={{ color }} />
           <span className="truncate text-sm font-semibold text-text">{step.title.trim() || "Untitled step"}</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-text-2">
-          <span className={cn("truncate", !agent && "text-st-fail")}>{agent ? agent.name : step.agent ? `${step.agent} (not available)` : "Choose an agent"}</span>
-          {step.changes_code && (
-            <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-[6px] bg-raised px-1.5 text-2xs text-text-2">
-              <PenLine className="size-3" /> Edits code
+          <span className={cn("truncate", !approval && !agent && "text-st-fail")}>
+            {approval ? (status ? "Approval" : "Approval by you") : agent ? agent.name : step.agent ? `${step.agent} (not available)` : "Choose an agent"}
+          </span>
+          {meta && status ? (
+            <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-2xs font-medium" style={{ color: meta.color }}>
+              <meta.icon className={cn("size-3.5", meta.spin && "animate-spin motion-reduce:animate-none")} /> {status.label}
             </span>
+          ) : (
+            step.changes_code && (
+              <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-[6px] bg-raised px-1.5 text-2xs text-text-2">
+                <PenLine className="size-3" /> Edits code
+              </span>
+            )
           )}
         </div>
       </div>
@@ -80,11 +101,11 @@ const StepNode = memo(function StepNode({ data, selected }: NodeProps) {
           {issue === "error" ? "Fix" : "Check"}
         </span>
       )}
-      {selected && solo && (
+      {selected && solo && !readOnly && (
         // The menu renders in a portal, but React bubbles its clicks and keys through this node,
         // where React Flow would take them as selecting the node again.
         <div className="contents" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-          <AgentMenu agents={agents} onPick={(a) => onAddAfter(step.key, a)} align="center">
+          <AgentMenu agents={agents} onPick={(a) => onAddAfter(step.key, a)} onPickApproval={onAddApprovalAfter && (() => onAddApprovalAfter(step.key))} align="center">
             <button
               className="nodrag absolute -bottom-4 left-1/2 z-10 flex size-8 -translate-x-1/2 items-center justify-center rounded-full border border-line bg-panel text-text-2 shadow-sm hover:border-accent hover:text-accent"
               aria-label={`Add a step after ${step.title || "this step"}`}
@@ -94,7 +115,7 @@ const StepNode = memo(function StepNode({ data, selected }: NodeProps) {
           </AgentMenu>
         </div>
       )}
-      <Handle type="source" position={Position.Bottom} className={HANDLE} />
+      <Handle type="source" position={Position.Bottom} className={HANDLE} isConnectable={!readOnly} />
     </div>
   );
 });
@@ -117,14 +138,20 @@ const ARROW = { type: MarkerType.ArrowClosed, width: 16, height: 16, color: "var
 export interface WorkflowCanvasProps {
   steps: Step[];
   agents: Role[];
-  allRoles: Role[];
+  /** Every agent a step may name: today's, or those frozen into a version or run. */
+  allRoles: AgentInfo[];
   issues: WorkflowIssue[];
   selected: string | null;
   onSelect: (key: string | null) => void;
   onChange: (update: (steps: Step[]) => Step[], label?: string) => void;
   onAdd: (agent: Role, after?: string | null) => void;
+  onAddApproval?: (after?: string | null) => void;
   addMenuOpen: boolean;
   onAddMenuOpenChange: (open: boolean) => void;
+  /** A published version or a run: steps can be selected, not changed. */
+  readOnly?: boolean;
+  /** Each step's state in a run. */
+  status?: Map<string, StepStatus>;
   panelHidden?: boolean;
   /** Width covered by the settings panel when it floats over the canvas. */
   coveredRight?: number;
@@ -132,7 +159,25 @@ export interface WorkflowCanvasProps {
   emptyState?: ReactNode;
 }
 
-function Canvas({ steps, agents, allRoles, issues, selected, onSelect, onChange, onAdd, addMenuOpen, onAddMenuOpenChange, panelHidden, coveredRight = 0, onShowPanel, emptyState }: WorkflowCanvasProps) {
+function Canvas({
+  steps,
+  agents,
+  allRoles,
+  issues,
+  selected,
+  onSelect,
+  onChange,
+  onAdd,
+  onAddApproval,
+  addMenuOpen,
+  onAddMenuOpenChange,
+  readOnly = false,
+  status,
+  panelHidden,
+  coveredRight = 0,
+  onShowPanel,
+  emptyState,
+}: WorkflowCanvasProps) {
   const flow = useReactFlow();
   // Selection lives here, fed by React Flow's own select changes, so it can't echo back and forth
   // with the page's copy. The page only hears about a single selected step.
@@ -180,21 +225,34 @@ function Canvas({ steps, agents, allRoles, issues, selected, onSelect, onChange,
     return [
       { id: "@task", type: "anchor", position: { x: center - 85, y: top - 96 }, data: { kind: "task" }, style: { width: 170, height: 40 }, draggable: false, selectable: false, deletable: false, focusable: false },
       ...steps.map((s) => {
-        const agent = allRoles.find((r) => r.key === s.agent && r.enabled && !r.is_coordinator);
+        const agent = allRoles.find((r) => r.key === s.agent && r.enabled !== false && !r.is_coordinator);
         const level = levels.get(s.key);
+        const state = status?.get(s.key);
+        const who = s.kind === "approval" ? "approval by you" : agent ? agent.name : "no agent";
         return {
           id: s.key,
           type: "step",
           position: s.position,
           selected: picked.includes(s.key),
-          ariaLabel: `Step ${s.title || "untitled"}, ${agent ? agent.name : "no agent"}${level === "error" ? ", has a problem" : level === "warning" ? ", has a warning" : ""}`,
-          data: { step: s, agent, issue: level, agents, solo: picked.length === 1, onAddAfter: (after: string, a: Role) => onAdd(a, after) } satisfies StepNodeData,
+          draggable: !readOnly,
+          ariaLabel: `Step ${s.title || "untitled"}, ${who}${state ? `, ${state.label}` : ""}${level === "error" ? ", has a problem" : level === "warning" ? ", has a warning" : ""}`,
+          data: {
+            step: s,
+            agent,
+            issue: level,
+            agents,
+            solo: picked.length === 1,
+            readOnly,
+            status: state,
+            onAddAfter: (after: string, a: Role) => onAdd(a, after),
+            onAddApprovalAfter: onAddApproval && ((after: string) => onAddApproval(after)),
+          } satisfies StepNodeData,
           style: { width: STEP_SIZE.width, height: STEP_SIZE.height },
         };
       }),
       { id: "@result", type: "anchor", position: { x: center - 95, y: bottom + STEP_SIZE.height + 56 }, data: { kind: "result" }, style: { width: 190, height: 40 }, draggable: false, selectable: false, deletable: false, focusable: false },
     ];
-  }, [steps, allRoles, agents, levels, picked, onAdd]);
+  }, [steps, allRoles, agents, levels, picked, onAdd, onAddApproval, readOnly, status]);
 
   // React Flow owns positions while dragging; the draft gets them when a drag ends or a step moves by arrow key.
   const [nodes, setNodes] = useState<Node[]>(built);
@@ -242,10 +300,11 @@ function Canvas({ steps, agents, allRoles, issues, selected, onSelect, onChange,
 
   return (
     <div className="relative h-full w-full">
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+      <div className={cn("absolute top-4 left-4 z-10 flex items-center gap-2", readOnly && "hidden")}>
         <AgentMenu
           agents={agents}
           onPick={(a) => onAdd(a, selected)}
+          onPickApproval={onAddApproval && (() => onAddApproval(selected))}
           open={addMenuOpen}
           onOpenChange={onAddMenuOpenChange}
           footer={
@@ -286,7 +345,9 @@ function Canvas({ steps, agents, allRoles, issues, selected, onSelect, onChange,
           onSelect(list.length === 1 ? list[0] : null);
         }}
         onConnect={onConnect}
-        isValidConnection={(c) => !!c.source && !!c.target && !c.source.startsWith("@") && !c.target.startsWith("@") && c.source !== c.target}
+        nodesConnectable={!readOnly}
+        nodesDraggable={!readOnly}
+        isValidConnection={(c) => !readOnly && !!c.source && !!c.target && !c.source.startsWith("@") && !c.target.startsWith("@") && c.source !== c.target}
         onDelete={({ nodes: gone, edges: cut }) => {
           const keys = gone.filter((n) => !n.id.startsWith("@")).map((n) => n.id);
           onChange((s) => {
@@ -295,7 +356,7 @@ function Canvas({ steps, agents, allRoles, issues, selected, onSelect, onChange,
             return next;
           }, keys.length ? `Deleted ${keys.map((k) => stepTitle(steps, k)).join(", ")}` : "Removed a connection");
         }}
-        deleteKeyCode={["Delete", "Backspace"]}
+        deleteKeyCode={readOnly ? null : ["Delete", "Backspace"]}
         onPaneClick={() => onSelect(null)}
         proOptions={{ hideAttribution: true }}
         minZoom={0.3}
@@ -313,13 +374,13 @@ function Canvas({ steps, agents, allRoles, issues, selected, onSelect, onChange,
           </Button>
         </Tip>
       )}
-      {steps.length > 0 && <CanvasControls onTidy={() => onChange(tidy, "Tidied the layout")} />}
+      {steps.length > 0 && <CanvasControls onTidy={readOnly ? undefined : () => onChange(tidy, "Tidied the layout")} />}
       {!steps.length && emptyState}
     </div>
   );
 }
 
-function CanvasControls({ onTidy }: { onTidy: () => void }) {
+function CanvasControls({ onTidy }: { onTidy?: () => void }) {
   const flow = useReactFlow();
   const { zoom } = useViewport();
   const btn = "flex size-9 items-center justify-center rounded-[8px] text-text-2 hover:bg-raised hover:text-text";
@@ -340,15 +401,17 @@ function CanvasControls({ onTidy }: { onTidy: () => void }) {
           <Maximize2 className="size-4" />
         </button>
       </Tip>
-      <button
-        className={cn(btn, "w-auto gap-2 px-2.5 text-sm")}
-        onClick={() => {
-          onTidy();
-          setTimeout(() => void flow.fitView({ padding: 0.2, maxZoom: 1, minZoom: 0.9, duration: 200 }), 50);
-        }}
-      >
-        <Wand2 className="size-4" /> Tidy up
-      </button>
+      {onTidy && (
+        <button
+          className={cn(btn, "w-auto gap-2 px-2.5 text-sm")}
+          onClick={() => {
+            onTidy();
+            setTimeout(() => void flow.fitView({ padding: 0.2, maxZoom: 1, minZoom: 0.9, duration: 200 }), 50);
+          }}
+        >
+          <Wand2 className="size-4" /> Tidy up
+        </button>
+      )}
     </div>
   );
 }

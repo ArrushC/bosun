@@ -32,6 +32,7 @@ const approval: Approval = {
   expires_at: null,
   task_key: "BOS-1",
   task_title: "Fix",
+  run_status: "waiting_approval",
 };
 
 afterEach(() => vi.unstubAllGlobals());

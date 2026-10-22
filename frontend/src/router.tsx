@@ -15,6 +15,7 @@ import { WorkflowsPage } from "@/pages/WorkflowsPage";
 
 // The editor and its canvas tools are only needed when a workflow is open.
 const WorkflowEditorPage = lazy(() => import("@/pages/WorkflowEditorPage").then((m) => ({ default: m.WorkflowEditorPage })));
+const WorkflowVersionPage = lazy(() => import("@/pages/WorkflowVersionPage").then((m) => ({ default: m.WorkflowVersionPage })));
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense>
             <WorkflowEditorPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "workflows/:workflowId/versions/:number",
+        element: (
+          <Suspense>
+            <WorkflowVersionPage />
           </Suspense>
         ),
       },

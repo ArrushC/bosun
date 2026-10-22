@@ -1,34 +1,24 @@
-import { ArrowLeft, Check, ChevronRight, Ellipsis, History, Play, Plus, Redo2, RefreshCw, Trash2, TriangleAlert, Undo2, Workflow } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Ellipsis, History, Play, Plus, Redo2, RefreshCw, Trash2, TriangleAlert, Undo2, Upload, Workflow } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 import { ApiError } from "@/api/client";
-import { useDeleteWorkflow, useRoles, useRuns } from "@/api/hooks";
+import { useDeleteWorkflow, useRoles, useRuns, useWorkflowVersion, useWorkflowVersions } from "@/api/hooks";
 import type { Role, WorkflowIssue } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorNote, Kbd, StatusPill, TabPanel, Tabs } from "@/components/ui/display";
 import { DropdownContent, DropdownItem, DropdownMenu, DropdownSeparator, DropdownTrigger, Tip } from "@/components/ui/overlays";
-import { RunWorkflowDialog } from "@/components/workflow/RunWorkflowDialog";
+import { type RunSource, RunWorkflowDialog } from "@/components/workflow/RunWorkflowDialog";
 import { StepInspector, WorkflowDetails } from "@/components/workflow/StepInspector";
 import { WorkflowCanvas } from "@/components/workflow/WorkflowCanvas";
 import { AgentMenu, countIssues, IssueIcon, SaveStatus, stepAgents } from "@/components/workflow/parts";
 import { useWorkflowDraft } from "@/components/workflow/useWorkflowDraft";
+import { DraftBadge, draftState, PublishDialog, VersionList, versionContent } from "@/components/workflow/versions";
 import { RUN_LABEL, runState } from "@/lib/status";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import { cn, elapsed, formatDuration, plural, relativeTime } from "@/lib/utils";
-import { addStep, connect, disconnect, MAX_STEPS, removeSteps, type Step, stepTitle, updateStep } from "@/lib/workflow";
-
-function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const list = window.matchMedia(query);
-    const update = () => setMatches(list.matches);
-    update();
-    list.addEventListener?.("change", update);
-    return () => list.removeEventListener?.("change", update);
-  }, [query]);
-  return matches;
-}
+import { addStep, connect, disconnect, MAX_STEPS, removeSteps, specChanges, type Step, stepTitle, updateStep } from "@/lib/workflow";
 
 function typing(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
@@ -46,6 +36,11 @@ export function WorkflowEditorPage() {
   const { data: roles = [] } = useRoles();
   const agents = useMemo(() => stepAgents(roles), [roles]);
   const { data: runs } = useRuns({ workflow_id: workflowId });
+  const { data: versions } = useWorkflowVersions(workflowId);
+  const server = editor.query.data;
+  const latest = useWorkflowVersion(workflowId, server?.latest_version?.number ?? null);
+  // Compared here rather than by the server, so the draft's state follows each edit at once.
+  const changes = useMemo(() => (latest.data && draft ? specChanges(versionContent(latest.data), draft) : null), [latest.data, draft]);
   const remove = useDeleteWorkflow();
   const narrow = useMediaQuery("(max-width: 1180px)");
   const [selected, setSelected] = useState<string | null>(null);
@@ -53,10 +48,18 @@ export function WorkflowEditorPage() {
   const [problemsOpen, setProblemsOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [runOpen, setRunOpen] = useState(false);
+  const [runSource, setRunSource] = useState<RunSource | undefined>(undefined);
+  const [publishOpen, setPublishOpen] = useState(false);
   // A step just added or duplicated, whose name gets focus when its settings open.
   const [fresh, setFresh] = useState<string | null>(null);
   const [isNew] = useState(() => params.get("new") === "1");
   const tab = params.get("tab") ?? "editor";
+  const setTab = (v: string) => {
+    const next = new URLSearchParams(params);
+    if (v === "editor") next.delete("tab");
+    else next.set("tab", v);
+    setParams(next, { replace: true });
+  };
 
   useEffect(() => {
     if (params.has("new")) {
@@ -95,6 +98,20 @@ export function WorkflowEditorPage() {
         return;
       }
       const result = addStep(steps, { agent: agent.key, title: agent.name, changes_code: agent.permission_profile !== "read_only", after });
+      change((d) => ({ ...d, steps: result.steps }));
+      select(result.key);
+      setFresh(result.key);
+    },
+    [steps, change, select],
+  );
+
+  const addApproval = useCallback(
+    (after?: string | null) => {
+      if (steps.length >= MAX_STEPS) {
+        toast.error(`A workflow can have up to ${MAX_STEPS} steps.`);
+        return;
+      }
+      const result = addStep(steps, { kind: "approval", agent: null, title: "Approve", changes_code: false, after });
       change((d) => ({ ...d, steps: result.steps }));
       select(result.key);
       setFresh(result.key);
@@ -167,6 +184,17 @@ export function WorkflowEditorPage() {
 
   const runBlocked =
     editor.saveState === "conflict" ? "Resolve the save conflict first" : !steps.length ? "Add a step to run this workflow" : errors.length ? `Fix ${plural(errors.length, "problem")} first` : null;
+  const published = server?.latest_version ?? null;
+  const state = draftState(server ?? { latest_version: null, unpublished_changes: true }, changes);
+  const agentsChanged = (latest.data?.agent_changes ?? []).some((c) => c.state === "changed");
+  const publishBlocked =
+    runBlocked ?? (published && !state.changed && !agentsChanged ? `The draft is the same as version ${published.number}` : null);
+  // With a published version there is always something to run, even while the draft has problems.
+  const runDisabled = published ? null : runBlocked;
+  const openRun = (source?: RunSource) => {
+    setRunSource(source);
+    setRunOpen(true);
+  };
   const showPanel = !narrow || panelOpen;
 
   return (
@@ -180,6 +208,7 @@ export function WorkflowEditorPage() {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <h1 className="truncate text-lg font-semibold tracking-tight">{draft.name.trim() || "Untitled workflow"}</h1>
               <SaveStatus state={editor.saveState} onRetry={editor.retryNow} />
+              {server && <DraftBadge workflow={server} changes={changes} onClick={() => setTab("versions")} />}
             </div>
             {draft.description && <p className="mt-0.5 truncate text-sm text-text-2">{draft.description}</p>}
           </div>
@@ -195,9 +224,16 @@ export function WorkflowEditorPage() {
             )
           )}
           {runBlocked && !errors.length && <span className="text-sm text-text-3">{runBlocked}</span>}
-          <Tip label={runBlocked ?? "Run this workflow on a task"}>
-            <span tabIndex={runBlocked ? 0 : -1}>
-              <Button variant="primary" disabled={!!runBlocked} onClick={() => setRunOpen(true)}>
+          <Tip label={publishBlocked ?? "Publish the draft as a new version"}>
+            <span tabIndex={publishBlocked ? 0 : -1}>
+              <Button variant="secondary" disabled={!!publishBlocked} onClick={() => setPublishOpen(true)}>
+                <Upload /> Publish
+              </Button>
+            </span>
+          </Tip>
+          <Tip label={runDisabled ?? (published ? "Run a version or the draft on a task" : "Run this workflow on a task")}>
+            <span tabIndex={runDisabled ? 0 : -1}>
+              <Button variant="primary" disabled={!!runDisabled} onClick={() => openRun()}>
                 <Play /> Run
               </Button>
             </span>
@@ -256,14 +292,10 @@ export function WorkflowEditorPage() {
 
       <Tabs
         value={tab}
-        onValueChange={(v) => {
-          const next = new URLSearchParams(params);
-          if (v === "editor") next.delete("tab");
-          else next.set("tab", v);
-          setParams(next, { replace: true });
-        }}
+        onValueChange={setTab}
         tabs={[
           { value: "editor", label: "Editor" },
+          { value: "versions", label: "Versions", count: versions?.length },
           { value: "runs", label: "Runs", count: runs?.length },
         ]}
         className="min-h-0 flex-1"
@@ -280,6 +312,7 @@ export function WorkflowEditorPage() {
                 onSelect={select}
                 onChange={editSteps}
                 onAdd={add}
+                onAddApproval={addApproval}
                 addMenuOpen={addOpen}
                 onAddMenuOpenChange={setAddOpen}
                 panelHidden={!showPanel}
@@ -318,6 +351,7 @@ export function WorkflowEditorPage() {
                   else change((d) => ({ ...d, steps: next }));
                 }}
                 onAddAfter={(agent) => add(agent, selectedStep.key)}
+                onAddApprovalAfter={() => addApproval(selectedStep.key)}
                 onDuplicate={duplicate}
                 onDelete={deleteSelected}
               />
@@ -335,8 +369,21 @@ export function WorkflowEditorPage() {
               />
             ))}
         </TabPanel>
+        <TabPanel value="versions">
+          {server && (
+            <VersionList
+              workflowId={workflowId}
+              workflow={server}
+              changes={changes}
+              publishBlocked={publishBlocked}
+              onEditDraft={() => setTab("editor")}
+              onPublish={() => setPublishOpen(true)}
+              onRun={(n) => openRun(n)}
+            />
+          )}
+        </TabPanel>
         <TabPanel value="runs">
-          <WorkflowRuns workflowId={workflowId} onRun={runBlocked ? undefined : () => setRunOpen(true)} />
+          <WorkflowRuns workflowId={workflowId} onRun={runDisabled ? undefined : () => openRun()} />
         </TabPanel>
       </Tabs>
 
@@ -349,6 +396,20 @@ export function WorkflowEditorPage() {
         saving={editor.saveState !== "saved"}
         steps={steps}
         roles={roles}
+        draftState={published ? state.label.toLowerCase() : "not published"}
+        draftProblem={runBlocked}
+        initialSource={runSource}
+      />
+      <PublishDialog
+        open={publishOpen}
+        onOpenChange={setPublishOpen}
+        workflowId={workflowId}
+        revision={editor.revision}
+        draft={draft}
+        latest={latest.data ?? null}
+        roles={roles}
+        errors={errors}
+        saving={editor.saveState !== "saved"}
       />
     </div>
   );
@@ -437,8 +498,11 @@ function WorkflowRuns({ workflowId, onRun }: { workflowId: string; onRun?: () =>
           <li key={r.id}>
             <Link to={`/runs/${r.id}`} className="flex items-center gap-4 px-5 py-4 hover:bg-raised">
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-base">
-                  Run {r.number}: {r.task_title}
+                <span className="flex items-center gap-2 text-base">
+                  <span className="truncate">
+                    Run {r.number}: {r.task_title}
+                  </span>
+                  <span className="shrink-0 rounded-full bg-raised px-2 text-xs font-medium text-text-2">{r.workflow_version ? `Version ${r.workflow_version}` : "Draft"}</span>
                 </span>
                 <span className="mt-0.5 block truncate text-sm text-text-2">
                   <span className="mono mr-2 text-text-3">{r.task_key}</span>

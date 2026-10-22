@@ -3,17 +3,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 
-import { useProviderStatus, useRunWorkflow, useSettings, useTasks, useWorkspaces } from "@/api/hooks";
+import { useProviderStatus, useRunWorkflow, useSettings, useTasks, useWorkflowVersion, useWorkflowVersions, useWorkspaces } from "@/api/hooks";
 import type { Role, Task } from "@/api/types";
 import { Button } from "@/components/ui/button";
-import { ErrorNote, KeyValue, Notice, RoleTag, Spinner } from "@/components/ui/display";
+import { ErrorNote, KeyValue, Notice, Spinner } from "@/components/ui/display";
 import { Field, Input, NativeSelect, SearchInput, Segmented, Textarea } from "@/components/ui/inputs";
 import { Dialog } from "@/components/ui/overlays";
 import { RUN_LABEL } from "@/lib/status";
-import { cn, newIdempotencyKey, plural, tildePath } from "@/lib/utils";
-import type { Step } from "@/lib/workflow";
+import { cn, newIdempotencyKey, plural, relativeTime, tildePath } from "@/lib/utils";
+import { normalizeStep, sourceLabel, type Step } from "@/lib/workflow";
 
-import { agentColor } from "./parts";
+import { AgentChangeNotes, AgentTags } from "./versions";
 
 const ACTIVE = new Set(["queued", "preparing", "planning", "running", "waiting_approval"]);
 
@@ -25,6 +25,9 @@ function runnable(task: Task): string | null {
   return null;
 }
 
+/** What a run executes: the draft, or a published version's number. */
+export type RunSource = "draft" | number;
+
 export function RunWorkflowDialog({
   open,
   onOpenChange,
@@ -34,19 +37,33 @@ export function RunWorkflowDialog({
   saving = false,
   steps,
   roles,
+  draftState,
+  draftProblem,
+  initialSource,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workflowId: string;
   name: string;
+  /** The draft's saved revision; a draft run is refused if the draft changes after this. */
   revision: number;
   /** True while the draft has changes the server has not stored yet: the run would start from an older revision. */
   saving?: boolean;
+  /** The draft's steps. */
   steps: Step[];
   roles: Role[];
+  /** "unpublished changes", "same as version 3"… shown with the draft option. */
+  draftState: string;
+  /** Why the draft can't run, if it can't (a version still can). */
+  draftProblem?: string | null;
+  /** Preselect this source; otherwise the latest version, or the draft if there is none. */
+  initialSource?: RunSource;
 }) {
   const navigate = useNavigate();
   const run = useRunWorkflow(workflowId);
+  const { data: versions = [], isLoading: versionsLoading } = useWorkflowVersions(workflowId);
+  const [source, setSource] = useState<RunSource>("draft");
+  const chosen = useWorkflowVersion(workflowId, source === "draft" ? null : source);
   const { data: tasks = [], isLoading: tasksLoading } = useTasks();
   const { data: workspaces = [] } = useWorkspaces();
   const { data: settings } = useSettings();
@@ -65,6 +82,17 @@ export function RunWorkflowDialog({
     key.current = newIdempotencyKey();
     run.reset();
   }, [open]); // not `run`: it is a new object on every render
+  // Choose what to run once the dialog is open and the versions are known.
+  const picked = useRef(false);
+  useEffect(() => {
+    if (!open) {
+      picked.current = false;
+      return;
+    }
+    if (picked.current || versionsLoading) return;
+    picked.current = true;
+    setSource(initialSource ?? (versions[0]?.number ?? "draft"));
+  }, [open, versionsLoading, versions, initialSource]);
   useEffect(() => {
     if (!workspaceId && workspaces.length) setWorkspaceId(workspaces[0].id);
   }, [workspaces, workspaceId]);
@@ -74,10 +102,17 @@ export function RunWorkflowDialog({
     if (run.error) errorRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [run.error]);
 
+  const version = source === "draft" ? null : chosen.data && chosen.data.number === source ? chosen.data : null;
+  const runSteps = useMemo(() => (source === "draft" ? steps : (version?.spec.steps ?? []).map(normalizeStep)), [source, steps, version]);
   const agents = useMemo(() => {
-    const keys = [...new Set(steps.map((s) => s.agent).filter((a): a is string => !!a))];
+    if (version) return version.agents;
+    const keys = [...new Set(runSteps.filter((s) => s.kind === "agent").map((s) => s.agent).filter((a): a is string => !!a))];
     return keys.map((k) => roles.find((r) => r.key === k)).filter((r): r is Role => !!r);
-  }, [steps, roles]);
+  }, [version, runSteps, roles]);
+  const approvals = runSteps.filter((s) => s.kind === "approval").map((s) => s.title.trim() || "Untitled step");
+  const versionProblem = version?.issues[0]?.message ?? null;
+  const sourceProblem = source === "draft" ? (draftProblem ?? null) : chosen.error ? (chosen.error as Error).message : versionProblem;
+  const sourceLoading = source !== "draft" && !version && !chosen.error;
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
     return tasks
@@ -86,16 +121,19 @@ export function RunWorkflowDialog({
       .slice(0, 50);
   }, [tasks, query]);
 
-  const chosen = tasks.find((t) => t.id === taskId);
-  const ready = target === "new" ? title.trim().length > 0 && !!workspaceId : !!chosen && !runnable(chosen);
+  const chosenTask = tasks.find((t) => t.id === taskId);
+  const ready = target === "new" ? title.trim().length > 0 && !!workspaceId : !!chosenTask && !runnable(chosenTask);
   const parallel = settings?.execution.max_parallel_per_run;
+  const waitingOnDraft = source === "draft" && saving;
+  const canStart = ready && !waitingOnDraft && !sourceProblem && !sourceLoading && !run.isPending;
 
   const start = () => {
-    if (!ready || saving || run.isPending) return;
+    if (!canStart) return;
+    const what = { revision, ...(source === "draft" ? {} : { version: source }) };
     run.mutate(
       {
         idempotencyKey: key.current,
-        body: target === "new" ? { revision, new_task: { title: title.trim(), description: description.trim(), workspace_id: workspaceId } } : { revision, task_id: taskId },
+        body: target === "new" ? { ...what, new_task: { title: title.trim(), description: description.trim(), workspace_id: workspaceId } } : { ...what, task_id: taskId },
       },
       {
         onSuccess: (r) => {
@@ -104,7 +142,7 @@ export function RunWorkflowDialog({
           setDescription("");
           setTaskId(null);
           toast.success(`Run ${r.number} started on ${r.task_key}`, {
-            description: `${name} is running in its own worktree.`,
+            description: `${name}, ${sourceLabel(source === "draft" ? null : source)}, is running in its own worktree.`,
             action: { label: "Open run", onClick: () => navigate(`/runs/${r.id}`) },
           });
         },
@@ -121,11 +159,11 @@ export function RunWorkflowDialog({
       description="The workflow runs on a board task, in its own worktree. Nothing reaches your branch until you merge it."
       footer={
         <>
-          {saving && <span className="mr-auto text-sm text-text-3">Saving your latest changes…</span>}
+          {waitingOnDraft && <span className="mr-auto text-sm text-text-3">Saving your latest changes…</span>}
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={start} disabled={!ready || saving || run.isPending}>
+          <Button variant="primary" onClick={start} disabled={!canStart}>
             {run.isPending ? <Spinner className="text-accent-fg" /> : <Play />} Start run
           </Button>
         </>
@@ -138,6 +176,51 @@ export function RunWorkflowDialog({
           start();
         }}
       >
+        <Field label="What to run" hint={source === "draft" ? "The draft as it is now. Publish it to keep a fixed copy." : "A published version: fixed steps, with its agents as they were when it was published."}>
+          <NativeSelect value={String(source)} onChange={(e) => setSource(e.target.value === "draft" ? "draft" : Number(e.target.value))} disabled={versionsLoading}>
+            {versions.map((v, i) => (
+              <option key={v.number} value={v.number}>
+                Version {v.number}
+                {i === 0 ? " (latest)" : ""}
+                {v.note ? `: ${v.note.length > 60 ? `${v.note.slice(0, 60)}…` : v.note}` : ""}
+              </option>
+            ))}
+            <option value="draft" disabled={!!draftProblem}>
+              Draft ({draftProblem ? "has problems" : draftState})
+            </option>
+          </NativeSelect>
+        </Field>
+        <section className="rounded-[14px] bg-sunken px-5 py-4">
+          <h3 className="mb-3 text-sm font-semibold">What will happen</h3>
+          <KeyValue
+            items={[
+              [
+                "Runs",
+                version ? `Version ${version.number}, published ${relativeTime(version.created_at)}` : source === "draft" ? "The draft as it is now" : sourceLoading ? "Loading…" : "—",
+              ],
+              ["Steps", `${plural(runSteps.length, "step")}${parallel ? `, up to ${parallel} agents at a time` : ""}`],
+              ["Agents", <AgentTags agents={agents} />],
+              [
+                "Billing",
+                settings?.execution.backend === "demo"
+                  ? "Demo backend: no Claude calls are made"
+                  : provider
+                    ? provider.ready
+                      ? provider.summary
+                      : `${provider.summary} (fix this before running)`
+                    : "Checking…",
+              ],
+              [
+                "Approvals",
+                approvals.length
+                  ? `The run waits for you at ${approvals.join(", ")}. Shell commands outside the allowed list also ask you first.`
+                  : "Shell commands outside the allowed list ask you first",
+              ],
+            ]}
+          />
+        </section>
+        {version && <AgentChangeNotes changes={version.agent_changes} version={version.number} />}
+        {sourceProblem && <ErrorNote title={source === "draft" ? "The draft can't run yet" : `Version ${source} can't run now`}>{sourceProblem}</ErrorNote>}
         <Segmented
           value={target}
           onChange={setTarget}
@@ -198,33 +281,6 @@ export function RunWorkflowDialog({
             </div>
           </div>
         )}
-        <section className="rounded-[14px] bg-sunken px-5 py-4">
-          <h3 className="mb-3 text-sm font-semibold">What will happen</h3>
-          <KeyValue
-            items={[
-              ["Steps", `${plural(steps.length, "step")}${parallel ? `, up to ${parallel} at a time` : ""}`],
-              [
-                "Agents",
-                <span className="flex flex-wrap gap-1.5">
-                  {agents.map((a) => (
-                    <RoleTag key={a.key} name={a.name} color={agentColor(a)} />
-                  ))}
-                </span>,
-              ],
-              [
-                "Billing",
-                settings?.execution.backend === "demo"
-                  ? "Demo backend: no Claude calls are made"
-                  : provider
-                    ? provider.ready
-                      ? provider.summary
-                      : `${provider.summary} (fix this before running)`
-                    : "Checking…",
-              ],
-              ["Approvals", "Shell commands outside the allowed list ask you first"],
-            ]}
-          />
-        </section>
         {run.error && (
           <div ref={errorRef}>
             <ErrorNote title="The run did not start">{(run.error as Error).message}</ErrorNote>

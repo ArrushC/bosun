@@ -1,10 +1,10 @@
-import { Check, OctagonAlert, TriangleAlert } from "lucide-react";
+import { Check, OctagonAlert, TriangleAlert, UserCheck } from "lucide-react";
 import { type ReactNode, useRef } from "react";
 
 import type { Role, WorkflowIssue } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/display";
-import { DropdownContent, DropdownItem, DropdownLabel, DropdownMenu, DropdownTrigger } from "@/components/ui/overlays";
+import { DropdownContent, DropdownItem, DropdownLabel, DropdownMenu, DropdownSeparator, DropdownTrigger } from "@/components/ui/overlays";
 import { PROFILE_LABEL, roleColor } from "@/lib/status";
 import { cn } from "@/lib/utils";
 
@@ -15,9 +15,23 @@ export function stepAgents(roles: Role[]): Role[] {
   return roles.filter((r) => r.enabled && !r.is_coordinator);
 }
 
-export function agentColor(role: Pick<Role, "key" | "color"> | undefined): string {
+/** An agent as a canvas draws it: one of today's agents, or one frozen into a version or run. */
+export interface AgentInfo {
+  key: string;
+  name: string;
+  color?: string | null;
+  enabled?: boolean;
+  is_coordinator?: boolean;
+  permission_profile?: string;
+}
+
+export function agentColor(role: Pick<AgentInfo, "key" | "color"> | undefined): string {
   return role ? roleColor(role.key, role.color) : "var(--line)";
 }
+
+/** Approval steps wear the approval colour, with a person icon, wherever steps are drawn. */
+export const APPROVAL_COLOR = "var(--st-approval)";
+export const ApprovalIcon = UserCheck;
 
 /**
  * An "add a step" menu: pick an agent and a step for it is added. Focus then goes to the new
@@ -31,6 +45,7 @@ export function AgentMenu({
   open,
   onOpenChange,
   footer,
+  onPickApproval,
 }: {
   children: ReactNode;
   agents: Role[];
@@ -39,6 +54,8 @@ export function AgentMenu({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   footer?: ReactNode;
+  /** Offer an approval step too. */
+  onPickApproval?: () => void;
 }) {
   const picked = useRef(false);
   return (
@@ -58,6 +75,22 @@ export function AgentMenu({
             onPick(a);
           }}
         />
+        {onPickApproval && (
+          <>
+            <DropdownSeparator />
+            <DropdownLabel>Your decision</DropdownLabel>
+            <DropdownItem
+              onSelect={() => {
+                picked.current = true;
+                onPickApproval();
+              }}
+            >
+              <ApprovalIcon className="size-4 shrink-0" style={{ color: APPROVAL_COLOR }} />
+              <span className="flex-1">Approval</span>
+              <span className="pl-4 text-xs text-text-3">Waits for you</span>
+            </DropdownItem>
+          </>
+        )}
         {footer}
       </DropdownContent>
     </DropdownMenu>

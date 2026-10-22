@@ -1,4 +1,4 @@
-import { addStep, connect, disconnect, newStepKey, normalizeStep, removeSteps, type Step, tidy, upstream } from "./workflow";
+import { addStep, connect, disconnect, executionOrder, hasChanges, newStepKey, normalizeStep, removeSteps, specChanges, type Step, tidy, upstream } from "./workflow";
 
 const step = (key: string, after: string[] = [], position = { x: 0, y: 0 }): Step => normalizeStep({ key, title: key, agent: "implementer", instructions: "", changes_code: true, after, position });
 
@@ -50,5 +50,41 @@ describe("workflow drafts", () => {
     expect(at.b.y).toBe(at.c.y);
     expect(at.b.x).not.toBe(at.c.x);
     expect(at.d.y).toBeGreaterThan(at.b.y);
+  });
+});
+
+describe("versions: what changed", () => {
+  const base = { name: "Fix", description: "", steps: [step("a"), step("b", ["a"], { x: 0, y: 140 })] };
+
+  it("names added, removed and changed steps, and the fields that changed", () => {
+    const after = {
+      name: "Fix it",
+      description: "",
+      steps: [{ ...base.steps[0], instructions: "Look closer.", after: [] }, step("c", ["a"])],
+    };
+    const changes = specChanges(base, after);
+    expect(changes.name).toBe(true);
+    expect(changes.added.map((s) => s.key)).toEqual(["c"]);
+    expect(changes.removed.map((s) => s.key)).toEqual(["b"]);
+    expect(changes.changed).toEqual([{ key: "a", title: "a", fields: ["instructions"] }]);
+    expect(hasChanges(changes)).toBe(true);
+  });
+
+  it("counts layout-only moves, ignores the order of waits, and finds no change in a copy", () => {
+    const moved = { ...base, steps: [{ ...base.steps[0], position: { x: 50, y: 0 } }, base.steps[1]] };
+    expect(specChanges(base, moved)).toMatchObject({ moved: 1, changed: [] });
+    const joined = { ...base, steps: [step("x"), step("y"), step("z", ["x", "y"])] };
+    const reordered = { ...joined, steps: [step("x"), step("y"), step("z", ["y", "x"])] };
+    expect(hasChanges(specChanges(joined, reordered))).toBe(false);
+    expect(hasChanges(specChanges(base, structuredClone(base)))).toBe(false);
+  });
+
+  it("reads steps saved without a kind as agent steps", () => {
+    expect(normalizeStep({ key: "old", title: "Old", instructions: "", changes_code: false }).kind).toBe("agent");
+  });
+
+  it("orders steps so that everything a step waits for comes first", () => {
+    const steps = [step("final", ["left", "right"], { x: 0, y: 280 }), step("right", ["start"], { x: 280, y: 140 }), step("left", ["start"], { x: 0, y: 140 }), step("start")];
+    expect(executionOrder(steps).map((s) => s.key)).toEqual(["start", "left", "right", "final"]);
   });
 });

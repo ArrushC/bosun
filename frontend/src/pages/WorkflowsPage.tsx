@@ -1,10 +1,13 @@
 import { ChevronRight, Plus, RefreshCw, Workflow } from "lucide-react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { useCreateWorkflow, useWorkflows } from "@/api/hooks";
+import type { WorkflowTemplate } from "@/api/types";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorNote, StatusPill } from "@/components/ui/display";
+import { NewWorkflowDialog, TemplateGallery } from "@/components/workflow/templates";
 import { RUN_LABEL, runState } from "@/lib/status";
 import { plural, relativeTime } from "@/lib/utils";
 
@@ -12,20 +15,18 @@ export function WorkflowsPage() {
   const { data: workflows, isLoading, error, refetch } = useWorkflows();
   const create = useCreateWorkflow();
   const navigate = useNavigate();
+  const [dialog, setDialog] = useState<{ open: boolean; template: WorkflowTemplate | null }>({ open: false, template: null });
 
-  const newWorkflow = () =>
-    create.mutate({ name: "Untitled workflow" }, { onSuccess: (w) => navigate(`/workflows/${w.id}?new=1`) });
+  const blank = () => create.mutate({ name: "Untitled workflow" }, { onSuccess: (w) => navigate(`/workflows/${w.id}?new=1`) });
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         title="Workflows"
         actions={
-          workflows?.length ? (
-            <Button variant="primary" onClick={newWorkflow} disabled={create.isPending}>
-              <Plus /> New workflow
-            </Button>
-          ) : null
+          <Button variant="primary" onClick={() => setDialog({ open: true, template: null })} disabled={create.isPending}>
+            <Plus /> New workflow
+          </Button>
         }
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-8 pb-12">
@@ -55,18 +56,18 @@ export function WorkflowsPage() {
           </ErrorNote>
         )}
         {workflows && workflows.length === 0 && (
-          <EmptyState
-            icon={Workflow}
-            title="No workflows yet"
-            action={
-              <Button variant="primary" onClick={newWorkflow} disabled={create.isPending}>
-                <Plus /> New workflow
-              </Button>
-            }
-          >
-            A workflow is a plan of agent steps you can run again and again. Run it on a board task, and each step's agent builds on the
-            reports of the steps before it.
-          </EmptyState>
+          <>
+            <EmptyState icon={Workflow} title="No workflows yet" className="pt-12 pb-10">
+              A workflow is a plan of agent steps you can run again and again. Run it on a board task, and each step's agent builds on the
+              reports of the steps before it.
+            </EmptyState>
+            <section aria-labelledby="templates-heading">
+              <h2 id="templates-heading" className="text-md font-semibold">
+                Start from a template
+              </h2>
+              <TemplateGallery onPick={(t) => setDialog({ open: true, template: t })} onBlank={blank} busy={create.isPending} />
+            </section>
+          </>
         )}
         {workflows && workflows.length > 0 && (
           <ul className="divide-y divide-line-soft overflow-hidden rounded-panel bg-panel">
@@ -79,6 +80,10 @@ export function WorkflowsPage() {
                     <span className="mt-0.5 block truncate text-sm text-text-2">{w.description || "No description"}</span>
                   </span>
                   <span className="hidden w-20 shrink-0 text-sm text-text-2 lg:block">{plural(w.steps, "step")}</span>
+                  <span className="hidden w-44 shrink-0 text-sm lg:block">
+                    {w.latest_version ? <span className="text-text-2">Version {w.latest_version.number}</span> : <span className="text-text-3">Not published</span>}
+                    {w.latest_version && w.unpublished_changes && <span className="block text-xs text-text-3">Draft has changes</span>}
+                  </span>
                   <span className="hidden w-40 shrink-0 text-xs text-text-3 xl:block">Edited {relativeTime(w.updated_at)}</span>
                   <span className="flex w-44 shrink-0 items-center justify-end gap-2 text-xs text-text-3 xl:w-72">
                     {w.last_run ? (
@@ -100,6 +105,7 @@ export function WorkflowsPage() {
           </ul>
         )}
       </div>
+      <NewWorkflowDialog open={dialog.open} onOpenChange={(open) => setDialog((d) => ({ ...d, open }))} template={dialog.template} />
     </div>
   );
 }

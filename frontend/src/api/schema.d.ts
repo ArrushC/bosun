@@ -863,6 +863,64 @@ export interface paths {
         patch: operations["update_workflow_api_v1_workflows__workflow_id__patch"];
         trace?: never;
     };
+    "/api/v1/workflows/{workflow_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Versions */
+        get: operations["list_versions_api_v1_workflows__workflow_id__versions_get"];
+        put?: never;
+        /**
+         * Publish Version
+         * @description Publish the draft, as it is at `revision`, as the next version.
+         */
+        post: operations["publish_version_api_v1_workflows__workflow_id__versions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workflows/{workflow_id}/versions/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Version */
+        get: operations["get_version_api_v1_workflows__workflow_id__versions__number__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workflows/{workflow_id}/versions/{number}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Version
+         * @description Replace the draft's name, description and steps with a version's. The version stays.
+         */
+        post: operations["restore_version_api_v1_workflows__workflow_id__versions__number__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workflows/{workflow_id}/runs": {
         parameters: {
             query?: never;
@@ -874,9 +932,29 @@ export interface paths {
         put?: never;
         /**
          * Run Workflow
-         * @description Run the current draft on an existing task, or on a new task created for it.
+         * @description Run a published version or the draft, on an existing task or a new task made for it.
          */
         post: operations["run_workflow_api_v1_workflows__workflow_id__runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workflow-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Templates
+         * @description The built-in templates, with what still needs configuring before one can run here.
+         */
+        get: operations["list_templates_api_v1_workflow_templates_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -908,6 +986,23 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /**
+         * AgentChange
+         * @description How an agent a version uses differs from that agent today.
+         */
+        AgentChange: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** State */
+            state: string;
+            /**
+             * Fields
+             * @default []
+             */
+            fields: string[];
         };
         /** AppSettings */
         "AppSettings-Input": {
@@ -984,6 +1079,8 @@ export interface components {
             task_key: string | null;
             /** Task Title */
             task_title: string | null;
+            /** Run Status */
+            run_status: string | null;
         };
         /** ApprovalResolve */
         ApprovalResolve: {
@@ -1851,6 +1948,12 @@ export interface components {
             demo_scenario?: {
                 [key: string]: unknown;
             };
+            /** Workflow Id */
+            workflow_id?: string | null;
+            /** Workflow Version */
+            workflow_version?: number | null;
+            /** Workflow Revision */
+            workflow_revision?: number | null;
         };
         /** RunListItem */
         RunListItem: {
@@ -1907,6 +2010,8 @@ export interface components {
             workflow_id: string | null;
             /** Workflow Name */
             workflow_name: string | null;
+            /** Workflow Version */
+            workflow_version: number | null;
         };
         /** RunOut */
         RunOut: {
@@ -1971,6 +2076,10 @@ export interface components {
             ended_at: string | null;
             /** Is Demo */
             is_demo: boolean;
+            /** Workflow Id */
+            workflow_id: string | null;
+            /** Workflow Version */
+            workflow_version: number | null;
             /**
              * Active
              * @default false
@@ -2145,6 +2254,23 @@ export interface components {
              */
             live: boolean;
         };
+        /**
+         * SetupItem
+         * @description Something to configure before a workflow made from the template can run.
+         */
+        SetupItem: {
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "required" | "recommended";
+            /** Done */
+            done: boolean;
+            /** Message */
+            message: string;
+            /** Link */
+            link?: string | null;
+        };
         /** SourceRecordOut */
         SourceRecordOut: {
             /** Id */
@@ -2267,6 +2393,11 @@ export interface components {
             id: string;
             /** Key */
             key: string;
+            /**
+             * Kind
+             * @default agent
+             */
+            kind: string;
             /** Position */
             position: number;
             /** Title */
@@ -2534,6 +2665,20 @@ export interface components {
             /** Archived */
             archived?: boolean | null;
         };
+        /** TemplateOut */
+        TemplateOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Outline */
+            outline: string;
+            spec: components["schemas"]["WorkflowSpec"];
+            /** Setup */
+            setup: components["schemas"]["SetupItem"][];
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -2547,6 +2692,25 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /**
+         * VersionAgent
+         * @description An agent as a version froze it: what its steps run with.
+         */
+        VersionAgent: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Permission Profile */
+            permission_profile: string;
+            /** Model */
+            model: string | null;
+            /**
+             * Color
+             * @default slate
+             */
+            color: string;
+        };
         /** WorkflowCreate */
         WorkflowCreate: {
             /** Name */
@@ -2557,6 +2721,8 @@ export interface components {
              */
             description: string;
             spec?: components["schemas"]["WorkflowSpec"];
+            /** Template */
+            template?: string | null;
         };
         /** WorkflowListItem */
         WorkflowListItem: {
@@ -2578,6 +2744,14 @@ export interface components {
             /** Run Count */
             run_count: number;
             last_run: components["schemas"]["WorkflowRunBrief"] | null;
+            /** Template */
+            template: string | null;
+            latest_version: components["schemas"]["WorkflowVersionBrief"] | null;
+            /**
+             * Unpublished Changes
+             * @default true
+             */
+            unpublished_changes: boolean;
         };
         /** WorkflowOut */
         WorkflowOut: {
@@ -2602,6 +2776,29 @@ export interface components {
             updated_at: string;
             /** Issues */
             issues: components["schemas"]["Issue"][];
+            /** Template */
+            template: string | null;
+            latest_version: components["schemas"]["WorkflowVersionBrief"] | null;
+            /**
+             * Unpublished Changes
+             * @default true
+             */
+            unpublished_changes: boolean;
+        };
+        /** WorkflowPublish */
+        WorkflowPublish: {
+            /** Revision */
+            revision: number;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+        };
+        /** WorkflowRestore */
+        WorkflowRestore: {
+            /** Revision */
+            revision: number;
         };
         /** WorkflowRunBrief */
         WorkflowRunBrief: {
@@ -2625,6 +2822,8 @@ export interface components {
         WorkflowRunCreate: {
             /** Revision */
             revision: number;
+            /** Version */
+            version?: number | null;
             /** Task Id */
             task_id?: string | null;
             new_task?: components["schemas"]["NewTaskIn"] | null;
@@ -2638,6 +2837,12 @@ export interface components {
         WorkflowStep: {
             /** Key */
             key: string;
+            /**
+             * Kind
+             * @default agent
+             * @enum {string}
+             */
+            kind: "agent" | "approval";
             /**
              * Title
              * @default
@@ -2676,6 +2881,65 @@ export interface components {
             /** Description */
             description?: string | null;
             spec?: components["schemas"]["WorkflowSpec"] | null;
+        };
+        /** WorkflowVersionBrief */
+        WorkflowVersionBrief: {
+            /** Number */
+            number: number;
+            /** Name */
+            name: string;
+            /** Note */
+            note: string;
+            /** Steps */
+            steps: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Draft Revision */
+            draft_revision: number;
+            /**
+             * Run Count
+             * @default 0
+             */
+            run_count: number;
+        };
+        /** WorkflowVersionOut */
+        WorkflowVersionOut: {
+            /** Number */
+            number: number;
+            /** Name */
+            name: string;
+            /** Note */
+            note: string;
+            /** Steps */
+            steps: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Draft Revision */
+            draft_revision: number;
+            /**
+             * Run Count
+             * @default 0
+             */
+            run_count: number;
+            /** Workflow Id */
+            workflow_id: string;
+            /** Description */
+            description: string;
+            spec: components["schemas"]["WorkflowSpec"];
+            /** Agents */
+            agents: components["schemas"]["VersionAgent"][];
+            /** Agent Changes */
+            agent_changes: components["schemas"]["AgentChange"][];
+            /** Issues */
+            issues: components["schemas"]["Issue"][];
+            /** Is Latest */
+            is_latest: boolean;
         };
         /** WorkspaceCreate */
         WorkspaceCreate: {
@@ -4709,6 +4973,140 @@ export interface operations {
             };
         };
     };
+    list_versions_api_v1_workflows__workflow_id__versions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workflow_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowVersionBrief"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_version_api_v1_workflows__workflow_id__versions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workflow_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowPublish"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowVersionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_version_api_v1_workflows__workflow_id__versions__number__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workflow_id: string;
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowVersionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_version_api_v1_workflows__workflow_id__versions__number__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workflow_id: string;
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowRestore"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     run_workflow_api_v1_workflows__workflow_id__runs_post: {
         parameters: {
             query?: never;
@@ -4742,6 +5140,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_templates_api_v1_workflow_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateOut"][];
                 };
             };
         };

@@ -9,7 +9,7 @@ import { PROFILE_DESCRIPTION } from "@/lib/status";
 import { cn } from "@/lib/utils";
 import { MAX_STEPS, type Step, stepTitle, upstream } from "@/lib/workflow";
 
-import { AgentMenu, agentColor, IssueIcon } from "./parts";
+import { AgentMenu, agentColor, APPROVAL_COLOR, ApprovalIcon, IssueIcon } from "./parts";
 
 const MODELS = [
   ["", "The agent's default"],
@@ -66,11 +66,30 @@ export interface StepInspectorProps {
   onRemoveAfter: (key: string) => void;
   onWaitFor: (key: string) => void;
   onAddAfter: (agent: Role) => void;
+  onAddApprovalAfter: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
 }
 
-export function StepInspector({ step, steps, roles, agents, issues, overlay, onClose, onEdit, onCheckpoint, focusName, onRemoveAfter, onWaitFor, onAddAfter, onDuplicate, onDelete }: StepInspectorProps) {
+export function StepInspector({
+  step,
+  steps,
+  roles,
+  agents,
+  issues,
+  overlay,
+  onClose,
+  onEdit,
+  onCheckpoint,
+  focusName,
+  onRemoveAfter,
+  onWaitFor,
+  onAddAfter,
+  onAddApprovalAfter,
+  onDuplicate,
+  onDelete,
+}: StepInspectorProps) {
+  const approval = step.kind === "approval";
   const [advanced, setAdvanced] = useState(step.model != null || step.max_turns != null || step.timeout_minutes != null || step.retries != null);
   const role = roles.find((r) => r.key === step.agent);
   const usable = role && role.enabled && !role.is_coordinator;
@@ -98,7 +117,11 @@ export function StepInspector({ step, steps, roles, agents, issues, overlay, onC
   return (
     <Panel label={`${step.title || "Step"} settings`} overlay={overlay} onClose={onClose}>
       <div className={cn("flex items-center gap-3 px-6 pt-5 pb-4", overlay && "pr-14")}>
-        <Bot className="size-5 shrink-0" style={{ color: agentColor(usable ? role : undefined) }} />
+        {approval ? (
+          <ApprovalIcon className="size-5 shrink-0" style={{ color: APPROVAL_COLOR }} />
+        ) : (
+          <Bot className="size-5 shrink-0" style={{ color: agentColor(usable ? role : undefined) }} />
+        )}
         <h2 className="min-w-0 flex-1 truncate text-md font-semibold">{step.title.trim() || "Untitled step"}</h2>
         <Tip label="Duplicate step">
           <Button variant="ghost" size="icon-sm" onClick={onDuplicate} disabled={steps.length >= MAX_STEPS} aria-label="Duplicate step">
@@ -112,6 +135,11 @@ export function StepInspector({ step, steps, roles, agents, issues, overlay, onC
         </Tip>
       </div>
       <div className="space-y-6 px-6 pb-8">
+        {approval && (
+          <p className="-mt-2 text-sm text-text-2">
+            An approval step: the run waits here until you approve or reject. The steps after it run only if you approve; other branches carry on either way.
+          </p>
+        )}
         <FieldIssues issues={general} />
         <div className="space-y-2">
           <Field label="Name">
@@ -119,34 +147,42 @@ export function StepInspector({ step, steps, roles, agents, issues, overlay, onC
           </Field>
           <FieldIssues issues={forField("title")} />
         </div>
+        {!approval && (
+          <div className="space-y-2">
+            <Field label="Agent" hint={usable ? PROFILE_DESCRIPTION[role.permission_profile] : undefined}>
+              <NativeSelect
+                value={step.agent ?? ""}
+                onChange={(e) => {
+                  const next = roles.find((r) => r.key === e.target.value);
+                  onEdit({ agent: e.target.value || null, ...(next && next.permission_profile === "read_only" ? { changes_code: false } : {}) });
+                }}
+                aria-invalid={forField("agent").some((i) => i.level === "error")}
+                className={cn(forField("agent").some((i) => i.level === "error") && "border-st-fail")}
+              >
+                {!usable && <option value={step.agent ?? ""}>{step.agent ? `${role?.name ?? step.agent} (not available)` : "Choose an agent"}</option>}
+                {agents.map((a) => (
+                  <option key={a.key} value={a.key}>
+                    {a.name}
+                  </option>
+                ))}
+              </NativeSelect>
+            </Field>
+            <FieldIssues issues={forField("agent")} />
+          </div>
+        )}
         <div className="space-y-2">
-          <Field label="Agent" hint={usable ? PROFILE_DESCRIPTION[role.permission_profile] : undefined}>
-            <NativeSelect
-              value={step.agent ?? ""}
-              onChange={(e) => {
-                const next = roles.find((r) => r.key === e.target.value);
-                onEdit({ agent: e.target.value || null, ...(next && next.permission_profile === "read_only" ? { changes_code: false } : {}) });
-              }}
-              aria-invalid={forField("agent").some((i) => i.level === "error")}
-              className={cn(forField("agent").some((i) => i.level === "error") && "border-st-fail")}
-            >
-              {!usable && <option value={step.agent ?? ""}>{step.agent ? `${role?.name ?? step.agent} (not available)` : "Choose an agent"}</option>}
-              {agents.map((a) => (
-                <option key={a.key} value={a.key}>
-                  {a.name}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
-          <FieldIssues issues={forField("agent")} />
-        </div>
-        <div className="space-y-2">
-          <Field label="Instructions" hint="The agent also sees the task's title and description, and the reports of the steps it runs after.">
-            <Textarea value={step.instructions} rows={5} maxLength={8000} {...text} onChange={(e) => onEdit({ instructions: e.target.value }, { history: false })} placeholder="What should this agent do in this step?" />
-          </Field>
+          {approval ? (
+            <Field label="What to check" hint="You see this with the reports of the steps it waits for, and the changes so far, when the run gets here.">
+              <Textarea value={step.instructions} rows={5} maxLength={8000} {...text} onChange={(e) => onEdit({ instructions: e.target.value }, { history: false })} placeholder="What should you check before approving?" />
+            </Field>
+          ) : (
+            <Field label="Instructions" hint="The agent also sees the task's title and description, and the reports of the steps it runs after.">
+              <Textarea value={step.instructions} rows={5} maxLength={8000} {...text} onChange={(e) => onEdit({ instructions: e.target.value }, { history: false })} placeholder="What should this agent do in this step?" />
+            </Field>
+          )}
           <FieldIssues issues={forField("instructions")} />
         </div>
-        <div className="space-y-2">
+        <div className={cn("space-y-2", approval && "hidden")}>
           <div className="flex items-start gap-4">
             <div className="min-w-0 flex-1">
               <p id={`changes-${step.key}`} className="text-sm font-medium">Changes code</p>
@@ -161,9 +197,9 @@ export function StepInspector({ step, steps, roles, agents, issues, overlay, onC
           <FieldIssues issues={forField("changes_code")} />
         </div>
         <div className="space-y-2">
-          <p className="text-sm font-medium">Runs after</p>
+          <p className="text-sm font-medium">{approval ? "Asks after" : "Runs after"}</p>
           <div className="flex flex-wrap items-center gap-2">
-            {step.after.length === 0 && <span className="text-sm text-text-3">Starts with the run</span>}
+            {step.after.length === 0 && <span className="text-sm text-text-3">{approval ? "As soon as the run starts" : "Starts with the run"}</span>}
             {step.after.map((key) => (
               <span key={key} className="inline-flex h-8 items-center gap-1 rounded-control bg-raised pr-1 pl-3 text-sm">
                 {stepTitle(steps, key)}
@@ -199,14 +235,14 @@ export function StepInspector({ step, steps, roles, agents, issues, overlay, onC
                 ))}
               </DropdownContent>
             </DropdownMenu>
-            <AgentMenu agents={agents} onPick={onAddAfter}>
+            <AgentMenu agents={agents} onPick={onAddAfter} onPickApproval={onAddApprovalAfter}>
               <Button size="sm" variant="ghost" disabled={steps.length >= MAX_STEPS}>
                 <Plus /> Add a step after this one
               </Button>
             </AgentMenu>
           </div>
         </div>
-        <section className="rounded-[12px] border border-line-soft">
+        <section className={cn("rounded-[12px] border border-line-soft", approval && "hidden")}>
           <button className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium" aria-expanded={advanced} onClick={() => setAdvanced((v) => !v)}>
             {advanced ? <ChevronDown className="size-4 text-text-3" /> : <ChevronRight className="size-4 text-text-3" />}
             Advanced

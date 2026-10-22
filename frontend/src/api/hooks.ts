@@ -30,7 +30,10 @@ import type {
   Workflow,
   WorkflowListItem,
   WorkflowRunCreate,
+  WorkflowTemplate,
   WorkflowUpdate,
+  WorkflowVersion,
+  WorkflowVersionBrief,
   Workspace,
 } from "./types";
 
@@ -56,6 +59,9 @@ export const keys = {
   overview: ["overview-graph"] as const,
   workflows: ["workflows"] as const,
   workflow: (id: string) => ["workflow", id] as const,
+  versions: (id: string) => ["workflow-versions", id] as const,
+  version: (id: string, n: number) => ["workflow-version", id, n] as const,
+  templates: ["workflow-templates"] as const,
 };
 
 export function notifyError(error: unknown, fallback = "Something went wrong") {
@@ -377,10 +383,22 @@ export const useWorkflows = () => useQuery({ queryKey: keys.workflows, queryFn: 
 export const useWorkflow = (id: string) =>
   useQuery({ queryKey: keys.workflow(id), queryFn: () => api.get<Workflow>(`/workflows/${id}`), retry: (n, e) => !(e instanceof ApiError && e.status === 404) && n < 2 });
 
+export const useWorkflowVersions = (id: string) =>
+  useQuery({ queryKey: keys.versions(id), queryFn: () => api.get<WorkflowVersionBrief[]>(`/workflows/${id}/versions`) });
+export const useWorkflowVersion = (id: string, n: number | null) =>
+  useQuery({
+    queryKey: keys.version(id, n ?? 0),
+    queryFn: () => api.get<WorkflowVersion>(`/workflows/${id}/versions/${n}`),
+    enabled: !!n,
+    retry: (count, e) => !(e instanceof ApiError && e.status === 404) && count < 2,
+  });
+export const useWorkflowTemplates = () =>
+  useQuery({ queryKey: keys.templates, queryFn: () => api.get<WorkflowTemplate[]>("/workflow-templates") });
+
 export function useCreateWorkflow() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { name: string; description?: string }) => api.post<Workflow>("/workflows", body),
+    mutationFn: (body: { name: string; description?: string; template?: string }) => api.post<Workflow>("/workflows", body),
     onSuccess: () => void qc.invalidateQueries({ queryKey: keys.workflows }),
     onError: (e) => notifyError(e),
   });
@@ -407,6 +425,37 @@ export function useDeleteWorkflow() {
   });
 }
 
+function invalidateVersions(qc: QueryClient, id: string) {
+  void qc.invalidateQueries({ queryKey: keys.workflows });
+  void qc.invalidateQueries({ queryKey: keys.versions(id) });
+  void qc.invalidateQueries({ queryKey: ["workflow-version", id] });
+}
+
+/** Publishes the draft as the next version. Errors are shown in the publish dialog. */
+export function usePublishWorkflow(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { revision: number; note: string }) => api.post<WorkflowVersion>(`/workflows/${id}/versions`, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.workflow(id) });
+      invalidateVersions(qc, id);
+    },
+  });
+}
+
+/** Replaces the draft with a version's steps; the version itself is unchanged. */
+export function useRestoreVersion(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { number: number; revision: number }) => api.post<Workflow>(`/workflows/${id}/versions/${v.number}/restore`, { revision: v.revision }),
+    onSuccess: (saved) => {
+      qc.setQueryData(keys.workflow(id), saved);
+      invalidateVersions(qc, id);
+    },
+    onError: (e) => notifyError(e),
+  });
+}
+
 /** Starts a run; errors are shown in the run dialog. */
 export function useRunWorkflow(id: string) {
   const qc = useQueryClient();
@@ -416,7 +465,7 @@ export function useRunWorkflow(id: string) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.tasks });
       void qc.invalidateQueries({ queryKey: ["runs"] });
-      void qc.invalidateQueries({ queryKey: keys.workflows });
+      invalidateVersions(qc, id);
     },
   });
 }

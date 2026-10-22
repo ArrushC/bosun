@@ -52,14 +52,16 @@ const renderEditor = () =>
   );
 
 describe("workflow list", () => {
-  it("offers to create the first workflow", async () => {
+  it("offers to create the first workflow, blank or from a template", async () => {
     const { calls } = mockApi({
       "GET /workflows": () => [],
+      "GET /workflow-templates": () => [],
       "POST /workflows": () => [201, workflow({ id: "wf_new", name: "Untitled workflow", spec: { steps: [] } })],
     });
     renderWithProviders(<WorkflowsPage />, { route: "/workflows" });
     expect(await screen.findByText("No workflows yet")).toBeInTheDocument();
-    await userEvent.setup().click(screen.getByRole("button", { name: /new workflow/i }));
+    expect(screen.getByRole("heading", { name: "Start from a template" })).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("button", { name: /blank workflow/i }));
     await waitFor(() => expect(calls.some((c) => c.method === "POST")).toBe(true));
     expect(calls.find((c) => c.method === "POST")!.body).toEqual({ name: "Untitled workflow" });
   });
@@ -205,12 +207,13 @@ describe("running a workflow", () => {
       "GET /workspaces": () => [{ id: "ws_1", name: "shop", path: "/home/me/code/shop" }],
       "GET /settings": () => ({ execution: { max_parallel_per_run: 2 } }),
       "GET /providers/status": () => ({ ready: true, summary: "Signed in with Claude (max)" }),
+      "GET /workflows/wf_1/versions": () => [],
       "POST /workflows/wf_1/runs": start,
     });
 
   const renderDialog = (saving = false) =>
     renderWithProviders(
-      <RunWorkflowDialog open onOpenChange={() => {}} workflowId="wf_1" name="Fix and review" revision={3} saving={saving} steps={steps.map(normalizeStep)} roles={roles as never} />,
+      <RunWorkflowDialog open onOpenChange={() => {}} workflowId="wf_1" name="Fix and review" revision={3} saving={saving} steps={steps.map(normalizeStep)} roles={roles as never} draftState="not published" />,
     );
 
   it("starts one run on a new task, however often Start is clicked", async () => {
@@ -219,7 +222,7 @@ describe("running a workflow", () => {
     renderDialog();
     const user = userEvent.setup();
     await user.type(await screen.findByRole("textbox", { name: "Task title" }), "Add a dark mode");
-    expect(await screen.findByText("2 steps, up to 2 at a time")).toBeInTheDocument();
+    expect(await screen.findByText("2 steps, up to 2 agents at a time")).toBeInTheDocument();
     expect(screen.getByText("Signed in with Claude (max)")).toBeInTheDocument();
     const start = screen.getByRole("button", { name: /start run/i });
     await waitFor(() => expect(start).toBeEnabled());
