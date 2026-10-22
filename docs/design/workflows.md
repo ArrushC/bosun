@@ -1,8 +1,7 @@
 # Workflows: authored agent graphs
 
 Status: proposal, revision 2 (2026-10-20), against `main` at `e29f98f`.
-Milestone 1 is done and deployed. Milestone 2 is implemented on the
-`workflows-m2` branch and awaits review ([status](#milestone-2-status-2026-10-22-implemented-awaiting-review)).
+Milestones 1 and 2 are done and deployed ([milestone 2's status](#milestone-2-status-2026-10-22-done-and-deployed)).
 Milestones 3 and 4 are proposals. A spike tested the central assumption; its code
 is on the local branch `spike/workflow-engine` (worktree `../bosun-spike`),
 in three reviewable commits:
@@ -322,10 +321,12 @@ Implemented screens:
 Acceptance follows milestone 1's pattern: functional tests, a visual review,
 and one real run.
 
-### Milestone 2 status (2026-10-22): implemented, awaiting review
+### Milestone 2 status (2026-10-22): done and deployed
 
-Built on the `workflows-m2` branch. It is not merged, pushed or deployed. The
-evidence is in [VALIDATION.md](../VALIDATION.md#workflows-milestone-2): one
+Built on the `workflows-m2` branch, merged into `main` as `f173a43`, and
+deployed to the service on 2026-10-22, with a backup taken before migration
+0003 ([the deploy and its live checks](../VALIDATION.md#deployed-to-the-service-2026-10-22)).
+The evidence is in [VALIDATION.md](../VALIDATION.md#workflows-milestone-2): one
 real Claude run through an approval step, browser checks of every flow
 including a crash while an approval waited, a keyboard-only walk-through,
 axe-core on thirteen screens in both themes at two sizes, and the migration

@@ -208,6 +208,83 @@ It is not fixed. Measured on 2026-10-22, in both themes:
 
 The Steps view, the version page and the Run dialogs have no menus.
 
+### Deployed to the service (2026-10-22)
+
+Everything above in this section was checked on throwaway instances. This
+part was checked against the running service (`bosun.service`, data in
+`~/.local/share/bosun`, `127.0.0.1:8787`), without starting any agent run.
+
+**Before the deploy:**
+
+- **Revisions:** origin had nothing new since `eb09f4c`, so `main`
+  fast-forwarded to the reviewed `workflows-m2` (`f173a43`). Every file in
+  the 11 commits is milestone 2 work or one of the shared fixes listed above;
+  gitleaks found no leaks.
+- **Tests on the reviewed code:** 161 backend and 70 frontend tests passed on
+  `9ec9e2c`, the last commit with code changes (`f173a43` only changes docs).
+  `vitest` exited 0 with no unhandled or uncaught errors.
+- **Nothing in progress:** 0 runs, 0 pending approvals.
+- **Stopped first:** the service (`eb09f4c`, code as `c81f032`, migration
+  0002) was stopped cleanly at 12:56:35, before the checkout changed.
+
+**Backup**, in `~/.local/share/bosun-backups/2026-10-22T1256-pre-0003/`
+(folder 700, files 600):
+
+- **`bosun.db`:** taken with SQLite's online backup API at 12:57.
+  sha256 `a54470be…08ca16`, integrity ok, migration 0002, rows identical to
+  the live database.
+- **Configuration:** copies of `.env` and the systemd unit. The data folder
+  held nothing else.
+- **`ROLLBACK.md`:** the 0003 rollback (downgrade with the new code before
+  starting the old, what a downgrade loses, runs waiting at approval steps).
+  It was rehearsed on a copy of this backup: up and down with every row kept,
+  and the old code accepted the result.
+- **Earlier runbook:** yesterday's `ROLLBACK.md` is unchanged. Its "no active
+  runs" check filters on a field the runs list doesn't have, so it always
+  prints 0; the new runbook uses the run statuses instead.
+
+**The deploy:**
+
+- **Started** at 12:58:22. It rebuilt the UI, ran "Running upgrade
+  0002 -> 0003" at 12:58:31 and was healthy about 10 seconds after the
+  start, with no restarts.
+- **Log:** no warnings or errors.
+- **Address:** still listening on `127.0.0.1:8787` only.
+- **Database:** migration 0003, integrity ok. The schema is identical to a
+  fresh 0003 database built by the deployed code, including both triggers
+  that keep versions immutable. Every row from before the migration is
+  unchanged.
+- **UI:** the served JavaScript and CSS are byte-identical to the build on
+  disk and to the build that was reviewed; the whole `dist` folder matches.
+
+**Smoke test on the running service** (Playwright, headless Chromium):
+
+| Check | Result |
+|---|---|
+| Pages | Overview, Board, Inbox, Agent graph, Runs, Settings, Integrations and Workflows load. A missing run says "Run not found". The only browser error was that page's expected 404. |
+| An existing workflow | "Untitled workflow" (revision 4) is listed as not published and opens in the editor, which says so. Opening it changed nothing. |
+| From a template | "Deployment smoke test M2 (safe to delete)" from **Fix with review**: 5 steps, no problems. An edit to a step's instructions saved. |
+| Publish and inspect | Version 1 is an exact copy of the draft with its note, froze Researcher, Implementer, Tester and Reviewer, and can run. Its page says "Version 1, read-only"; **Run version 1** opens the Run dialog on version 1 (cancelled). |
+| Change the draft | Renaming a step marked the draft "Changed since version 1". Version 1, through the API and on its page, was exactly as before. |
+| Restore | **Restore to draft** made the draft a copy of version 1 again ("Same as version 1"); there was still one version. |
+| Launch from a task | On a temporary task, the task's Run dialog offers **Workflow**. For the new workflow it offers "Version 1 (latest)" (chosen by default, with the note that a version runs with its agents as published) and "Draft (same as the latest version)" ("The draft as it is now"). For "Untitled workflow" it offers only "Draft (not published)". Cancelled without starting. |
+| Nothing started | 0 runs and 0 pending approvals before and after. |
+
+**Not checked on the running service:**
+
+- **Run pages and the Steps view:** the service has no runs, and no agent run
+  was started for this check.
+- **Approval steps:** they need a run.
+- **Browser console during the workflow checks:** that script's error capture
+  was lost when it stopped on a selector after its last check. Its checks all
+  passed, the service logged no warnings or errors, and a read-only rerun of
+  the page checks found only the expected 404.
+
+**Kept:** versions can't be deleted, so the archived temporary workflow
+`wf_c6a678cfeaa332cc` keeps its version 1. The temporary task
+`tsk_4744559d438ade6a` is archived, with its activity entries. Yesterday's
+archived smoke-test workflow is still there too.
+
 ### Migration 0003 and rolling back
 
 Migration 0003 adds the `workflow_versions` table (with triggers that refuse
@@ -329,7 +406,8 @@ Docker-compatible API. End-to-end checks used a separate throwaway stack
   Claude sign-in).
 - A real Claude run under the systemd service. Earlier real runs used
   `uv run bosun` directly, and the workflow runs used a separate instance.
-- Milestone 2 on the running service: it is not deployed.
+- Milestone 2's run pages, Steps view and approval steps on the running
+  service: it has no runs, and none was started for the deploy check.
 - An approval step left waiting for days, or across many restarts. Requests
   have no time limit; the longest wait checked was a few minutes and one
   restart.
