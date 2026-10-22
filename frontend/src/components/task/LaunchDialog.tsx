@@ -1,8 +1,8 @@
-import { Bot, Check, GitBranch, Lock, Network, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { Bot, Check, GitBranch, Lock, Network, ShieldCheck, Sparkles, Users, Workflow } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
-import { usePreviewRun, useRoles, useSettings, useStartRun } from "@/api/hooks";
+import { usePreviewRun, useRoles, useSettings, useStartRun, useWorkflows, useWorkflowVersions } from "@/api/hooks";
 import type { ExecutionMode, RunCreate, RunPreview, TaskDetail } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { ErrorNote, Notice, RoleTag, Spinner } from "@/components/ui/display";
@@ -57,7 +57,13 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
   const idempotencyKey = useRef(newIdempotencyKey());
   const workers = roles.filter((r) => r.enabled && !r.is_coordinator);
 
-  const [mode, setMode] = useState<ExecutionMode>((task.execution_mode as ExecutionMode) ?? "single");
+  const [mode, setMode] = useState<ExecutionMode | "workflow">((task.execution_mode as ExecutionMode) ?? "single");
+  const { data: workflows = [], isLoading: workflowsLoading } = useWorkflows();
+  const [workflowId, setWorkflowId] = useState("");
+  const { data: versions = [], isLoading: versionsLoading } = useWorkflowVersions(workflowId);
+  // A published version's number, or "draft".
+  const [source, setSource] = useState("");
+  const chosenWorkflow = workflows.find((w) => w.id === workflowId);
   const [role, setRole] = useState("implementer");
   const [teamRoles, setTeamRoles] = useState<string[]>([]);
   const [backend, setBackend] = useState<"claude" | "demo">("claude");
@@ -76,6 +82,8 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
     setPlanApproval(settings?.execution.require_plan_approval ?? true);
     setSubagents(settings?.execution.allow_sdk_subagents ?? false);
     setInstructions("");
+    setWorkflowId("");
+    setSource("");
     setResult(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, task.id]);
@@ -86,24 +94,48 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workers.length]);
 
+  // A workflow runs its latest version unless another version, or the draft, is chosen.
+  useEffect(() => {
+    if (mode === "workflow" && !workflowId && workflows.length) setWorkflowId(workflows[0].id);
+  }, [mode, workflowId, workflows]);
+  useEffect(() => {
+    if (!workflowId || versionsLoading) return;
+    setSource((s) => (s && (s === "draft" || versions.some((v) => String(v.number) === s)) ? s : versions.length ? String(versions[0].number) : "draft"));
+  }, [workflowId, versions, versionsLoading]);
+
   const body: RunCreate = useMemo(
-    () => ({
-      mode,
-      role: mode === "single" ? role : undefined,
-      team_roles: mode === "single" ? undefined : teamRoles,
-      backend,
-      model: model || undefined,
-      require_plan_approval: mode === "single" ? undefined : planApproval,
-      allow_subagents: mode === "single" ? subagents : undefined,
-      max_turns: maxTurns ? Number(maxTurns) : undefined,
-      instructions: instructions.trim() || undefined,
-    }),
-    [mode, role, teamRoles, backend, model, planApproval, subagents, maxTurns, instructions],
+    () =>
+      mode === "workflow"
+        ? {
+            workflow_id: workflowId || undefined,
+            workflow_version: source && source !== "draft" ? Number(source) : undefined,
+            workflow_revision: source === "draft" ? chosenWorkflow?.revision : undefined,
+            backend,
+            instructions: instructions.trim() || undefined,
+          }
+        : {
+            mode,
+            role: mode === "single" ? role : undefined,
+            team_roles: mode === "single" ? undefined : teamRoles,
+            backend,
+            model: model || undefined,
+            require_plan_approval: mode === "single" ? undefined : planApproval,
+            allow_subagents: mode === "single" ? subagents : undefined,
+            max_turns: maxTurns ? Number(maxTurns) : undefined,
+            instructions: instructions.trim() || undefined,
+          },
+    [mode, role, teamRoles, backend, model, planApproval, subagents, maxTurns, instructions, workflowId, source, chosenWorkflow?.revision],
   );
+  // Don't ask for a preview of a workflow run until there is a workflow and a version to show.
+  const previewable = mode !== "workflow" || (!!workflowId && !!source);
 
   const bodyKey = JSON.stringify(body);
   useEffect(() => {
     if (!open) return;
+    if (!previewable) {
+      setResult(null);
+      return;
+    }
     const timer = setTimeout(() => preview.mutate(body, { onSuccess: setResult }), 220);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -149,12 +181,13 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
     >
       <div className="grid gap-7">
         <Field label="Strategy">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {(
               [
                 { value: "single", icon: Bot, title: "Single agent", text: "One agent does the whole task. Best for focused changes." },
                 { value: "team", icon: Users, title: "Agent team", text: "A coordinator plans subtasks and delegates to role agents." },
                 { value: "auto", icon: Network, title: "Automatic", text: "The coordinator picks one agent or a team, within your limits." },
+                { value: "workflow", icon: Workflow, title: "Workflow", text: "Your own plan of steps, with the agents and approvals you set." },
               ] as const
             ).map((opt) => (
               <button
@@ -176,7 +209,42 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
           </div>
         </Field>
 
-        {mode === "single" ? (
+        {mode === "workflow" ? (
+          workflowsLoading ? (
+            <p className="text-sm text-text-3">Loading workflows…</p>
+          ) : workflows.length === 0 ? (
+            <Notice>
+              No workflows yet.{" "}
+              <Link to="/workflows" className="text-accent-strong underline underline-offset-[3px]">
+                Create one in Workflows
+              </Link>
+              , from a template or from scratch.
+            </Notice>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Workflow">
+                <NativeSelect value={workflowId} onChange={(e) => setWorkflowId(e.target.value)}>
+                  {workflows.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </Field>
+              <Field label="Version" hint={source === "draft" ? "The draft as it is now." : "A published version runs with its agents as they were when published."}>
+                <NativeSelect value={source} onChange={(e) => setSource(e.target.value)} disabled={versionsLoading}>
+                  {versions.map((v, i) => (
+                    <option key={v.number} value={v.number}>
+                      Version {v.number}
+                      {i === 0 ? " (latest)" : ""}
+                    </option>
+                  ))}
+                  <option value="draft">Draft{chosenWorkflow ? (chosenWorkflow.latest_version ? (chosenWorkflow.unpublished_changes ? " (unpublished changes)" : " (same as the latest version)") : " (not published)") : ""}</option>
+                </NativeSelect>
+              </Field>
+            </div>
+          )
+        ) : mode === "single" ? (
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Agent role">
               <NativeSelect value={role} onChange={(e) => setRole(e.target.value)}>
@@ -225,7 +293,7 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
           </div>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className={cn("grid gap-3", mode === "workflow" ? "sm:grid-cols-2" : "sm:grid-cols-3")}>
           <Field label="Backend">
             <Segmented
               value={backend}
@@ -236,25 +304,32 @@ export function LaunchDialog({ task, open, onOpenChange }: { task: TaskDetail; o
               ]}
             />
           </Field>
-          <Field label="Model" hint="Empty uses the provider default.">
-            <NativeSelect value={model} onChange={(e) => setModel(e.target.value)} disabled={backend === "demo"}>
-              {MODEL_OPTIONS.map((m) => (
-                <option key={m} value={m}>
-                  {m || `Default${settings?.provider.model ? ` (${settings.provider.model})` : ""}`}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
-          <Field label="Max turns per agent">
-            <Input
-              type="number"
-              min={1}
-              max={500}
-              placeholder={String(settings?.execution.default_max_turns ?? 60)}
-              value={maxTurns}
-              onChange={(e) => setMaxTurns(e.target.value)}
-            />
-          </Field>
+          {mode !== "workflow" && (
+            <>
+              <Field label="Model" hint="Empty uses the provider default.">
+                <NativeSelect value={model} onChange={(e) => setModel(e.target.value)} disabled={backend === "demo"}>
+                  {MODEL_OPTIONS.map((m) => (
+                    <option key={m} value={m}>
+                      {m || `Default${settings?.provider.model ? ` (${settings.provider.model})` : ""}`}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </Field>
+              <Field label="Max turns per agent">
+                <Input
+                  type="number"
+                  min={1}
+                  max={500}
+                  placeholder={String(settings?.execution.default_max_turns ?? 60)}
+                  value={maxTurns}
+                  onChange={(e) => setMaxTurns(e.target.value)}
+                />
+              </Field>
+            </>
+          )}
+          {mode === "workflow" && (
+            <p className="self-end pb-2 text-sm text-text-3">Each step uses its agent's model and limits, or the ones the step sets.</p>
+          )}
         </div>
 
         <Field label="Extra instructions for this run (optional)">
