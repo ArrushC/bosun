@@ -393,7 +393,8 @@ all passing.
   rather than milestone 1's "which did not finish". Runs recorded before
   keep their wording.
 - **Restart recovery** now emits an event for every step it puts back (team
-  runs too), so the live graph matches the run after a restart.
+  runs too), so the live graph matches the run after a restart, and notes
+  "Interrupted by a Bosun restart" on the step until it runs again.
 - **Found on the way:** tab panels had no visible focus, the sidebar's
   approvals button had a different name from its words, and the editor's
   tests ended with uncaught errors. All three predate this milestone and are

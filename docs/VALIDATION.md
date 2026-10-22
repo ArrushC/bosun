@@ -169,7 +169,8 @@ template's preview, the list, the editor with an approval step selected, the
 publish dialog, the Versions tab, a version, the Run dialog, the Steps view
 waiting and as a list and finished, the task's Run dialog with a workflow,
 and the approvals list) in both themes at 1440×900 and 1024×768, with
-axe-core on each: 52 checks, no violations. Also checked: a version that
+axe-core on each and no menu open: 52 checks, no violations. (The approvals
+list is a popover, not a menu, and is clean.) Also checked: a version that
 can't run, the restore confirmation, a rejected run, a run after a crash, and
 milestone 1's runs in the new Steps view. Screenshots are in
 [docs/design/workflows](design/workflows/) (`m2-*.png`).
@@ -180,6 +181,10 @@ Found and fixed during the review:
   background that took muted text (dark) and the Needs approval pill (light)
   below 4.5:1; and at 1024 px the Steps view's panel covered the step it
   described.
+- **Changed for every run mode:** restart recovery now announces each step it
+  puts back as an event, so the live graph matches after a restart, and
+  notes "Interrupted by a Bosun restart" on it, which the run's summary
+  shows until the step runs again. Approval steps aren't put back.
 - **Older than this milestone:**
   - tab panels took keyboard focus with no visible focus (WCAG 2.4.7), on the
     run page, the editor and every other tabbed page;
@@ -189,10 +194,19 @@ Found and fixed during the review:
     drag handling in jsdom, so the suite exited non-zero although every test
     passed.
 
-Still open: the menu finding below. With any menu open, the editor's
-**Add a step** menu now fails it on eleven elements rather than eight,
-because the header has more controls (the draft's state, **Publish**, the
-Versions tab); the cause is the same.
+**With a menu open**, axe reports one rule and nothing else: the known
+`aria-hidden-focus` finding tracked in [Open follow-ups](#open-follow-ups).
+It is not fixed. Measured on 2026-10-22, in both themes:
+
+| Menu open | `aria-hidden-focus` |
+|---|---|
+| Board, **Filters** (from before workflows, for reference) | 3 elements with a task on the board, 1 with none; the same on milestone 1's code with the same data |
+| Editor, **Add a step** | 11 elements (8 in milestone 1; the header gained the draft's state, **Publish** and the **Versions** tab) |
+| Editor, a step's **+** | 11 |
+| Editor, **Add a step after this one** in a step's settings | 11 |
+| Editor, **More actions** | 11 |
+
+The Steps view, the version page and the Run dialogs have no menus.
 
 ### Migration 0003 and rolling back
 
