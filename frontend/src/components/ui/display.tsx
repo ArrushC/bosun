@@ -189,7 +189,8 @@ export function Tabs({ value, onValueChange, tabs, className, children }: {
 }
 
 export const TabPanel = ({ value, children, className }: { value: string; children: ReactNode; className?: string }) => (
-  <TabsPrimitive.Content value={value} className={cn("min-h-0 flex-1 overflow-y-auto focus:outline-none", className)}>
+  // Radix makes the panel a tab stop; its ring sits inside, so the panel's edges don't clip it.
+  <TabsPrimitive.Content value={value} className={cn("min-h-0 flex-1 overflow-y-auto focus-visible:-outline-offset-2", className)}>
     {children}
   </TabsPrimitive.Content>
 );
