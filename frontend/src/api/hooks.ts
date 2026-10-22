@@ -384,7 +384,7 @@ export const useWorkflow = (id: string) =>
   useQuery({ queryKey: keys.workflow(id), queryFn: () => api.get<Workflow>(`/workflows/${id}`), retry: (n, e) => !(e instanceof ApiError && e.status === 404) && n < 2 });
 
 export const useWorkflowVersions = (id: string) =>
-  useQuery({ queryKey: keys.versions(id), queryFn: () => api.get<WorkflowVersionBrief[]>(`/workflows/${id}/versions`) });
+  useQuery({ queryKey: keys.versions(id), queryFn: () => api.get<WorkflowVersionBrief[]>(`/workflows/${id}/versions`), enabled: !!id });
 export const useWorkflowVersion = (id: string, n: number | null) =>
   useQuery({
     queryKey: keys.version(id, n ?? 0),

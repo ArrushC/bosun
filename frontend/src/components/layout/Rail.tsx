@@ -131,7 +131,8 @@ export function Rail() {
                   "mb-2 flex h-10 items-center gap-3 rounded-control bg-st-approval/10 px-3 text-sm font-medium text-st-approval transition-colors hover:bg-st-approval/15",
                   collapsed && "justify-center px-0",
                 )}
-                aria-label={`${approvals.length} approvals waiting`}
+                // Collapsed, it shows only an icon; otherwise its visible words are its name.
+                aria-label={collapsed ? `${approvals.length} waiting for you` : undefined}
               >
                 <Hand className="size-[18px] animate-pulse-ring rounded-full" />
                 {!collapsed && <span className="flex-1 text-left">{approvals.length} waiting for you</span>}
@@ -140,7 +141,7 @@ export function Rail() {
             <PopoverContent className="w-[440px] p-0" align="start">
               <div className="px-4 pt-4 pb-2 text-md font-semibold">Approvals</div>
               <div className="max-h-[60vh] overflow-y-auto p-3 pt-1">
-                <ApprovalList approvals={approvals} empty="Agents will ask here before running commands outside their allowlist." />
+                <ApprovalList approvals={approvals} empty="Agents ask here before running commands outside their allowlist, and workflows wait here at their approval steps." />
               </div>
             </PopoverContent>
           </Popover>

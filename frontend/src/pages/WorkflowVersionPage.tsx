@@ -23,7 +23,8 @@ export function WorkflowVersionPage() {
   const navigate = useNavigate();
   const workflow = useWorkflow(workflowId);
   const version = useWorkflowVersion(workflowId, valid ? n : null);
-  const previous = useWorkflowVersion(workflowId, valid && n > 1 ? n - 1 : null);
+  // What changed since the version before, once this one is known to exist.
+  const previous = useWorkflowVersion(workflowId, version.data && n > 1 ? n - 1 : null);
   const { data: roles = [] } = useRoles();
   const restore = useRestoreVersion(workflowId);
   const narrow = useMediaQuery("(max-width: 1180px)");
@@ -172,7 +173,7 @@ export function WorkflowVersionPage() {
                 <>
                   <section>
                     <h3 className="mb-2 text-sm font-medium">{n > 1 ? `Changes since version ${n - 1}` : "The first version"}</h3>
-                    {n > 1 ? sinceLast ? <ChangeList changes={sinceLast} /> : <p className="text-sm text-text-3">Loading…</p> : <p className="text-sm text-text-2">{v.description || "No description."}</p>}
+                    {n > 1 ? sinceLast ? <ChangeList changes={sinceLast} /> : <p className="text-sm text-text-3">Loading…</p> : <p className="text-sm text-text-2">{v.description || "The first published version of this workflow."}</p>}
                   </section>
                   <section>
                     <h3 className="mb-2 text-sm font-medium">Agents, as published</h3>

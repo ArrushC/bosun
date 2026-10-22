@@ -194,7 +194,10 @@ function StepPanel({
       <div className="space-y-6 px-6 pb-8">
         <div className="space-y-2">
           <StatusPill state={row.state} label={row.label} />
-          {row.reason && <p className={cn("text-sm leading-6", row.state === "failed" ? "text-st-fail" : "text-text-2")}>{row.reason}</p>}
+          {/* A pending approval's card says it all, including what a paused run means for it. */}
+          {row.reason && !(isApproval && approval?.status === "pending") && (
+            <p className={cn("text-sm leading-6", row.state === "failed" ? "text-st-fail" : "text-text-2")}>{row.reason}</p>
+          )}
         </div>
 
         {isApproval && approval && approval.status === "pending" && <ApprovalCard approval={approval} />}
@@ -237,7 +240,7 @@ function StepPanel({
           </dd>
           <dt className="text-text-3">Next</dt>
           <dd>{next.length ? next.map((r) => r.step.title).join(", ") : "The result for review"}</dd>
-          {!isApproval && subtask && (
+          {!isApproval && subtask && subtask.attempts > 0 && (
             <>
               <dt className="text-text-3">Attempts</dt>
               <dd>

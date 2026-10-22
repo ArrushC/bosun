@@ -1,5 +1,5 @@
 import { Check, FileDiff, ShieldAlert, ThumbsDown, UserCheck, X } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router";
 
 import { useResolveApproval } from "@/api/hooks";
@@ -139,7 +139,13 @@ function StepApprovalCard({ approval, compact }: { approval: Approval; compact?:
   const pending = approval.status === "pending";
   const busy = resolve.isPending;
   const stopped = approval.run_status === "paused" || approval.run_status === "interrupted";
-  const decide = (decision: "approve" | "deny") => resolve.mutate({ id: approval.id, decision, message: note.trim() || undefined });
+  // Synchronous guard: a double click must send one decision (the server would refuse the second).
+  const deciding = useRef(false);
+  const decide = (decision: "approve" | "deny") => {
+    if (deciding.current) return;
+    deciding.current = true;
+    resolve.mutate({ id: approval.id, decision, message: note.trim() || undefined }, { onSettled: () => (deciding.current = false) });
+  };
   const workflow = (approval.data as StepContext).workflow;
   return (
     <article className={cn("rounded-panel border bg-panel p-5", pending ? "border-st-approval/40" : "border-line-soft opacity-75")}>

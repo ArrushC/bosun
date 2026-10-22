@@ -108,7 +108,8 @@ describe("approval steps", () => {
     const { calls } = mockApi({ [`POST /approvals/${pending.id}/resolve`]: () => ({ ...pending, status: "approved" }) });
     renderWithProviders(<RunSteps run={run} selected={null} onSelect={() => {}} onOpenTranscript={() => {}} />);
     const panel = await screen.findByRole("complementary", { name: "Approve the plan details" });
-    expect(within(panel).getByText(/The run is paused: decide now/)).toBeInTheDocument();
+    expect(within(panel).getByText(/The run is paused\. Your decision is saved now/)).toBeInTheDocument();
+    expect(within(panel).queryByText(/The run is paused: decide now/)).toBeNull(); // said once, by the card
     expect(within(panel).getByText("Is the cause right?")).toBeInTheDocument();
     expect(panel).toHaveTextContent(/Approve to continue with Implement/);
     const user = userEvent.setup();
