@@ -68,6 +68,8 @@ function stateBorder(state: VisualState, selected?: boolean) {
       return "border-st-approval/80 animate-pulse-ring";
     case "failed":
       return "border-st-fail/70";
+    case "rejected":
+      return "border-st-fail/50 opacity-90";
     case "waiting_dependency":
     case "pending":
       return "border-dashed border-line";

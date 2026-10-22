@@ -12,6 +12,7 @@ import {
   PauseCircle,
   PlugZap,
   SkipForward,
+  ThumbsDown,
 } from "lucide-react";
 
 /**
@@ -28,6 +29,7 @@ export type VisualState =
   | "failed"
   | "cancelled"
   | "skipped"
+  | "rejected"
   | "paused";
 
 export interface StateMeta {
@@ -47,6 +49,7 @@ export const STATE: Record<VisualState, StateMeta> = {
   failed: { label: "Failed", color: "var(--st-fail)", icon: AlertOctagon, pattern: "solid" },
   cancelled: { label: "Cancelled", color: "var(--st-cancel)", icon: Ban, pattern: "struck" },
   skipped: { label: "Skipped", color: "var(--st-cancel)", icon: SkipForward, pattern: "dashed" },
+  rejected: { label: "Rejected", color: "var(--st-fail)", icon: ThumbsDown, pattern: "struck" },
   paused: { label: "Paused", color: "var(--st-dep)", icon: PauseCircle, pattern: "dashed" },
 };
 
@@ -108,11 +111,21 @@ export function subtaskState(status: string | null | undefined): VisualState {
       return "failed";
     case "skipped":
       return "skipped";
+    case "rejected":
+      return "rejected";
     case "cancelled":
       return "cancelled";
     default:
       return "pending";
   }
+}
+
+/** A workflow step's status in words; approval steps say Approved where agent steps say Done. */
+export function stepStatusLabel(status: string | null | undefined, kind: string | null | undefined): string {
+  if (kind === "approval" && status === "completed") return "Approved";
+  if (status === "conflict") return "Merge conflict";
+  if (status === "waiting_dependency") return "Waiting";
+  return STATE[subtaskState(status)].label;
 }
 
 export const RUN_LABEL: Record<string, string> = {

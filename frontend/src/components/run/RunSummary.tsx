@@ -4,7 +4,7 @@ import { Link } from "react-router";
 
 import type { Run } from "@/api/types";
 import { KeyValue, Md, Notice, RoleTag, StatusPill } from "@/components/ui/display";
-import { roleColor, strategyLabel, subtaskState } from "@/lib/status";
+import { roleColor, stepStatusLabel, strategyLabel, subtaskState } from "@/lib/status";
 import { cn, formatDuration, formatTokens, plural, relativeTime } from "@/lib/utils";
 import { runWorkflow } from "@/lib/workflow";
 
@@ -62,7 +62,7 @@ export function RunSummary({ run }: { run: Run }) {
                   <div className="min-w-0 flex-1">
                     <p className="text-base font-medium">{s.title}</p>
                     <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-text-3">
-                      <RoleTag name={agentName(s.role)} color={roleColor(s.role)} />
+                      {s.kind === "approval" ? <RoleTag name="Approval by you" color="var(--st-approval)" /> : <RoleTag name={agentName(s.role)} color={roleColor(s.role)} />}
                       {s.depends_on.length > 0 && (
                         <span>after {(workflow ? s.depends_on.map((k) => titles.get(k) ?? k) : s.depends_on).join(", ")}</span>
                       )}
@@ -70,7 +70,7 @@ export function RunSummary({ run }: { run: Run }) {
                     </p>
                     {s.error && <p className={cn("mt-1 text-xs", s.status === "skipped" ? "text-text-3" : "text-st-fail")}>{s.error}</p>}
                   </div>
-                  <StatusPill state={subtaskState(s.status)} />
+                  <StatusPill state={subtaskState(s.status)} label={stepStatusLabel(s.status, s.kind)} />
                 </li>
               ))}
             </ol>
@@ -107,6 +107,16 @@ export function RunSummary({ run }: { run: Run }) {
               ...(workflow
                 ? ([
                     ["Workflow", <Link to={`/workflows/${workflow.id}`} className="hover:text-accent-strong">{workflow.name}</Link>],
+                    [
+                      "Ran",
+                      workflow.version ? (
+                        <Link to={`/workflows/${workflow.id}/versions/${workflow.version}`} className="hover:text-accent-strong">
+                          Version {workflow.version}
+                        </Link>
+                      ) : (
+                        `The draft, revision ${workflow.revision}`
+                      ),
+                    ],
                     ["Steps", `${plural(workflow.steps.length, "step")}, up to ${config.max_parallel ?? "?"} at a time`],
                     ["Agents", (config.team_roles ?? []).map(agentName).join(", ")],
                   ] as [string, ReactNode][])

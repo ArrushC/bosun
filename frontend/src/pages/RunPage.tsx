@@ -1,5 +1,5 @@
 import { ArrowLeft, Ban, Pause, Play, RotateCcw, TriangleAlert } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 
 import { useRun, useRunAction } from "@/api/hooks";
@@ -17,6 +17,9 @@ import { RUN_LABEL, runState, strategyLabel } from "@/lib/status";
 import { runWorkflow } from "@/lib/workflow";
 import { elapsed, formatDuration } from "@/lib/utils";
 import { useEvents, useRunLog } from "@/stores/events";
+
+// The Steps view draws with the workflow canvas, which only workflow runs need.
+const RunSteps = lazy(() => import("@/components/run/RunSteps").then((m) => ({ default: m.RunSteps })));
 
 function RunControls({ run }: { run: Run }) {
   const action = useRunAction(run.id);
@@ -57,9 +60,10 @@ function RunControls({ run }: { run: Run }) {
 export function RunPage() {
   const { runId = "" } = useParams();
   const [params, setParams] = useSearchParams();
-  const tab = params.get("tab") ?? "graph";
   const sessionParam = params.get("session");
+  const stepParam = params.get("step");
   const { data: run, isLoading, error } = useRun(runId);
+  const tab = params.get("tab") ?? (run?.mode === "workflow" ? "steps" : "graph");
   const log = useRunLog(runId);
   const load = useEvents((s) => s.load);
   const openTask = useOpenTask();
@@ -91,6 +95,19 @@ export function RunPage() {
 
   const pending = run.approvals.filter((a) => a.status === "pending");
   const workflow = runWorkflow(run);
+  const openTranscript = (id: string) => {
+    const next = new URLSearchParams(params);
+    next.set("tab", "transcript");
+    next.set("session", id);
+    setParams(next, { replace: true });
+  };
+  const selectStep = (key: string | null) => {
+    const next = new URLSearchParams(params);
+    next.set("tab", "steps");
+    if (key) next.set("step", key);
+    else next.delete("step");
+    setParams(next, { replace: true });
+  };
   const advice = run.status === "failed" ? adviceFor(run.error_kind, { workflow: !!workflow }) : null;
 
   return (
@@ -114,11 +131,24 @@ export function RunPage() {
             {run.task_key}
           </button>
           {workflow && (
-            <Link to={`/workflows/${workflow.id}`} className="text-text-2 underline decoration-text-3/60 underline-offset-[3px] hover:text-text hover:decoration-text-2">
-              Workflow {workflow.name}
-            </Link>
+            <>
+              <Link to={`/workflows/${workflow.id}`} className="text-text-2 underline decoration-text-3/60 underline-offset-[3px] hover:text-text hover:decoration-text-2">
+                Workflow {workflow.name}
+              </Link>
+              {", "}
+              {workflow.version ? (
+                <Link
+                  to={`/workflows/${workflow.id}/versions/${workflow.version}`}
+                  className="text-text-2 underline decoration-text-3/60 underline-offset-[3px] hover:text-text hover:decoration-text-2"
+                >
+                  version {workflow.version}
+                </Link>
+              ) : (
+                <span className="text-text-2">draft (revision {workflow.revision})</span>
+              )}
+              {", "}
+            </>
           )}
-          {workflow && ", "}
           {[
             ...(workflow ? [] : [strategyLabel(run)]),
             run.backend === "demo" ? "Demo" : run.provider === "subscription" ? "Claude subscription" : run.provider === "api_key" ? "Anthropic API" : "Vertex AI",
@@ -140,7 +170,8 @@ export function RunPage() {
             {pending.length > 0 && (
               <div className="grid gap-3 lg:grid-cols-2">
                 {pending.map((a) => (
-                  <ApprovalCard key={a.id} approval={a} compact={a.kind === "tool_permission"} />
+                  // Approval steps are shown in full in the Steps tab; here they only need the buttons.
+                  <ApprovalCard key={a.id} approval={a} compact={a.kind === "tool_permission" || (a.kind === "workflow_step" && tab === "steps")} />
                 ))}
               </div>
             )}
@@ -153,12 +184,20 @@ export function RunPage() {
         onValueChange={setTab}
         className="min-h-0 flex-1"
         tabs={[
+          ...(workflow ? [{ value: "steps", label: "Steps", count: run.subtasks.length || undefined }] : []),
           { value: "graph", label: "Agent graph" },
           { value: "transcript", label: "Transcripts", count: run.sessions.length },
           { value: "changes", label: "Changes", count: Number((run.usage.diff as { files?: number } | undefined)?.files ?? 0) },
           { value: "summary", label: "Summary" },
         ]}
       >
+        {workflow && (
+          <TabPanel value="steps" className="flex flex-col overflow-hidden">
+            <Suspense fallback={<div className="flex flex-1 items-center justify-center"><Spinner /></div>}>
+              <RunSteps run={run} selected={stepParam} onSelect={selectStep} onOpenTranscript={openTranscript} />
+            </Suspense>
+          </TabPanel>
+        )}
         <TabPanel value="graph" className="flex flex-col overflow-hidden">
           {log.error ? (
             <div className="px-8 py-5">
@@ -171,16 +210,7 @@ export function RunPage() {
           )}
         </TabPanel>
         <TabPanel value="transcript" className="overflow-hidden">
-          <Transcript
-            run={run}
-            events={log.events}
-            sessionId={sessionParam}
-            onSelectSession={(id) => {
-              const next = new URLSearchParams(params);
-              next.set("session", id);
-              setParams(next, { replace: true });
-            }}
-          />
+          <Transcript run={run} events={log.events} sessionId={sessionParam} onSelectSession={openTranscript} />
         </TabPanel>
         <TabPanel value="changes" className="overflow-hidden">
           <DiffView run={run} />

@@ -140,6 +140,8 @@ const SUBAGENT_TOOLS = new Set(["Agent", "Task"]);
 interface PlanItem {
   subtask_id: string;
   key: string;
+  /** "approval" for a workflow approval step (no agent); missing in older plans. */
+  kind?: string;
   title: string;
   role: string;
   instructions: string;
@@ -148,7 +150,7 @@ interface PlanItem {
 }
 
 function terminal(state: VisualState) {
-  return state === "success" || state === "failed" || state === "cancelled" || state === "skipped" || state === "paused";
+  return state === "success" || state === "failed" || state === "cancelled" || state === "skipped" || state === "rejected" || state === "paused";
 }
 
 export function emptyModel(): RunModel {
@@ -395,6 +397,11 @@ export function createBuilder(): ModelBuilder {
         break;
       }
       case "approval.requested": {
+        // A workflow approval step is drawn as its step, whose status says it needs approval.
+        if (d.kind === "workflow_step") {
+          update(`subtask:${d.subtask_id}`, { data: { approvalId: d.approval_id, requestedAt: e.ts } }, e.seq);
+          break;
+        }
         const id = `approval:${d.approval_id}`;
         const owner = e.session_id ?? undefined;
         node({ id, kind: "approval", label: d.title, sublabel: d.kind === "plan" ? "Plan approval" : d.kind === "integration" ? "Merge decision" : d.tool_name, state: "waiting_approval", owner, seq: e.seq, data: { approvalId: d.approval_id, kind: d.kind, toolName: d.tool_name, toolInput: d.tool_input, description: d.description, toolUseId: d.tool_use_id, requestedAt: e.ts } });
@@ -411,6 +418,10 @@ export function createBuilder(): ModelBuilder {
         break;
       }
       case "approval.resolved": {
+        if (d.kind === "workflow_step") {
+          update(`subtask:${d.subtask_id}`, { data: { decision: d.decision, note: d.message, resolvedAt: e.ts } }, e.seq);
+          break;
+        }
         const id = `approval:${d.approval_id}`;
         const state: VisualState = e.status === "approved" ? "success" : e.status === "denied" ? "failed" : "cancelled";
         update(id, { state, data: { resolution: d.decision, message: d.message, remember: d.remember, resolvedAt: e.ts, status: e.status } }, e.seq);
@@ -432,7 +443,17 @@ export function createBuilder(): ModelBuilder {
         for (const s of (d.subtasks ?? []) as PlanItem[]) {
           const id = `subtask:${s.subtask_id}`;
           subtaskByKey.set(s.key, id);
-          node({ id, kind: "subtask", label: s.title, sublabel: s.key, state: "pending", color: roleColor(s.role), seq: e.seq, data: { key: s.key, role: s.role, instructions: s.instructions, modifiesCode: s.modifies_code, dependsOn: s.depends_on } });
+          const approval = s.kind === "approval";
+          node({
+            id,
+            kind: "subtask",
+            label: s.title,
+            sublabel: approval ? "Approval by you" : s.key,
+            state: "pending",
+            color: approval ? "var(--st-approval)" : roleColor(s.role),
+            seq: e.seq,
+            data: { key: s.key, stepKind: s.kind ?? "agent", role: s.role, instructions: s.instructions, modifiesCode: s.modifies_code, dependsOn: s.depends_on },
+          });
           // A workflow's plan has no coordinator: the steps that wait for nothing start from the task.
           const from = coordinator ?? (s.depends_on?.length ? undefined : taskNodeId());
           if (from) edge({ id: `plan:${id}`, source: from, target: id, kind: "planned", seq: e.seq });

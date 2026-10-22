@@ -2,7 +2,9 @@
 
     uv run --directory backend python ../scripts/export_fixtures.py [OUT_DIR] [NAME ...]
 
-With names, only those fixtures are recorded.
+With names, only those fixtures are recorded. Runs with approval steps also save
+the run as the API returns it (`NAME.run.json`), so the Steps view and the live
+graph can be checked against each other.
 """
 
 import asyncio
@@ -17,6 +19,7 @@ from tests.conftest import add_task, add_workspace, make_repo, make_settings  # 
 
 from bosun.agents.fake import FakeAgentAdapter  # noqa: E402
 from bosun.agents.roles import seed_roles  # noqa: E402
+from bosun.api.routes.runs import run_detail  # noqa: E402
 from bosun.db.migrate import upgrade_to_head  # noqa: E402
 from bosun.db.models import Workflow  # noqa: E402
 from bosun.db.session import Database  # noqa: E402
@@ -39,6 +42,9 @@ async def main(out_dir: Path, only: set[str]) -> None:
     ws = await add_workspace(services, repo)
     fix = await _workflow(services, "Fix with review", FIX_WITH_REVIEW)
     branches = await _workflow(services, "Two branches", TWO_BRANCHES)
+    gated = await _workflow(services, "Gated fix", GATED)
+    # How each run's approvals are answered: approve, reject, or pause the run at the first one.
+    decisions = {"workflow-rejected": "reject", "workflow-paused-approval": "pause"}
     for name, request in {
         "team-run": RunRequest(backend="demo", mode=ExecutionMode.TEAM, require_plan_approval=False),
         "single-run": RunRequest(backend="demo", demo_scenario={"needs_approval": True}),
@@ -47,17 +53,30 @@ async def main(out_dir: Path, only: set[str]) -> None:
         "workflow-failed": RunRequest(
             backend="demo", workflow_id=branches, demo_scenario={"fail": "process_crash", "fail_role": "researcher"}
         ),
+        # Approval steps: approved with a note; rejected beside a branch that carries on; paused while waiting.
+        "workflow-approved": RunRequest(backend="demo", workflow_id=gated),
+        "workflow-rejected": RunRequest(backend="demo", workflow_id=gated),
+        "workflow-paused-approval": RunRequest(backend="demo", workflow_id=gated),
     }.items():
         if only and name not in only:
             continue
         task = await add_task(services, ws, title=f"Fixture {name}")
         run = await services.runs.start(task.id, request)
+        decision = decisions.get(name, "approve")
         while services.runs.context(run.id) is not None:
             for approval in await _pending(services, run.id):
-                await services.approvals.resolve(approval, approve=True, message=None, remember=False)
+                if decision == "pause":
+                    await services.runs.pause(run.id)
+                    break
+                note = "Keep it small." if name == "workflow-approved" else None
+                await services.approvals.resolve(approval, approve=decision == "approve", message=note, remember=False)
             await asyncio.sleep(0.02)
         events = await services.bus.history(run_id=run.id, limit=100_000)
         (out_dir / f"{name}.json").write_text(json.dumps(events, indent=1, default=str))
+        if request.workflow_id == gated:
+            async with services.db.session() as session:
+                detail = await run_detail(session, services, run.id)
+            (out_dir / f"{name}.run.json").write_text(detail.model_dump_json(indent=1))
         print(name, len(events), "events")
     await db.dispose()
 
@@ -72,6 +91,13 @@ FIX_WITH_REVIEW = [
     _step("test", "Add tests", "tester", "implement", changes_code=True),
     _step("review", "Review", "reviewer", "implement"),
     _step("final", "Final check", "reviewer", "test", "review"),
+]
+GATED = [
+    _step("research", "Research", "researcher"),
+    WorkflowStep(key="approve", kind="approval", title="Approve the plan", instructions="Is the cause right?", after=["research"]),
+    _step("implement", "Implement", "implementer", "approve", changes_code=True),
+    _step("final", "Final check", "reviewer", "implement"),
+    _step("docs", "Check the docs", "reviewer", "research"),
 ]
 TWO_BRANCHES = [
     _step("left", "Check the API", "researcher", retries=0),

@@ -1,4 +1,4 @@
-import { Check, ShieldAlert, X } from "lucide-react";
+import { Check, FileDiff, ShieldAlert, ThumbsDown, UserCheck, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
 
@@ -6,8 +6,9 @@ import { useResolveApproval } from "@/api/hooks";
 import type { Approval } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Md } from "@/components/ui/display";
-import { Checkbox, Input } from "@/components/ui/inputs";
-import { cn, relativeTime } from "@/lib/utils";
+import { Checkbox, Input, Textarea } from "@/components/ui/inputs";
+import { stepStatusLabel } from "@/lib/status";
+import { cn, plural, relativeTime } from "@/lib/utils";
 
 function ToolInput({ approval }: { approval: Approval }) {
   const input = approval.tool_input ?? {};
@@ -52,7 +53,155 @@ function PlanPreview({ approval }: { approval: Approval }) {
   );
 }
 
+interface StepContext {
+  step?: { key: string; title: string };
+  checks?: Array<{ key: string; title: string; kind?: string; agent?: string | null; status?: string; report?: string; session_id?: string | null }>;
+  changes?: { files: number; additions: number; deletions: number; paths: string[] } | null;
+  next?: Array<{ key: string; title: string }>;
+  workflow?: { name: string; version: number | null } | null;
+}
+
+/** What an approval step asks a person to check: the work before it, the changes so far and what comes next. */
+export function StepContextView({ approval }: { approval: Approval }) {
+  const data = approval.data as StepContext;
+  const checks = (data.checks ?? []).filter((c) => c.kind !== "approval" || c.report?.startsWith("Approved. Note"));
+  return (
+    <div className="mt-3 space-y-4 text-sm">
+      {approval.description && <p className="leading-6 whitespace-pre-wrap text-text">{approval.description}</p>}
+      {checks.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-xs font-medium tracking-wide text-text-3 uppercase">Work to check</p>
+          <ul className="space-y-1.5">
+            {checks.map((c) => (
+              <li key={c.key}>
+                <details className="group rounded-[10px] bg-sunken">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 marker:hidden">
+                    <span className="min-w-0 flex-1 truncate font-medium">{c.title}</span>
+                    <span className="shrink-0 text-xs text-text-3">
+                      {c.kind === "approval" ? "Approver's note" : c.agent}
+                      {c.status && c.kind !== "approval" ? `, ${stepStatusLabel(c.status, c.kind).toLowerCase()}` : ""}
+                    </span>
+                    <span className="shrink-0 text-xs text-accent-strong group-open:hidden">Show report</span>
+                  </summary>
+                  <div className="max-h-72 overflow-y-auto border-t border-line-soft px-3 py-2">
+                    {c.report ? <Md className="text-sm">{c.report}</Md> : <p className="text-text-3">No report.</p>}
+                    {c.session_id && (
+                      <Link to={`/runs/${approval.run_id}?tab=transcript&session=${c.session_id}`} className="mt-2 inline-block text-xs text-accent-strong underline underline-offset-[3px]">
+                        Open the transcript
+                      </Link>
+                    )}
+                  </div>
+                </details>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {data.changes && (
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-text-2">
+          <FileDiff className="size-4 text-text-3" />
+          {data.changes.files ? (
+            <>
+              {plural(data.changes.files, "file")} changed so far, <span className="text-st-ok">+{data.changes.additions}</span>{" "}
+              <span className="text-st-fail">−{data.changes.deletions}</span>
+              <Link to={`/runs/${approval.run_id}?tab=changes`} className="text-accent-strong underline underline-offset-[3px]">
+                Review the changes
+              </Link>
+            </>
+          ) : (
+            "No files changed so far."
+          )}
+        </p>
+      )}
+      <p className="text-text-2">
+        {data.next?.length ? (
+          <>
+            <span className="text-text">Approve</span> to continue with {data.next.map((n) => n.title).join(", ")}. <span className="text-text">Reject</span> to skip{" "}
+            {data.next.length === 1 ? "it" : "them"} and what follows; other branches carry on.
+          </>
+        ) : (
+          <>Nothing waits for this step: approving lets the run finish, rejecting ends it as rejected.</>
+        )}
+      </p>
+    </div>
+  );
+}
+
 export function ApprovalCard({ approval, compact }: { approval: Approval; compact?: boolean }) {
+  if (approval.kind === "workflow_step") return <StepApprovalCard approval={approval} compact={compact} />;
+  return <ToolApprovalCard approval={approval} compact={compact} />;
+}
+
+/** A workflow approval step: Approve or Reject, with an optional note for the steps after it. */
+function StepApprovalCard({ approval, compact }: { approval: Approval; compact?: boolean }) {
+  const resolve = useResolveApproval();
+  const [note, setNote] = useState("");
+  const pending = approval.status === "pending";
+  const busy = resolve.isPending;
+  const stopped = approval.run_status === "paused" || approval.run_status === "interrupted";
+  const decide = (decision: "approve" | "deny") => resolve.mutate({ id: approval.id, decision, message: note.trim() || undefined });
+  const workflow = (approval.data as StepContext).workflow;
+  return (
+    <article className={cn("rounded-panel border bg-panel p-5", pending ? "border-st-approval/40" : "border-line-soft opacity-75")}>
+      <header className="flex items-start gap-3">
+        <UserCheck className="mt-0.5 size-5 shrink-0 text-st-approval" />
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-medium break-words">{approval.title}</p>
+          <p className="mt-0.5 text-xs text-text-3">
+            {approval.task_key && (
+              <Link to={`/runs/${approval.run_id}?tab=steps`} className="mono hover:text-text-2">
+                {approval.task_key}
+              </Link>
+            )}{" "}
+            Approval step{workflow ? ` in ${workflow.name}` : ""}, asked {relativeTime(approval.created_at)}
+          </p>
+        </div>
+      </header>
+      {!compact && <StepContextView approval={approval} />}
+      {pending ? (
+        <div className="mt-4 space-y-3">
+          {stopped && (
+            <p className="text-sm text-text-2">The run is {approval.run_status}. Your decision is saved now, and the run carries on with it when you resume.</p>
+          )}
+          {!compact && (
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={2}
+              maxLength={4000}
+              placeholder="Note (optional). If you approve, the next steps see it."
+              aria-label="Note for the decision"
+            />
+          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="primary" disabled={busy} onClick={() => decide("approve")}>
+              <Check /> Approve
+            </Button>
+            <Button size="sm" variant="danger" disabled={busy} onClick={() => decide("deny")}>
+              <ThumbsDown /> Reject
+            </Button>
+            {compact && (
+              <Link
+                to={`/runs/${approval.run_id}?tab=steps${(approval.data as StepContext).step ? `&step=${(approval.data as StepContext).step!.key}` : ""}`}
+                className="ml-auto text-sm text-accent-strong underline underline-offset-[3px]"
+              >
+                See what to check
+              </Link>
+            )}
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-text-3">
+          {approval.status === "approved" ? "Approved" : approval.status === "denied" ? "Rejected" : approval.status === "cancelled" ? "Cancelled: the run was cancelled before a decision" : "Expired"}
+          {approval.resolved_at ? ` ${relativeTime(approval.resolved_at)}` : ""}
+          {approval.resolution?.message && approval.status !== "cancelled" ? `: ${String(approval.resolution.message)}` : ""}
+        </p>
+      )}
+    </article>
+  );
+}
+
+function ToolApprovalCard({ approval, compact }: { approval: Approval; compact?: boolean }) {
   const resolve = useResolveApproval();
   const [remember, setRemember] = useState(false);
   const [denyOpen, setDenyOpen] = useState(false);
