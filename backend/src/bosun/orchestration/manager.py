@@ -53,20 +53,27 @@ from bosun.domain.enums import (
     SessionKind,
     SessionStatus,
     SourceKind,
+    SubtaskKind,
     SubtaskStatus,
     TaskStatus,
 )
 from bosun.events.bus import EventInput
 from bosun.ids import utcnow
-from bosun.orchestration.config import RoleConfig, RunConfig, RunRequest
+from bosun.orchestration.config import RunConfig, RunRequest
 from bosun.orchestration.context import build_task_context
 from bosun.orchestration.git import GitError
-from bosun.orchestration.runtime import RunContext
+from bosun.orchestration.runtime import RunContext, subtask_event
 from bosun.orchestration.sessions import SessionRequest, SessionRunner
 from bosun.orchestration.team import RunInfo, TeamExecutor, TeamResult
 from bosun.settings_store import ProviderSettings, load_settings
 from bosun.tasks.service import add_activity, load_task, system_transition
-from bosun.workflows.service import WorkflowInvalid, snapshot_for_run
+from bosun.workflows.service import (
+    WorkflowInvalid,
+    agent_changes,
+    get_version,
+    role_config,
+    source_for_run,
+)
 
 log = logging.getLogger(__name__)
 
@@ -106,22 +113,7 @@ class RunManager:
     async def resolve_config(self, session: Any, task: Task, request: RunRequest) -> RunConfig:
         settings = await load_settings(session)
         roles = (await session.scalars(select(AgentRole).where(AgentRole.enabled.is_(True)))).all()
-        role_configs = {
-            r.key: RoleConfig(
-                key=r.key,
-                name=r.name,
-                description=r.description,
-                system_prompt=r.system_prompt,
-                permission_profile=r.permission_profile,
-                model=r.model,
-                effort=r.effort,
-                max_turns=r.max_turns,
-                extra_allowed_tools=list(r.extra_allowed_tools),
-                is_coordinator=r.is_coordinator,
-                color=r.color,
-            )
-            for r in roles
-        }
+        role_configs = {r.key: role_config(r) for r in roles}
         workers = [k for k, r in role_configs.items() if not r.is_coordinator]
         if not workers:
             raise RunConflict(
@@ -132,10 +124,24 @@ class RunManager:
             row = await session.get(Workflow, request.workflow_id)
             if row is None or row.archived:
                 raise RunNotFound("Workflow not found")
+            if (
+                request.workflow_version is None
+                and request.workflow_revision is not None
+                and request.workflow_revision != row.revision
+            ):
+                raise RunConflict(
+                    "This workflow's draft changed after you chose to run it. "
+                    "Check the latest draft and run it again."
+                )
             try:
-                workflow = await snapshot_for_run(session, row)
+                source = await source_for_run(session, row, request.workflow_version)
             except WorkflowInvalid as exc:
                 raise RunConflict(str(exc)) from exc
+            except LookupError as exc:
+                raise RunNotFound(str(exc)) from exc
+            workflow = source.snapshot
+            # A published version runs with the agents as they were when it was published.
+            role_configs = {**role_configs, **source.agents}
             mode = RunMode.WORKFLOW
         else:
             mode = RunMode(
@@ -282,6 +288,8 @@ class RunManager:
                     "summary": "Demo backend: no Claude calls are made",
                 }
             )
+        if config.workflow is not None:
+            warnings.extend(await self._workflow_warnings(config))
         if config.mode == RunMode.TEAM:
             warnings.append(
                 f"A coordinator will plan up to {config.max_team_size} subtasks"
@@ -300,6 +308,30 @@ class RunManager:
             "workspace": ws_info,
             "provider": provider,
         }
+
+    async def _workflow_warnings(self, config: RunConfig) -> list[str]:
+        """What a person should know before running this workflow version or draft."""
+        workflow = config.workflow
+        assert workflow is not None
+        warnings = []
+        approvals = [s.title for s in workflow.steps if s.is_approval]
+        if approvals:
+            warnings.append(
+                "The run waits for your approval at "
+                + ", ".join(approvals)
+                + ". It stays waiting, even through restarts, until you decide or cancel it."
+            )
+        if workflow.version is not None:
+            async with self.services.db.session() as session:
+                row = await get_version(session, workflow.id, workflow.version)
+                changes = await agent_changes(session, row) if row else []
+            for c in changes:
+                if c.state == "changed":
+                    warnings.append(
+                        f"Version {workflow.version} runs the {c.name} agent as it was when it "
+                        f"was published. Its {', '.join(c.fields)} changed since."
+                    )
+        return warnings
 
     # ------------------------------------------------------------------ start
     async def start(
@@ -342,6 +374,7 @@ class RunManager:
                     number=number,
                     mode=config.mode,
                     workflow_id=config.workflow.id if config.workflow else None,
+                    workflow_version=config.workflow.version if config.workflow else None,
                     status=RunStatus.QUEUED,
                     backend=config.backend,
                     provider="demo" if config.backend == ExecutionBackend.DEMO else config.provider,
@@ -363,7 +396,12 @@ class RunManager:
                     session,
                     task_id,
                     TaskStatus.IN_PROGRESS,
-                    f"Run #{number} started (workflow {config.workflow.name})"
+                    f"Run #{number} started (workflow {config.workflow.name}, "
+                    + (
+                        f"version {config.workflow.version})"
+                        if config.workflow.version
+                        else "draft)"
+                    )
                     if config.workflow
                     else f"Run #{number} started ({config.mode})",
                     run_id=run.id,
@@ -391,6 +429,7 @@ class RunManager:
                                     "id": config.workflow.id,
                                     "name": config.workflow.name,
                                     "revision": config.workflow.revision,
+                                    "version": config.workflow.version,
                                 }
                             }
                             if config.workflow
@@ -840,7 +879,8 @@ class RunManager:
             info is not None
             and info.isolation == "worktree"
             and config.commit_agent_changes
-            and result.status != "rejected"
+            # A rejected plan made no changes; a rejected workflow approval may follow some.
+            and (result.status != "rejected" or config.mode == RunMode.WORKFLOW)
         ):
             try:
                 commit = await self.services.worktrees.commit_all(
@@ -1030,6 +1070,9 @@ class RunManager:
                     run_id=run_id,
                 )
                 await session.commit()
+            await self.services.approvals.cancel_steps(
+                run_id, "The run was cancelled before anyone decided"
+            )
             await self.services.store.set_run_status(
                 run_id, RunStatus.CANCELLED, reason="Cancelled by the operator", force=True
             )
@@ -1150,11 +1193,21 @@ class RunManager:
             sub = await session.get(Subtask, subtask_id)
             if sub is None or sub.run_id != run_id:
                 raise RunNotFound("Subtask not found")
+            approval = sub.kind == SubtaskKind.APPROVAL
+            if approval and sub.status == SubtaskStatus.WAITING_APPROVAL:
+                raise RunConflict("This step is waiting for your decision: approve or reject it")
             if action == "retry":
+                if approval and sub.status == SubtaskStatus.COMPLETED:
+                    raise RunConflict("This step was already approved")
+                # For an approval step, asks again when the run resumes.
                 sub.status, sub.attempts, sub.error = SubtaskStatus.PENDING, 0, None
             elif action == "skip":
                 if sub.status == SubtaskStatus.COMPLETED:
                     raise RunConflict("Completed subtasks cannot be skipped")
+                if approval:
+                    raise RunConflict(
+                        "Approval steps can't be skipped: retry it to ask again, or cancel the run"
+                    )
                 sub.status, sub.error = SubtaskStatus.SKIPPED, "Skipped by the operator"
             else:
                 raise RunConflict(f"Unknown subtask action {action}")
@@ -1418,6 +1471,7 @@ class RunManager:
                 row.error = "Interrupted by a Bosun restart"
                 row.pid = None
                 counts["sessions"] += 1
+            reset: list[tuple[str, Subtask, str]] = []
             for sub in (
                 await session.scalars(
                     select(Subtask).where(
@@ -1425,7 +1479,13 @@ class RunManager:
                     )
                 )
             ).all():
+                # A workflow approval step keeps waiting: its request outlives the restart.
+                if sub.kind == SubtaskKind.APPROVAL:
+                    continue
+                reset.append((sub.status, sub, sub.run_id))
                 sub.status = SubtaskStatus.PENDING
+                sub.error = "Interrupted by a Bosun restart"
+            task_of = {r.id: r.task_id for r in runs}
             run_ids = [(r.id, r.task_id, r.number) for r in runs]
             for run in runs:
                 run.status = RunStatus.INTERRUPTED
@@ -1444,6 +1504,9 @@ class RunManager:
                         run_id=run_id,
                     )
             await session.commit()
+        # The live graph is built from events, so it hears about the steps put back too.
+        for previous, sub, run_id in reset:
+            await self.services.bus.emit(subtask_event(run_id, task_of.get(run_id), sub, previous))
         for run_id, task_id, _ in run_ids:
             counts["runs"] += 1
             await self.services.bus.emit(

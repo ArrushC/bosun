@@ -43,11 +43,12 @@ from bosun.domain.enums import (
     RunStatus,
     SessionKind,
     SessionStatus,
+    SubtaskKind,
     SubtaskStatus,
 )
 from bosun.events.bus import EventInput
 from bosun.orchestration.config import RoleConfig, RunConfig
-from bosun.orchestration.runtime import RunContext
+from bosun.orchestration.runtime import RunContext, subtask_event
 from bosun.orchestration.sessions import SessionRequest
 
 log = logging.getLogger(__name__)
@@ -55,6 +56,13 @@ log = logging.getLogger(__name__)
 PLAN_APPROVAL_TIMEOUT_S = 24 * 3600.0
 # Error prefix of workflow steps skipped because something they wait for failed.
 NOT_RUN = "Not run"
+# Workflow steps that end a branch: nothing after them can run.
+_BLOCKING = {
+    SubtaskStatus.FAILED: "failed",
+    SubtaskStatus.CONFLICT: "had a merge conflict",
+    SubtaskStatus.CANCELLED: "was cancelled",
+    SubtaskStatus.REJECTED: "was rejected",
+}
 CONTINUE_PROMPT = (
     "Your previous session was interrupted before you finished. Continue the assignment from where you "
     "left off, then finish with the report format requested earlier."
@@ -248,22 +256,8 @@ class TeamExecutor:
                 setattr(row, key, value)
             await session.commit()
         if previous != status or "report" in fields:
-            await self._emit(
-                "subtask.status",
-                {
-                    "subtask_id": row.id,
-                    "key": row.key,
-                    "title": row.title,
-                    "role": row.role,
-                    "from": previous,
-                    "to": status,
-                    "attempt": row.attempts,
-                    "session_id": row.session_id,
-                    "error": row.error,
-                    "depends_on": row.depends_on,
-                },
-                status=status,
-                agent_id=f"subtask:{row.id}",
+            await self.services.bus.emit(
+                subtask_event(self.ctx.run_id, self.ctx.task_id, row, previous)
             )
         self.services.bus.notify("run", self.ctx.run_id)
         return row
@@ -436,13 +430,16 @@ class TeamExecutor:
                     Subtask(
                         run_id=self.ctx.run_id,
                         key=step.key,
+                        kind=SubtaskKind.APPROVAL if step.is_approval else SubtaskKind.AGENT,
                         position=position,
                         title=step.title,
                         role=step.agent or "",
                         instructions=step.instructions,
                         depends_on=list(step.after),
                         modifies_code=step.changes_code,
-                        max_attempts=step.retries + 1
+                        max_attempts=1
+                        if step.is_approval
+                        else step.retries + 1
                         if step.retries is not None
                         else self.config.subtask_max_attempts,
                     )
@@ -462,11 +459,13 @@ class TeamExecutor:
                     "id": workflow.id,
                     "name": workflow.name,
                     "revision": workflow.revision,
+                    "version": workflow.version,
                 },
                 "subtasks": [
                     {
                         "subtask_id": s.id,
                         "key": s.key,
+                        "kind": s.kind,
                         "title": s.title,
                         "role": s.role,
                         "depends_on": s.depends_on,
@@ -479,46 +478,32 @@ class TeamExecutor:
         )
 
     async def finish_workflow(self) -> TeamResult:
-        """The run's result once no step can run: a summary, or what failed and what didn't run."""
+        """The run's result once no step can run: a summary, or what failed and what didn't run.
+
+        A failed step fails the run. A rejected approval step with no failures ends it
+        as rejected (the run is cancelled and its task goes back to Ready).
+        """
         if self.ctx.stop_event.is_set():
             return TeamResult("stopped")
-        subtasks = await self._subtasks()
-        by_key = {s.key: s for s in subtasks}
-        blocked = {
-            SubtaskStatus.FAILED,
-            SubtaskStatus.CONFLICT,
-            SubtaskStatus.CANCELLED,
-            SubtaskStatus.SKIPPED,
-        }
-        # Steps that never started because something they wait for did not complete.
-        for s in subtasks:
-            if s.status not in (SubtaskStatus.PENDING, SubtaskStatus.WAITING_DEPENDENCY):
-                continue
-            causes = [
-                by_key[k].title for k in _upstream(s.key, by_key) if by_key[k].status in blocked
-            ]
-            await self._set_subtask(
-                s.id,
-                SubtaskStatus.SKIPPED,
-                error=f"{NOT_RUN}: it waits for {_join(causes)}, which did not finish."
-                if causes
-                else f"{NOT_RUN}.",
-            )
+        await self._skip_unreachable(await self._subtasks(), running=set(), final=True)
         subtasks = await self._subtasks()
         failed = [
             s
             for s in subtasks
             if s.status in (SubtaskStatus.FAILED, SubtaskStatus.CONFLICT, SubtaskStatus.CANCELLED)
         ]
+        rejected = [s for s in subtasks if s.status == SubtaskStatus.REJECTED]
         skipped = [s for s in subtasks if s.status == SubtaskStatus.SKIPPED]
-        if failed:
-            what = "; ".join(f"{s.title} failed: {s.error or 'no details'}" for s in failed)
-            not_run = f" Not run: {_join([s.title for s in skipped])}." if skipped else ""
-            return TeamResult(
-                "failed",
-                error=f"{what}{'' if what.endswith('.') else '.'}{not_run}",
-                error_kind=await self._first_error_kind(failed),
+        if failed or rejected:
+            what = "; ".join(
+                [f"{s.title} failed: {_sentence(s.error or 'no details')}" for s in failed]
+                + [f"{s.title} was rejected{_note(s.error)}" for s in rejected]
             )
+            not_run = f" Not run: {_join([s.title for s in skipped])}." if skipped else ""
+            text = f"{what}{'' if what.endswith('.') else '.'}{not_run}"
+            if not failed:
+                return TeamResult("rejected", error=text)
+            return TeamResult("failed", error=text, error_kind=await self._first_error_kind(failed))
         results = [
             {
                 "title": s.title,
@@ -528,7 +513,7 @@ class TeamExecutor:
                 "session_id": s.session_id or "",
             }
             for s in subtasks
-            if s.status == SubtaskStatus.COMPLETED
+            if s.status == SubtaskStatus.COMPLETED and s.kind != SubtaskKind.APPROVAL
         ]
         if len(results) == 1:
             return TeamResult("completed", summary=results[0]["report"])
@@ -547,24 +532,41 @@ class TeamExecutor:
         self.ctx.active_status = RunStatus.RUNNING
         await self.services.store.set_run_status(self.ctx.run_id, RunStatus.RUNNING, reason=None)
         running: dict[str, asyncio.Task[None]] = {}
+        # Approval steps wait for a person, so they don't take one of the run's agent slots.
+        approvals: set[str] = set()
+        workflow = self.config.mode == RunMode.WORKFLOW
         try:
             while True:
                 subtasks = await self._subtasks()
-                by_key = {s.key: s for s in subtasks}
                 if self.ctx.stop_event.is_set():
                     break
+                if workflow and await self._skip_unreachable(subtasks, running=set(running)):
+                    subtasks = await self._subtasks()
+                by_key = {s.key: s for s in subtasks}
                 started = False
                 for s in subtasks:
-                    if s.id in running or s.status not in (
-                        SubtaskStatus.PENDING,
-                        SubtaskStatus.WAITING_DEPENDENCY,
-                    ):
+                    if s.id in running:
+                        continue
+                    approval = s.kind == SubtaskKind.APPROVAL
+                    if approval and s.status == SubtaskStatus.WAITING_APPROVAL:
+                        # Still waiting from before a pause or restart: wait on the same request.
+                        running[s.id] = asyncio.create_task(
+                            self._run_approval(s.id), name=f"approval:{s.key}"
+                        )
+                        approvals.add(s.id)
+                        started = True
+                        continue
+                    if s.status not in (SubtaskStatus.PENDING, SubtaskStatus.WAITING_DEPENDENCY):
                         continue
                     deps = [by_key[k] for k in s.depends_on if k in by_key]
-                    if all(
-                        d.status in (SubtaskStatus.COMPLETED, SubtaskStatus.SKIPPED) for d in deps
-                    ):
-                        if len(running) < self.config.max_parallel:
+                    if all(self._satisfied(d) for d in deps):
+                        if approval:
+                            running[s.id] = asyncio.create_task(
+                                self._run_approval(s.id), name=f"approval:{s.key}"
+                            )
+                            approvals.add(s.id)
+                            started = True
+                        elif len(running.keys() - approvals) < self.config.max_parallel:
                             running[s.id] = asyncio.create_task(
                                 self._run_subtask(s.id), name=f"subtask:{s.key}"
                             )
@@ -587,6 +589,123 @@ class TeamExecutor:
         finally:
             if running:
                 await asyncio.gather(*running.values(), return_exceptions=True)
+
+    def _satisfied(self, dep: Subtask) -> bool:
+        """Whether a step waiting for `dep` may start (a step skipped by a person counts)."""
+        if dep.status == SubtaskStatus.COMPLETED:
+            return True
+        return dep.status == SubtaskStatus.SKIPPED and not (
+            self.config.mode == RunMode.WORKFLOW and (dep.error or "").startswith(NOT_RUN)
+        )
+
+    async def _skip_unreachable(
+        self, subtasks: list[Subtask], *, running: set[str], final: bool = False
+    ) -> bool:
+        """Mark workflow steps that can no longer run as skipped, saying why. True if any were.
+
+        A step can't run once something it waits for (directly or not) has failed, been
+        rejected or been cancelled; independent branches carry on. With `final`, every
+        step still waiting is marked, since nothing else will run.
+        """
+        by_key = {s.key: s for s in subtasks}
+        changed = False
+        for s in subtasks:
+            if s.id in running or s.status not in (
+                SubtaskStatus.PENDING,
+                SubtaskStatus.WAITING_DEPENDENCY,
+            ):
+                continue
+            causes = [
+                by_key[k]
+                for k in _upstream(s.key, by_key)
+                if by_key[k].status in _BLOCKING and by_key[k].id not in running
+            ]
+            if not causes and not final:
+                continue
+            reason = (
+                f"{NOT_RUN}: it waits for {_causes(causes)}."
+                if causes
+                else f"{NOT_RUN}: the run ended before it could start."
+            )
+            await self._set_subtask(s.id, SubtaskStatus.SKIPPED, error=reason)
+            changed = True
+        return changed
+
+    async def _run_approval(self, subtask_id: str) -> None:
+        """An approval step: ask a person once, and wait for their decision.
+
+        The request is durable (see ApprovalBroker): pausing or restarting leaves it
+        pending, a decision made meanwhile is already on the step, and resuming waits
+        on the same request rather than asking again.
+        """
+        broker = self.services.approvals
+        async with self.services.db.session() as session:
+            s = await session.get(Subtask, subtask_id)
+            assert s is not None
+        approval = await broker.pending_step(s.id)
+        if s.status != SubtaskStatus.WAITING_APPROVAL:
+            if s.status not in (SubtaskStatus.PENDING, SubtaskStatus.WAITING_DEPENDENCY):
+                return
+            # The step waits first, then the request appears, so a decision always finds it waiting.
+            s = await self._set_subtask(
+                s.id,
+                SubtaskStatus.WAITING_APPROVAL,
+                attempts=s.attempts + (0 if approval else 1),
+                error=None,
+            )
+        if approval is None:
+            approval = await broker.create(
+                self.ctx,
+                kind=ApprovalKind.STEP,
+                title=s.title,
+                description=s.instructions or None,
+                subtask_id=s.id,
+                data=await self._approval_context(s),
+            )
+        await broker.wait_step(self.ctx, approval.id)
+
+    async def _approval_context(self, s: Subtask) -> dict[str, Any]:
+        """What the approver sees: the work it checks, the changes so far, and what comes next."""
+        subtasks = await self._subtasks()
+        by_key = {x.key: x for x in subtasks}
+        checked = []
+        for dep in _report_sources(s, by_key):
+            agent = self.config.roles.get(dep.role)
+            checked.append(
+                {
+                    "key": dep.key,
+                    "title": dep.title,
+                    "kind": dep.kind,
+                    "agent": agent.name if agent else (dep.role or None),
+                    "status": dep.status,
+                    "report": (dep.report or "")[:6000],
+                    "session_id": dep.session_id,
+                }
+            )
+        changes = None
+        async with self.services.db.session() as session:
+            run = await session.get(AgentRun, self.ctx.run_id)
+            base = run.base_commit if run else None
+        if base and self.info.isolation == "worktree":
+            try:
+                diff = await self.services.worktrees.diff(self.info.cwd, base)
+                files = list(diff["files"])  # type: ignore[call-overload]
+                changes = {
+                    "files": len(files),
+                    "additions": diff["additions"],
+                    "deletions": diff["deletions"],
+                    "paths": [f["path"] for f in files[:20]],
+                }
+            except Exception:  # noqa: BLE001 - the request still works without it
+                log.warning("Could not summarise changes for %s", s.key, exc_info=True)
+        workflow = self.config.workflow
+        return {
+            "step": {"key": s.key, "title": s.title},
+            "workflow": {"name": workflow.name, "version": workflow.version} if workflow else None,
+            "checks": checked,
+            "changes": changes,
+            "next": [{"key": x.key, "title": x.title} for x in subtasks if s.key in x.depends_on],
+        }
 
     async def _fail_crashed(self, subtask_id: str, exc: BaseException) -> None:
         try:
@@ -694,13 +813,24 @@ class TeamExecutor:
 
         deps_reports: list[tuple[str, str, str]] = []
         dep_sessions: list[tuple[str | None, str, str]] = []
-        for dep in await self._subtasks():
-            if dep.key in s.depends_on and dep.status == SubtaskStatus.COMPLETED and dep.report:
-                who = (
-                    self.config.roles[dep.role].name if dep.role in self.config.roles else dep.role
-                )
-                deps_reports.append((who, dep.title, dep.report))
-                dep_sessions.append((dep.session_id, dep.title, dep.report))
+        all_subtasks = await self._subtasks()
+        if workflow is not None:
+            # Reports pass through approval steps, so the step after an approval still
+            # gets the work that was approved (and the approver's note, if any).
+            sources = _report_sources(s, {x.key: x for x in all_subtasks})
+        else:
+            sources = [d for d in all_subtasks if d.key in s.depends_on]
+        for dep in sources:
+            if dep.status != SubtaskStatus.COMPLETED or not dep.report:
+                continue
+            if dep.kind == SubtaskKind.APPROVAL:
+                if dep.report.startswith("Approved. Note"):
+                    deps_reports.append(("The approver", dep.title, dep.report))
+                    dep_sessions.append((None, dep.title, dep.report))
+                continue
+            who = self.config.roles[dep.role].name if dep.role in self.config.roles else dep.role
+            deps_reports.append((who, dep.title, dep.report))
+            dep_sessions.append((dep.session_id, dep.title, dep.report))
 
         if resume:
             prompt = CONTINUE_PROMPT
@@ -990,6 +1120,42 @@ def _upstream(key: str, by_key: dict[str, Subtask]) -> list[str]:
         seen.append(dep)
         stack.extend(by_key[dep].depends_on)
     return sorted(seen, key=lambda k: by_key[k].position)
+
+
+def _report_sources(s: Subtask, by_key: dict[str, Subtask]) -> list[Subtask]:
+    """The steps whose reports `s` receives: what it waits for, looking through approval steps.
+
+    An approval step contributes itself (for its note) and the steps it waits for.
+    """
+    out: list[Subtask] = []
+    stack = list(reversed(s.depends_on))
+    while stack:
+        key = stack.pop()
+        dep = by_key.get(key)
+        if dep is None or dep in out:
+            continue
+        out.append(dep)
+        if dep.kind == SubtaskKind.APPROVAL:
+            stack.extend(reversed(dep.depends_on))
+    return sorted(out, key=lambda d: d.position)
+
+
+def _sentence(text: str) -> str:
+    return text.strip().rstrip(".")
+
+
+def _note(error: str | None) -> str:
+    """ ": the note" from a rejected approval step's error ("Rejected: the note"), or ""."""
+    note = (error or "").removeprefix("Rejected").lstrip(":. ").strip()
+    return f": {_sentence(note)}" if note else ""
+
+
+def _causes(steps: list[Subtask]) -> str:
+    """ "Implement, which failed" or "Implement (failed) and Approve (was rejected)"."""
+    verbs = [_BLOCKING[SubtaskStatus(s.status)] for s in steps]
+    if len(set(verbs)) == 1:
+        return f"{_join([s.title for s in steps])}, which {verbs[0]}"
+    return _join([f"{s.title} ({v})" for s, v in zip(steps, verbs, strict=True)])
 
 
 def _join(names: list[str]) -> str:

@@ -180,12 +180,20 @@ async def approvals_out(
             t.id: t
             for t in (await session.scalars(select(Task).where(Task.id.in_(task_ids)))).all()
         }
+    run_ids = {r.run_id for r in rows}
+    statuses: dict[str, str] = {}
+    if run_ids:
+        found = await session.execute(
+            select(AgentRun.id, AgentRun.status).where(AgentRun.id.in_(run_ids))
+        )
+        statuses = {run_id: status for run_id, status in found.tuples()}
     out = []
     for row in rows:
         item = ApprovalOut.model_validate(row)
         task = tasks.get(row.task_id or "")
         if task is not None:
             item.task_key, item.task_title = task.key, task.title
+        item.run_status = statuses.get(row.run_id)
         out.append(item)
     return out
 
@@ -243,6 +251,7 @@ async def run_list_items(session: AsyncSession, runs: Sequence[AgentRun]) -> lis
                 integration_status=run.integration_status,
                 workflow_id=run.workflow_id,
                 workflow_name=((run.config or {}).get("workflow") or {}).get("name"),
+                workflow_version=run.workflow_version,
             )
         )
     return items

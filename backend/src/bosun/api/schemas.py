@@ -8,7 +8,9 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from bosun.domain.enums import ExecutionMode, TaskKind, TaskPriority, TaskStatus
+from bosun.workflows.service import AgentChange
 from bosun.workflows.spec import WorkflowSpec
+from bosun.workflows.templates import SetupItem
 from bosun.workflows.validation import Issue
 
 
@@ -358,6 +360,8 @@ class SessionOut(ORM):
 class SubtaskOut(ORM):
     id: str
     key: str
+    # agent, or approval (a workflow step that waits for a person's decision)
+    kind: str = "agent"
     position: int
     title: str
     role: str
@@ -404,6 +408,8 @@ class ApprovalOut(ORM):
     expires_at: datetime | None
     task_key: str | None = None
     task_title: str | None = None
+    # The run's status, so a decision on a paused run can say it continues on resume.
+    run_status: str | None = None
 
 
 class RunOut(ORM):
@@ -435,6 +441,9 @@ class RunOut(ORM):
     started_at: datetime | None
     ended_at: datetime | None
     is_demo: bool
+    workflow_id: str | None = None
+    # The published version a workflow run executed; None for the draft.
+    workflow_version: int | None = None
     active: bool = False
     config: dict[str, Any] = Field(default_factory=dict)
     sessions: list[SessionOut] = Field(default_factory=list)
@@ -468,6 +477,8 @@ class RunListItem(Schema):
     integration_status: str
     workflow_id: str | None = None
     workflow_name: str | None = None
+    # The published version a workflow run executed; None for the draft.
+    workflow_version: int | None = None
 
 
 class RunCreate(Schema):
@@ -484,6 +495,10 @@ class RunCreate(Schema):
     max_team_size: int | None = Field(default=None, ge=1, le=8)
     instructions: str | None = Field(default=None, max_length=20_000)
     demo_scenario: dict[str, Any] = Field(default_factory=dict)
+    # Run a workflow on this task: a published version, or the draft when none is given.
+    workflow_id: str | None = None
+    workflow_version: int | None = Field(default=None, ge=1)
+    workflow_revision: int | None = None
 
 
 class RunPreview(Schema):
@@ -634,6 +649,17 @@ class WorkflowRunBrief(Schema):
     created_at: datetime
 
 
+class WorkflowVersionBrief(Schema):
+    number: int
+    name: str
+    note: str
+    steps: int
+    created_at: datetime
+    # The draft revision it was published from.
+    draft_revision: int
+    run_count: int = 0
+
+
 class WorkflowListItem(Schema):
     id: str
     name: str
@@ -643,6 +669,10 @@ class WorkflowListItem(Schema):
     updated_at: datetime
     run_count: int
     last_run: WorkflowRunBrief | None = None
+    template: str | None = None
+    latest_version: WorkflowVersionBrief | None = None
+    # The draft differs from the latest version (always true when nothing is published).
+    unpublished_changes: bool = True
 
 
 class WorkflowOut(Schema):
@@ -655,12 +685,59 @@ class WorkflowOut(Schema):
     updated_at: datetime
     # Problems found in the saved draft; errors block a run.
     issues: list[Issue]
+    template: str | None = None
+    latest_version: WorkflowVersionBrief | None = None
+    unpublished_changes: bool = True
+
+
+class VersionAgent(Schema):
+    """An agent as a version froze it: what its steps run with."""
+
+    key: str
+    name: str
+    permission_profile: str
+    model: str | None = None
+    color: str = "slate"
+
+
+class WorkflowVersionOut(WorkflowVersionBrief):
+    workflow_id: str
+    description: str
+    spec: WorkflowSpec
+    agents: list[VersionAgent]
+    # How its agents differ from today's (changed, turned off, or gone).
+    agent_changes: list[AgentChange]
+    # Why it can't run now (an agent turned off or gone); empty when it can.
+    issues: list[Issue]
+    is_latest: bool
 
 
 class WorkflowCreate(Schema):
     name: str = Field(min_length=1, max_length=120)
     description: str = Field(default="", max_length=2000)
     spec: WorkflowSpec = Field(default_factory=WorkflowSpec)
+    # Copy this template's steps (and its description, unless one is given) into the draft.
+    template: str | None = None
+
+
+class WorkflowPublish(Schema):
+    # The draft revision on screen; refused if the draft has changed since.
+    revision: int
+    note: str = Field(default="", max_length=500)
+
+
+class WorkflowRestore(Schema):
+    # The draft revision on screen; refused if the draft has changed since.
+    revision: int
+
+
+class TemplateOut(Schema):
+    key: str
+    name: str
+    description: str
+    outline: str
+    spec: WorkflowSpec
+    setup: list[SetupItem]
 
 
 class WorkflowUpdate(Schema):
@@ -678,8 +755,11 @@ class NewTaskIn(Schema):
 
 
 class WorkflowRunCreate(Schema):
-    # The revision shown when the person chose to run; refused if the draft changed since.
+    # The draft revision shown when the person chose to run; a draft run is refused if
+    # the draft changed since. Ignored when running a published version.
     revision: int
+    # Run this published version instead of the draft.
+    version: int | None = Field(default=None, ge=1)
     task_id: str | None = None
     new_task: NewTaskIn | None = None
 

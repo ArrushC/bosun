@@ -1,8 +1,8 @@
-"""Checks for an authored workflow, shared by the editor and run start.
+"""Checks for an authored workflow, shared by the editor, publishing and run start.
 
 Problems are reported, never fixed: an unknown agent or a code-changing step on
 a read-only agent stops the run instead of being mapped to something else.
-Errors block a run; warnings do not.
+Errors block a run or a publish; warnings do not.
 """
 
 from __future__ import annotations
@@ -43,6 +43,14 @@ def validate_workflow(spec: WorkflowSpec, agents: Mapping[str, AgentRef]) -> lis
     steps = spec.steps
     if not steps:
         return [Issue(level="error", code="no_steps", message="Add a step to run this workflow.")]
+    if all(s.is_approval for s in steps):
+        issues.append(
+            Issue(
+                level="error",
+                code="no_agent_steps",
+                message="Add an agent step: approval steps only check the work of agent steps.",
+            )
+        )
     if len(steps) > MAX_STEPS:
         issues.append(
             Issue(
@@ -76,7 +84,22 @@ def validate_workflow(spec: WorkflowSpec, agents: Mapping[str, AgentRef]) -> lis
                     message="Give this step a name.",
                 )
             )
-        issues.extend(_agent_issues(s.key, s.agent, s.changes_code, agents))
+        if s.is_approval:
+            if not s.after:
+                issues.append(
+                    Issue(
+                        level="warning",
+                        code="approval_first",
+                        steps=[s.key],
+                        field="after",
+                        message=(
+                            "This approval waits for nothing, so it asks as soon as the run starts. "
+                            "Make it wait for the step whose work should be checked."
+                        ),
+                    )
+                )
+        else:
+            issues.extend(_agent_issues(s.key, s.agent, s.changes_code, agents))
         if not s.instructions.strip():
             issues.append(
                 Issue(
@@ -84,7 +107,9 @@ def validate_workflow(spec: WorkflowSpec, agents: Mapping[str, AgentRef]) -> lis
                     code="missing_instructions",
                     steps=[s.key],
                     field="instructions",
-                    message="Add instructions so the agent knows what this step is for.",
+                    message="Say what the approver should check before approving."
+                    if s.is_approval
+                    else "Add instructions so the agent knows what this step is for.",
                 )
             )
         for dep in s.after:
@@ -205,7 +230,7 @@ def _parallel_code_changes(
                 ancestors[key] |= {dep, *upstream(dep)}
         return ancestors[key]
 
-    writers = [s.key for s in steps if s.changes_code]
+    writers = [s.key for s in steps if s.changes_code and not s.is_approval]
     issues = []
     for i, a in enumerate(writers):
         for b in writers[i + 1 :]:

@@ -107,6 +107,8 @@ class SubtaskStatus(StrEnum):
     CONFLICT = "conflict"
     SKIPPED = "skipped"
     CANCELLED = "cancelled"
+    # A workflow approval step that a person rejected.
+    REJECTED = "rejected"
 
 
 TERMINAL_SUBTASK_STATUSES = frozenset(
@@ -116,14 +118,24 @@ TERMINAL_SUBTASK_STATUSES = frozenset(
         SubtaskStatus.CONFLICT,
         SubtaskStatus.SKIPPED,
         SubtaskStatus.CANCELLED,
+        SubtaskStatus.REJECTED,
     }
 )
+
+
+class SubtaskKind(StrEnum):
+    AGENT = "agent"
+    # A workflow step that waits for a person's decision instead of running an agent.
+    APPROVAL = "approval"
 
 
 class ApprovalKind(StrEnum):
     TOOL_PERMISSION = "tool_permission"
     PLAN = "plan"
     INTEGRATION = "integration"
+    # A workflow approval step. Unlike the others it outlives the process: it stays
+    # pending through pauses and restarts until a person decides or the run is cancelled.
+    STEP = "workflow_step"
 
 
 class ApprovalStatus(StrEnum):

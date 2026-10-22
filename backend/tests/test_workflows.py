@@ -278,7 +278,7 @@ async def test_a_failed_step_marks_what_did_not_run_and_says_so(
         "right": SubtaskStatus.COMPLETED,
         "right2": SubtaskStatus.COMPLETED,
     }
-    assert by_key["left2"].error == "Not run: it waits for Check the API, which did not finish."
+    assert by_key["left2"].error == "Not run: it waits for Check the API, which failed."
     assert run.status == RunStatus.FAILED
     assert run.error == (
         "Check the API failed: The agent process exited unexpectedly (simulated). "

@@ -34,8 +34,12 @@ class RoleConfig(BaseModel):
 
 class RunRequest(BaseModel):
     mode: ExecutionMode | None = None
-    # Run this workflow's current draft instead of a single agent or a team.
+    # Run this workflow instead of a single agent or a team: a published version,
+    # or the draft when no version is given. A draft run may name the revision it
+    # expects, and is refused if the draft has changed since.
     workflow_id: str | None = None
+    workflow_version: int | None = Field(default=None, ge=1)
+    workflow_revision: int | None = None
     role: str | None = None
     team_roles: list[str] | None = None
     backend: ExecutionBackend | None = None
@@ -75,7 +79,7 @@ class RunConfig(BaseModel):
     instructions: str | None = None
     remembered_approvals: list[dict[str, str]] = Field(default_factory=list)
     demo_scenario: dict[str, Any] = Field(default_factory=dict)
-    # The workflow draft this run executes (mode "workflow"), frozen at start.
+    # The workflow this run executes (mode "workflow"), frozen at start: a version or the draft.
     workflow: WorkflowSnapshot | None = None
 
     def execution_settings(self) -> ExecutionSettings:

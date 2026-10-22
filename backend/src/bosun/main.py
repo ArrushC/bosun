@@ -164,6 +164,7 @@ def create_app(
         ws,
     ):
         app.include_router(router.router, prefix=API_PREFIX)
+    app.include_router(workflows.templates_router, prefix=API_PREFIX)
 
     @app.exception_handler(RunConflict)
     async def _conflict(_: Request, exc: RunConflict) -> JSONResponse:

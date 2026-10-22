@@ -91,18 +91,27 @@ def ensure_run_transition(current: RunStatus, target: RunStatus) -> None:
 
 # --- Subtasks ----------------------------------------------------------------
 S = SubtaskStatus
+# Approval steps go straight from waiting to `waiting_approval`, and from there to
+# `completed` (approved) or `rejected`.
 SUBTASK_TRANSITIONS: dict[SubtaskStatus, frozenset[SubtaskStatus]] = {
-    S.PENDING: frozenset({S.WAITING_DEPENDENCY, S.RUNNING, S.SKIPPED, S.CANCELLED}),
-    S.WAITING_DEPENDENCY: frozenset({S.PENDING, S.RUNNING, S.SKIPPED, S.CANCELLED}),
+    S.PENDING: frozenset(
+        {S.WAITING_DEPENDENCY, S.RUNNING, S.WAITING_APPROVAL, S.SKIPPED, S.CANCELLED}
+    ),
+    S.WAITING_DEPENDENCY: frozenset(
+        {S.PENDING, S.RUNNING, S.WAITING_APPROVAL, S.SKIPPED, S.CANCELLED}
+    ),
     S.RUNNING: frozenset(
         {S.WAITING_APPROVAL, S.COMPLETED, S.FAILED, S.CONFLICT, S.CANCELLED, S.PENDING}
     ),
-    S.WAITING_APPROVAL: frozenset({S.RUNNING, S.FAILED, S.CANCELLED, S.PENDING}),
+    S.WAITING_APPROVAL: frozenset(
+        {S.RUNNING, S.COMPLETED, S.REJECTED, S.FAILED, S.CANCELLED, S.PENDING}
+    ),
     S.COMPLETED: frozenset(),
     S.FAILED: frozenset({S.PENDING, S.SKIPPED}),
     S.CONFLICT: frozenset({S.PENDING, S.SKIPPED}),
     S.SKIPPED: frozenset({S.PENDING}),
     S.CANCELLED: frozenset({S.PENDING}),
+    S.REJECTED: frozenset({S.PENDING}),
 }
 
 

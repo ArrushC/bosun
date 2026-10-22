@@ -15,13 +15,14 @@ from typing import Any
 from sqlalchemy import select, update
 
 from bosun.agents.contracts import AgentEvent, PermissionDecision, PermissionRequest
-from bosun.db.models import AgentRun, AgentSession, ApprovalRequest, Artifact
+from bosun.db.models import AgentRun, AgentSession, ApprovalRequest, Artifact, Subtask
 from bosun.db.session import Database
 from bosun.domain.enums import (
     ApprovalKind,
     ApprovalStatus,
     RunStatus,
     SessionStatus,
+    SubtaskStatus,
 )
 from bosun.domain.state_machines import InvalidTransition, ensure_run_transition
 from bosun.events.bus import EventBus, EventInput
@@ -350,8 +351,43 @@ def describe_tool_request(tool_name: str, tool_input: dict[str, Any]) -> tuple[s
     return (f"{tool_name} {path}" if path else f"Use {tool_name}"), None
 
 
+def subtask_event(
+    run_id: str, task_id: str | None, row: Subtask, previous: str | None, **extra: Any
+) -> EventInput:
+    """The `subtask.status` event for a change to `row` (the run page and graph follow these)."""
+    return EventInput(
+        run_id=run_id,
+        task_id=task_id,
+        type="subtask.status",
+        status=row.status,
+        agent_id=f"subtask:{row.id}",
+        data={
+            "subtask_id": row.id,
+            "key": row.key,
+            "kind": row.kind,
+            "title": row.title,
+            "role": row.role,
+            "from": previous,
+            "to": row.status,
+            "attempt": row.attempts,
+            "session_id": row.session_id,
+            "error": row.error,
+            "depends_on": row.depends_on,
+            **extra,
+        },
+    )
+
+
 class ApprovalBroker:
-    """Human-in-the-loop approvals for tool permissions, plans and integrations."""
+    """Human-in-the-loop approvals for tool permissions, plans, integrations and workflow steps.
+
+    Tool, plan and integration requests live as long as the agent or run that asked:
+    a waiting coroutine receives the decision, and requests left pending by a restart
+    are expired. Workflow approval steps are durable instead. Their request stays
+    pending through pauses and restarts, a decision is recorded on the step in the
+    same transaction that resolves the request (so it counts once, whether or not the
+    run is active), and resuming the run waits on the same request again.
+    """
 
     def __init__(self, services: Any) -> None:
         self.services = services
@@ -579,6 +615,8 @@ class ApprovalBroker:
             raise LookupError("Approval request not found")
         if row.status != ApprovalStatus.PENDING:
             raise ValueError(f"This request was already {row.status}")
+        if row.kind == ApprovalKind.STEP:
+            return await self.resolve_step(approval_id, approve=approve, message=message)
         if future is None or future.done():
             await self._finalise(
                 approval_id,
@@ -605,10 +643,14 @@ class ApprovalBroker:
         return updated
 
     async def expire_stale(self, reason: str) -> int:
+        """Expire requests nobody can answer any more (workflow approval steps stay pending)."""
         async with self.db.session() as session:
             rows = (
                 await session.scalars(
-                    select(ApprovalRequest).where(ApprovalRequest.status == ApprovalStatus.PENDING)
+                    select(ApprovalRequest).where(
+                        ApprovalRequest.status == ApprovalStatus.PENDING,
+                        ApprovalRequest.kind != ApprovalKind.STEP,
+                    )
                 )
             ).all()
             ids = [r.id for r in rows if r.id not in self._waiters]
@@ -617,3 +659,156 @@ class ApprovalBroker:
                 approval_id, ApprovalStatus.EXPIRED, {"decision": "deny", "message": reason}
             )
         return len(ids)
+
+    # -- workflow approval steps -----------------------------------------------------------
+    async def pending_step(self, subtask_id: str) -> ApprovalRequest | None:
+        async with self.db.session() as session:
+            return await session.scalar(
+                select(ApprovalRequest)
+                .where(
+                    ApprovalRequest.subtask_id == subtask_id,
+                    ApprovalRequest.kind == ApprovalKind.STEP,
+                    ApprovalRequest.status == ApprovalStatus.PENDING,
+                )
+                .order_by(ApprovalRequest.created_at.desc())
+            )
+
+    async def wait_step(self, ctx: RunContext, approval_id: str) -> str:
+        """Wait for a decision on an approval step: "decided", "cancelled" or "stopped".
+
+        Pausing or shutting down leaves the request pending for later ("stopped");
+        cancelling the run cancels it. The decision itself is recorded by
+        `resolve_step`, so there is nothing to apply here.
+        """
+        future = self._waiters.get(approval_id)
+        if future is None or future.done():
+            future = asyncio.get_running_loop().create_future()
+            self._waiters[approval_id] = future
+        stop_wait = asyncio.ensure_future(ctx.stop_event.wait())
+        await self._enter_waiting(ctx, None)
+        try:
+            # Decided while the run was paused or interrupted, before this wait began.
+            async with self.db.session() as session:
+                row = await session.get(ApprovalRequest, approval_id)
+            if row is None or row.status != ApprovalStatus.PENDING:
+                return "decided"
+            done, _ = await asyncio.wait({future, stop_wait}, return_when=asyncio.FIRST_COMPLETED)
+            if future in done:
+                return "decided"
+            if ctx.stop_reason == "cancel":
+                await self.cancel_steps(ctx.run_id, "The run was cancelled before anyone decided")
+                return "cancelled"
+            return "stopped"
+        finally:
+            stop_wait.cancel()
+            self._waiters.pop(approval_id, None)
+            await self._leave_waiting(ctx, None)
+
+    async def resolve_step(
+        self, approval_id: str, *, approve: bool, message: str | None
+    ) -> ApprovalRequest:
+        """Record a decision on an approval step, exactly once.
+
+        The request and its step change in one transaction, and only from pending
+        and waiting: a second click, another tab or a stale page gets an error
+        instead of advancing the run twice.
+        """
+        note = redact((message or "").strip()) or None
+        resolution = {"decision": "approve" if approve else "deny", "message": note}
+        status = ApprovalStatus.APPROVED if approve else ApprovalStatus.DENIED
+        async with self.db.session() as session:
+            row = await session.get(ApprovalRequest, approval_id)
+            if row is None or row.kind != ApprovalKind.STEP or not row.subtask_id:
+                raise LookupError("Approval request not found")
+            resolved = await session.execute(
+                update(ApprovalRequest)
+                .where(
+                    ApprovalRequest.id == approval_id,
+                    ApprovalRequest.status == ApprovalStatus.PENDING,
+                )
+                .values(status=status, resolution=resolution, resolved_at=utcnow())
+            )
+            if getattr(resolved, "rowcount", 0) != 1:
+                await session.rollback()
+                current = await session.get(ApprovalRequest, approval_id, populate_existing=True)
+                raise ValueError(
+                    f"This request was already {current.status if current else 'resolved'}"
+                )
+            if approve:
+                fields = {
+                    "status": SubtaskStatus.COMPLETED,
+                    "report": f"Approved. Note from the approver: {note}" if note else "Approved.",
+                    "error": None,
+                }
+            else:
+                fields = {
+                    "status": SubtaskStatus.REJECTED,
+                    "error": f"Rejected: {note}" if note else "Rejected.",
+                }
+            stepped = await session.execute(
+                update(Subtask)
+                .where(
+                    Subtask.id == row.subtask_id,
+                    Subtask.status == SubtaskStatus.WAITING_APPROVAL,
+                )
+                .values(**fields)
+            )
+            if getattr(stepped, "rowcount", 0) != 1:
+                await session.rollback()
+                raise ValueError("This step isn't waiting for a decision any more")
+            await session.commit()
+            subtask_id = row.subtask_id
+            row = await session.get(ApprovalRequest, approval_id, populate_existing=True)
+            sub = await session.get(Subtask, subtask_id, populate_existing=True)
+            assert row is not None and sub is not None
+        await self.services.bus.emit(
+            EventInput(
+                run_id=row.run_id,
+                task_id=row.task_id,
+                type="approval.resolved",
+                status=status,
+                data={"approval_id": row.id, "kind": row.kind, "subtask_id": sub.id, **resolution},
+            )
+        )
+        await self.services.bus.emit(
+            subtask_event(
+                row.run_id, row.task_id, sub, SubtaskStatus.WAITING_APPROVAL, by="approver"
+            )
+        )
+        self.services.bus.notify("approval", row.id, action="resolved")
+        self.services.bus.notify("run", row.run_id)
+        future = self._waiters.get(approval_id)
+        if future is not None and not future.done():
+            future.set_result(resolution)
+        return row
+
+    async def cancel_steps(self, run_id: str, reason: str) -> int:
+        """Cancel a run's pending approval steps (the run is being cancelled)."""
+        async with self.db.session() as session:
+            rows = (
+                await session.scalars(
+                    select(ApprovalRequest).where(
+                        ApprovalRequest.run_id == run_id,
+                        ApprovalRequest.kind == ApprovalKind.STEP,
+                        ApprovalRequest.status == ApprovalStatus.PENDING,
+                    )
+                )
+            ).all()
+        count = 0
+        for row in rows:
+            if await self._finalise(
+                row.id, ApprovalStatus.CANCELLED, {"decision": "deny", "message": reason}
+            ):
+                count += 1
+            async with self.db.session() as session:
+                sub = await session.get(Subtask, row.subtask_id) if row.subtask_id else None
+                if sub is None or sub.status != SubtaskStatus.WAITING_APPROVAL:
+                    continue
+                sub.status, sub.error = SubtaskStatus.CANCELLED, f"Cancelled: {reason.lower()}."
+                await session.commit()
+            await self.services.bus.emit(
+                subtask_event(run_id, row.task_id, sub, SubtaskStatus.WAITING_APPROVAL)
+            )
+        if count:
+            self.services.bus.notify("run", run_id)
+        return count

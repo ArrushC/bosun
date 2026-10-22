@@ -35,6 +35,7 @@ from bosun.domain.enums import (
     SessionKind,
     SessionStatus,
     SourceRecordState,
+    SubtaskKind,
     SubtaskStatus,
     TaskKind,
     TaskPriority,
@@ -231,7 +232,7 @@ class AgentRole(TimestampMixin, Base):
 
 
 class Workflow(TimestampMixin, Base):
-    """An authored graph of agent steps (see bosun.workflows.spec)."""
+    """An authored graph of steps (see bosun.workflows.spec): its editable draft."""
 
     __tablename__ = "workflows"
 
@@ -242,6 +243,33 @@ class Workflow(TimestampMixin, Base):
     # Increases on every saved edit; a save must name the revision it started from.
     revision: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # The template it was created from, if any. Only a label: the draft is a copy.
+    template: Mapped[str | None] = mapped_column(String)
+
+
+class WorkflowVersion(Base):
+    """A published, numbered copy of a workflow's draft, with its agents frozen in.
+
+    Versions never change: the database refuses updates and deletes (migration 0003).
+    """
+
+    __tablename__ = "workflow_versions"
+    __table_args__ = (
+        UniqueConstraint("workflow_id", "number", name="uq_workflow_versions_number"),
+    )
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=_id("wfv"))
+    workflow_id: Mapped[str] = mapped_column(ForeignKey("workflows.id"), nullable=False)
+    number: Mapped[int] = mapped_column(Integer, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    spec: Mapped[JsonDict] = mapped_column(JSON, nullable=False)
+    # The definitions of the agents its steps use, as they were when it was published.
+    agents: Mapped[JsonDict] = mapped_column(JSON, nullable=False)
+    note: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    # The draft revision it was published from.
+    draft_revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
 
 
 class AgentRun(TimestampMixin, Base):
@@ -268,6 +296,8 @@ class AgentRun(TimestampMixin, Base):
     strategy: Mapped[str | None] = mapped_column(String)  # resolved: single | team | workflow
     # The workflow this run executed (its draft is frozen in `config.workflow`).
     workflow_id: Mapped[str | None] = mapped_column(String, index=True)
+    # The published version it ran; None for a draft (and for runs that aren't workflows).
+    workflow_version: Mapped[int | None] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(
         String, default=RunStatus.QUEUED, nullable=False, index=True
     )
@@ -350,6 +380,9 @@ class Subtask(TimestampMixin, Base):
         ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False, index=True
     )
     key: Mapped[str] = mapped_column(String, nullable=False)
+    kind: Mapped[str] = mapped_column(
+        String, default=SubtaskKind.AGENT, server_default=SubtaskKind.AGENT.value, nullable=False
+    )
     position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     role: Mapped[str] = mapped_column(String, nullable=False)
