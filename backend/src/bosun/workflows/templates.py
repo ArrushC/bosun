@@ -48,15 +48,9 @@ class Template:
     key: str
     name: str
     description: str
+    # The steps in order, as the template card shows them.
+    outline: str
     steps: tuple[WorkflowStep, ...]
-
-    @property
-    def outline(self) -> str:
-        """The steps in order, parallel ones joined: "Research → Implement → Add tests and Review"."""
-        rows: dict[float, list[str]] = {}
-        for s in self.steps:
-            rows.setdefault(s.position.y, []).append(s.title)
-        return " → ".join(" and ".join(titles) for _, titles in sorted(rows.items()))
 
 
 TEMPLATES: tuple[Template, ...] = (
@@ -64,6 +58,7 @@ TEMPLATES: tuple[Template, ...] = (
         key="fix-with-review",
         name="Fix with review",
         description="Find the cause, fix it, then test and review the change side by side before a final check.",
+        outline="Research → Implement → Add tests and Review → Final check",
         steps=(
             _step(
                 "research",
@@ -122,6 +117,7 @@ TEMPLATES: tuple[Template, ...] = (
         key="research-report",
         name="Research report",
         description="Research the code and the docs side by side, then combine what they found into one report. Changes no files.",
+        outline="Read the code and the docs side by side → Write the report",
         steps=(
             _step(
                 "read-code",
@@ -158,6 +154,7 @@ TEMPLATES: tuple[Template, ...] = (
         key="implement-and-test",
         name="Implement and test",
         description="Make the change, then add tests for it and run them.",
+        outline="Implement → Test",
         steps=(
             _step(
                 "implement",
